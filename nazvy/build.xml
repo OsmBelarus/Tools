@@ -1,0 +1,32 @@
+<project default="run">
+
+  <target name="clean">
+    <delete dir="classes" />
+  </target>
+
+  <target name="build" depends="clean">
+    <mkdir dir="classes" />
+    <javac destdir="classes" debug="true" encoding="UTF-8">
+      <src path="src" />
+      <classpath>
+        <fileset dir="lib" includes="**/*.jar" />
+      </classpath>
+    </javac>
+    <copy todir="classes">
+      <fileset dir="src" />
+    </copy>
+  </target>
+
+  <target name="run" depends="build">
+    <java classname="org.alex73.osm.validators.CheckCities" fork="yes">
+      <jvmarg value="-Xmx800m" />
+      <arg value="--pbf=http://download.geofabrik.de/europe/belarus-latest.osm.pbf" />
+      <arg value="--dav=https://github.com/OsmBelarus/Databases/raw/master/Nazvy_nasielenych_punktau/list.csv" />
+      <arg value="--out=$HOME/public_html/nazvy.html" />
+      <classpath>
+        <pathelement location="classes/" />
+        <fileset dir="lib" includes="**/*.jar" />
+      </classpath>
+    </java>
+  </target>
+</project>
