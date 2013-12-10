@@ -24,7 +24,7 @@ public class VelocityOutput {
         }
         Velocity.init(props);
         Template t = Velocity.getTemplate(template);
-        Writer wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+        Writer wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
         t.merge(context, wr);
         wr.close();
     }
