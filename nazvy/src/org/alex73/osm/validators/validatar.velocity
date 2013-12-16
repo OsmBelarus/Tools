@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 </head>
-<body>
+<body style="font-family: sans-serif">
 <script language="javascript">
     function send(cmd) {
 #set ( $d = "$")
@@ -15,21 +15,43 @@
 
 <b>Вынікі ад ${data.currentDateTime}</b> <br/>
 
-    #foreach ( $str in $data.nonExistInOsm )
-        ${str} <br/>
-    #end
+<a href="#p1">Выдаленыя на мапе (${data.nonExistInOsm.size()})</a><br/>
+<a href="#p2">Няправільныя назвы і тэгі (${data.incorrectNames.size()})</a><br/>
+<a href="#p3">Нявызначаныя тэгі (${data.requiredTags.size()})</a><br/>
+<a href="#p4">Няма ў даведніку (${data.unusedInDav.size()})</a><br/>
 
+<br/>
+<u>RadioButton - паказаць ў JOSM</u>
+<br/>
+<br/>
 
-Няправільныя назвы і тэгі:
+<a id="p1">Выдаленыя на мапе (${data.nonExistInOsm.size()}):</a>
 <ul>
-    #foreach ( $str in $data.incorrectNames )
-     <li>${str}</li>
+    #foreach ( $str in $data.nonExistInOsm )
+        <li>${str}</li>
     #end
 </ul>
 
-    #foreach ( $str in $data.unusedInDav )
-        ${str} <br/>
+<a id="p2">Няправільныя назвы і тэгі (${data.incorrectNames.size()}):</a>
+<ul>
+    #foreach ( $str in $data.incorrectNames )
+        <li>${str}</li>
     #end
+</ul>
+
+<a id="p3">Нявызначаныя тэгі (${data.requiredTags.size()}):</a>
+<ul>
+    #foreach ( $str in $data.requiredTags )
+        <li>${str}</li>
+    #end
+</ul>
+
+<a id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</a>
+<ul>
+    #foreach ( $str in $data.unusedInDav )
+        <li>${str}</li>
+    #end
+</ul>
 
 </body>
 </html>

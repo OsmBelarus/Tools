@@ -48,6 +48,13 @@ public class CheckCities {
         public List<String> getIncorrectNames() {
             return incorrectNames;
         }
+
+        // Нявызначаныя тэгі
+        public List<String> requiredTags = new ArrayList<>();
+
+        public List<String> getRequiredTags() {
+            return requiredTags;
+        }
     }
 
     static Result result = new Result();
@@ -94,6 +101,7 @@ public class CheckCities {
         findNonExistInOsm();
         findUnusedInDav();
         findIncorrectNames();
+        findRequiredTags();
 
         System.out.println("Output to " + out + "...");
         Collections.sort(result.nonExistInOsm);
@@ -142,8 +150,33 @@ public class CheckCities {
             }
             if (osm.isInsideBelarus(o)) {
                 if (!usedInDav.contains(o.getCode())) {
-                    result.unusedInDav.add("Няма ў даведніку : " + o.getTag("addr:region") + "|"
-                            + o.getTag("addr:district") + "|" + o.getTag("name") + "/" + OSM.browse(o.getCode()));
+                    result.unusedInDav.add(o.getTag("addr:region") + "|" + o.getTag("addr:district") + "|"
+                            + o.getTag("name") + "/" + OSM.browse(o.getCode()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Шукаем аб'екты што ня маюць нейкіх патрэбных тэгаў.
+     */
+    static void findRequiredTags() {
+        for (BaseObject o : osm.allObjects) {
+            String place = o.getTag("place");
+            if (place == null || "island".equals(place) || "islet".equals(place)) {
+                continue;
+            }
+            if (osm.isInsideBelarus(o)) {
+                // TODO check correct values
+                String name = o.getTag("name");
+                if (o.getTag("addr:region") == null) {
+                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:region");
+                }
+                if (o.getTag("addr:district") == null) {
+                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:district");
+                }
+                if (o.getTag("addr:country") == null) {
+                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:country");
                 }
             }
         }
@@ -158,6 +191,10 @@ public class CheckCities {
                     for (String tag : correctTags.keySet()) {
                         String mustBe = correctTags.get(tag);
                         String exist = o.getTag(tag);
+                        if (tag.equals("place") && "suburb".equals(exist) && mustBe.equals("hamlet")) {
+                            // hamlet => suburb - ok
+                            mustBe = exist;
+                        }
                         if (!StringUtils.equals(mustBe, exist)) {
                             result.incorrectNames.add(m + "/" + OSM.hist(o.getCode()) + ": чакаецца " + tag + "='"
                                     + mustBe + "' але ёсць '" + exist + "' "
