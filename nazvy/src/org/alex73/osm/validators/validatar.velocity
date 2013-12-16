@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<style type="text/css">
+		body {
+		    font-family: sans-serif;
+		    font-size: 80%;
+		}
+		table {
+		    border-collapse: collapse;
+		}
+		td, th {
+		    border: 1px solid black;
+		}
+		.err {
+			background-color: #FF8080;
+		}
+	</style>
 </head>
-<body style="font-family: sans-serif">
+<body>
 <script language="javascript">
     function send(cmd) {
 #set ( $d = "$")
@@ -13,40 +28,69 @@
     }
 </script>
 
-<b>Вынікі ад ${data.currentDateTime}</b> <br/>
+<b><u>Вынікі ад ${data.currentDateTime}</u></b> <br/><br/>
 
 <a href="#p1">Выдаленыя на мапе (${data.nonExistInOsm.size()})</a><br/>
-<a href="#p2">Няправільныя назвы і тэгі (${data.incorrectNames.size()})</a><br/>
+<a href="#p2">Няправільныя назвы і тэгі (${data.incorrectTags.size()})</a><br/>
 <a href="#p3">Нявызначаныя тэгі (${data.requiredTags.size()})</a><br/>
 <a href="#p4">Няма ў даведніку (${data.unusedInDav.size()})</a><br/>
 
 <br/>
-<u>RadioButton - выправіць ў JOSM</u>
 <br/>
 <br/>
 
-<a id="p1">Выдаленыя на мапе (${data.nonExistInOsm.size()}):</a>
+<h1 id="p1">Выдаленыя на мапе (${data.nonExistInOsm.size()}):</h1> ID аб'екта ёсьць у даведніку, але няма на мапе
 <ul>
     #foreach ( $str in $data.nonExistInOsm )
         <li>${str}</li>
     #end
 </ul>
 
-<a id="p2">Няправільныя назвы і тэгі (${data.incorrectNames.size()}):</a>
-<ul>
-    #foreach ( $str in $data.incorrectNames )
-        <li>${str}</li>
+<h1 id="p2">Няправільныя назвы і тэгі (${data.incorrectTags.size()}):</h1> несупадзенне тэгаў па даведніку і тых што на мапе. RadioButton - выправіць ў JOSM.
+<table>
+	<tr>
+	  <td>osm ID</td><td>Раён|Назва</td>
+	  <td>place</td><td>name</td><td>name:be</td><td>name:ru</td>
+	  <td>int_name</td><td>іншыя</td>
+	</tr>
+    #foreach ( $r in $data.incorrectTags )
+    <tr>
+      <td>${r.osmLink}</td><td>${r.davName}</td>
+      <td>$!{r.type}</td><td>$!{r.name}</td><td>$!{r.nameBe}</td><td>$!{r.nameRu}</td>
+      <td>$!{r.intName}</td><td>$!{r.other}</td>
+    </tr>
     #end
-</ul>
+</table>
 
-<a id="p3">Нявызначаныя тэгі (${data.requiredTags.size()}):</a>
-<ul>
-    #foreach ( $str in $data.requiredTags )
-        <li>${str}</li>
+<h1 id="p3">Нявызначаныя тэгі (${data.requiredTags.size()}):</h1> невызначаныя абавязковыя тэгі аб'ектаў на мапе
+<table>
+	<tr>
+	  <td>osm ID</td><td>Назва</td>
+	  <td>addr:country</td><td>addr:region</td><td>addr:district</td>
+	</tr>
+    #foreach ( $r in $data.requiredTags )
+        <tr>
+	      <td>${r.osmLink}</td><td>$!{r.davName}</td>
+	      <td>
+			#if (!$r.existCountry)
+			  <span class="err">няма</span>
+			#end
+		  </td>
+	      <td>
+			#if (!$r.existRegion)
+			  <span class="err">няма</span>
+			#end
+		  </td>
+	      <td>
+			#if (!$r.existDistrict)
+			  <span class="err">няма</span>
+			#end
+		  </td>
+	    </tr>
     #end
-</ul>
+</table>
 
-<a id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</a>
+<h1 id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</h1> аб'екты мапы на якіх няма спасылак у даведніку
 <ul>
     #foreach ( $str in $data.unusedInDav )
         <li>${str}</li>

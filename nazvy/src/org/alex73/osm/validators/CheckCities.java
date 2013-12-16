@@ -1,3 +1,24 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators;
 
 import java.io.File;
@@ -23,6 +44,33 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 public class CheckCities {
+    static public class WrongTags implements Comparable<WrongTags> {
+        public String osmLink;
+        public String davName;
+        public String type, name, nameBe, nameRu, intName, other;
+        public boolean correct = true;
+
+        @Override
+        public int compareTo(WrongTags o) {
+            return davName.compareToIgnoreCase(o.davName);
+        }
+    }
+
+    static public class NoTags implements Comparable<NoTags> {
+        public String osmLink;
+        public String davName;
+        public boolean existCountry, existDistrict, existRegion;
+
+        boolean isCorrect() {
+            return existCountry && existDistrict && existRegion;
+        }
+
+        @Override
+        public int compareTo(NoTags o) {
+            return davName.compareToIgnoreCase(o.davName);
+        }
+    }
+
     static public class Result {
         public String getCurrentDateTime() {
             return new Date().toGMTString();
@@ -43,16 +91,16 @@ public class CheckCities {
         }
 
         // Несупадзеньне тэгаў з назвамі у даведніку й аб'екце
-        public List<String> incorrectNames = new ArrayList<>();
+        public List<WrongTags> incorrectTags = new ArrayList<>();
 
-        public List<String> getIncorrectNames() {
-            return incorrectNames;
+        public List<WrongTags> getIncorrectTags() {
+            return incorrectTags;
         }
 
         // Нявызначаныя тэгі
-        public List<String> requiredTags = new ArrayList<>();
+        public List<NoTags> requiredTags = new ArrayList<>();
 
-        public List<String> getRequiredTags() {
+        public List<NoTags> getRequiredTags() {
             return requiredTags;
         }
     }
@@ -100,13 +148,13 @@ public class CheckCities {
         System.out.println("Checking...");
         findNonExistInOsm();
         findUnusedInDav();
-        findIncorrectNames();
+        findIncorrectTags();
         findRequiredTags();
 
         System.out.println("Output to " + out + "...");
         Collections.sort(result.nonExistInOsm);
         Collections.sort(result.unusedInDav);
-        Collections.sort(result.incorrectNames);
+        Collections.sort(result.incorrectTags);
         new File(out).getParentFile().mkdirs();
         VelocityOutput.output("org/alex73/osm/validators/validatar.velocity", result, out);
         System.out.println("done");
@@ -168,44 +216,165 @@ public class CheckCities {
             }
             if (osm.isInsideBelarus(o)) {
                 // TODO check correct values
-                String name = o.getTag("name");
-                if (o.getTag("addr:region") == null) {
-                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:region");
-                }
-                if (o.getTag("addr:district") == null) {
-                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:district");
-                }
-                if (o.getTag("addr:country") == null) {
-                    result.requiredTags.add(name + "/" + OSM.hist(o.getCode()) + ": няма addr:country");
+                NoTags w = new NoTags();
+                w.davName = o.getTag("name");
+                w.osmLink = OSM.hist(o.getCode());
+                w.existCountry = o.getTag("addr:country") != null;
+                w.existRegion = o.getTag("addr:region") != null;
+                w.existDistrict = o.getTag("addr:district") != null;
+                if (!w.isCorrect()) {
+                    result.requiredTags.add(w);
                 }
             }
         }
     }
 
-    static void findIncorrectNames() {
+    static void findIncorrectTags() {
+        // ствараем праверкі для тэгаў
+        TagChecker tcName = new TagChecker("name") {
+            void onError(WrongTags w, String errText) {
+                w.name = errText;
+            }
+
+            void onOk(WrongTags w, String correct) {
+                w.name = correct;
+            }
+        };
+        TagChecker tcNameBe = new TagChecker("name:be") {
+            void onError(WrongTags w, String errText) {
+                w.nameBe = errText;
+            }
+
+            void onOk(WrongTags w, String correct) {
+                w.nameBe = correct;
+            }
+        };
+        TagChecker tcNameRu = new TagChecker("name:ru") {
+            void onError(WrongTags w, String errText) {
+                w.nameRu = errText;
+            }
+
+            void onOk(WrongTags w, String correct) {
+                w.nameRu = correct;
+            }
+        };
+        TagChecker tcIntName = new TagChecker("int_name") {
+            void onError(WrongTags w, String errText) {
+                w.intName = errText;
+            }
+
+            void onOk(WrongTags w, String correct) {
+                w.intName = correct;
+            }
+        };
+        TagChecker tcNameBeTarask = new TagChecker("name:be-tarask") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "name:be-tarask: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+        TagChecker tcNameBexOld = new TagChecker("name:be-x-old") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "name:be-x-old: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+        TagChecker tcPlace = new TagChecker("place") {
+            void onError(WrongTags w, String errText) {
+                w.type = errText;
+            }
+
+            void onOk(WrongTags w, String correct) {
+                w.type = correct;
+            }
+        };
+        TagChecker tcAltNameBe = new TagChecker("alt_name:be") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "alt_name:be: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+        TagChecker tcAltNameRu = new TagChecker("alt_name:ru") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "alt_name:ru: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+        TagChecker tcAltNameEn = new TagChecker("alt_name:en") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "alt_name:en: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+        TagChecker tcAltName = new TagChecker("alt_name") {
+            void onError(WrongTags w, String errText) {
+                w.other = add(w.other, "alt_name: " + errText);
+            }
+
+            void onOk(WrongTags w, String correct) {
+            }
+        };
+
         for (Miesta m : daviednik) {
-            for (String code : getUsedCodes(m)) {
+            for (final String code : getUsedCodes(m)) {
+                final WrongTags w = new WrongTags();
+                w.davName = m.sielsaviet + '|' + m.nazva;
                 try {
                     BaseObject o = osm.getObject(code);
+                    w.osmLink = OSM.hist(o.getCode());
                     Map<String, String> correctTags = CalcCorrectTags.calc(m, osm);
-                    for (String tag : correctTags.keySet()) {
-                        String mustBe = correctTags.get(tag);
-                        String exist = o.getTag(tag);
-                        if (tag.equals("place") && "suburb".equals(exist) && mustBe.equals("hamlet")) {
-                            // hamlet => suburb - ok
-                            mustBe = exist;
-                        }
-                        if (!StringUtils.equals(mustBe, exist)) {
-                            result.incorrectNames.add(m + "/" + OSM.hist(o.getCode()) + ": чакаецца " + tag + "='"
-                                    + mustBe + "' але ёсць '" + exist + "' "
-                                    + " <input type='radio' onClick='send(\"load_object?objects=" + code + "&addtags="
-                                    + tag + "=" + mustBe + "\")'>");
-                        }
+                    if ("suburb".equals(o.getTag("place")) && "hamlet".equals(correctTags.get("place"))) {
+                        // hamlet => suburb - ok
+                        correctTags.put("place", o.getTag("place"));
+                    }
+                    if ("neighbourhood".equals(o.getTag("place")) && "hamlet".equals(correctTags.get("place"))) {
+                        // hamlet => neighbourhood - ok
+                        correctTags.put("place", o.getTag("place"));
+                    }
+                    // правяраем тэгі
+                    tcName.check(w, o, correctTags);
+                    tcNameBe.check(w, o, correctTags);
+                    tcNameRu.check(w, o, correctTags);
+                    tcIntName.check(w, o, correctTags);
+                    tcNameBeTarask.check(w, o, correctTags);
+                    tcNameBexOld.check(w, o, correctTags);
+                    if (correctTags.containsKey("place")) {
+                        tcPlace.check(w, o, correctTags);
+                    }
+                    tcAltNameBe.check(w, o, correctTags);
+                    tcAltNameRu.check(w, o, correctTags);
+                    tcAltNameEn.check(w, o, correctTags);
+                    tcAltName.check(w, o, correctTags);
+
+                    if (!correctTags.isEmpty()) {
+                        // яшчэ засталіся неправераныя ?
+                        throw new Exception("Unchecked tags: " + correctTags.keySet());
                     }
                 } catch (Exception ex) {
-                    result.incorrectNames.add(ex.getMessage());
+                    w.other = add(w.other, ex.getMessage());
+                }
+                if (!w.correct) {
+                    result.incorrectTags.add(w);
                 }
             }
+        }
+    }
+
+    static String add(String prev, String add) {
+        if (prev == null) {
+            return add;
+        } else {
+            return prev + "<br/>" + add;
         }
     }
 
@@ -232,5 +401,34 @@ public class CheckCities {
             }
         }
         return c;
+    }
+
+    /**
+     * Helper for check some specific tag.
+     */
+    public static abstract class TagChecker {
+        final String tagName;
+
+        public TagChecker(String tagName) {
+            this.tagName = tagName;
+        }
+
+        abstract void onError(WrongTags w, String errText);
+
+        abstract void onOk(WrongTags w, String correct);
+
+        public void check(WrongTags w, BaseObject o, Map<String, String> correctTags) {
+            String exist = o.getTag(tagName);
+            String mustBe = correctTags.get(tagName);
+            if (!StringUtils.equals(exist, mustBe)) {
+                w.correct = false;
+                onError(w, "<span class='err'>" + exist + " => " + mustBe
+                        + " <input type='radio' onClick='send(\"load_object?objects=" + o.getCode() + "&addtags="
+                        + tagName + "=" + mustBe + "\")'></span>");
+            } else {
+                onOk(w, mustBe);
+            }
+            correctTags.remove(tagName);
+        }
     }
 }
