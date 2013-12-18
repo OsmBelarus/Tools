@@ -66,7 +66,7 @@
 <table>
 	<tr>
 	  <td>osm ID</td><td>Назва</td>
-	  <td>addr:country</td><td>addr:region</td><td>addr:district</td>
+	  <td>addr:country</td><td>addr:region</td><td>addr:district</td><td>population</td>
 	</tr>
     #foreach ( $r in $data.requiredTags )
         <tr>
@@ -84,6 +84,11 @@
 	      <td>
 			#if (!$r.existDistrict)
 			  <span class="err">няма</span>
+			#end
+		  </td>
+	      <td>
+			#if (!$r.correctPopulation)
+			  <span class="err">выправіць</span>
 			#end
 		  </td>
 	    </tr>

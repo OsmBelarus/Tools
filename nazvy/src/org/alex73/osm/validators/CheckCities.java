@@ -59,10 +59,10 @@ public class CheckCities {
     static public class NoTags implements Comparable<NoTags> {
         public String osmLink;
         public String davName;
-        public boolean existCountry, existDistrict, existRegion;
+        public boolean existCountry, existDistrict, existRegion, correctPopulation;
 
         boolean isCorrect() {
-            return existCountry && existDistrict && existRegion;
+            return existCountry && existDistrict && existRegion && correctPopulation;
         }
 
         @Override
@@ -222,6 +222,18 @@ public class CheckCities {
                 w.existCountry = o.getTag("addr:country") != null;
                 w.existRegion = o.getTag("addr:region") != null;
                 w.existDistrict = o.getTag("addr:district") != null;
+                switch (place) {
+                case "city":
+                case "town":
+                case "village":
+                    String population = o.getTag("population");
+                    w.correctPopulation = population != null && population.matches("[0-9]+")
+                            && Integer.parseInt(population) < 2500000 && Integer.parseInt(population) > 1000;
+                    break;
+                default:
+                    w.correctPopulation = true;
+                    break;
+                }
                 if (!w.isCorrect()) {
                     result.requiredTags.add(w);
                 }
