@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+    <meta charset="UTF-8">
+    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<style type="text/css">
+		body {
+		    font-family: sans-serif;
+		    font-size: 80%;
+		}
+		table {
+		    border-collapse: collapse;
+		}
+		td, th {
+		    border: 1px solid black;
+		}
+		.err {
+			background-color: #FF8080;
+		}
+	</style>
+</head>
+<body>
+<script language="javascript">
+    function send(cmd) {
+#set ( $d = "$")
+        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
+        return false;
+    }
+</script>
+
+<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
+Памылак : ${data.size()}
+<br/>
+RadioButton - выправіць ў JOSM.
+<br/>
+
+#macro ( cell $code $tag $exist $required)
+  #if ($exist)
+    #set ($e = $exist)
+  #else
+    #set ($e = "")
+  #end
+  #if ($required)
+    #set ($r = $required)
+  #else
+    #set ($r = "")
+  #end
+    #if ($e != $r)
+      <td><span class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></span></td>
+    #else
+      <td>$!exist</td>
+    #end
+#end
+
+    <table>
+      <tr>
+        <td>ID</td>
+        <td>name</td>
+        <td>name:ru</td>
+        <td>name:be</td>
+        <td>int_name</td>
+      </tr>
+    #foreach ( $s in $data )
+      <tr>
+        <td>$s.link</td>
+        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
+        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
+        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
+        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
+      </tr>
+    #end
+    </table>
+
+</body>
+</html>

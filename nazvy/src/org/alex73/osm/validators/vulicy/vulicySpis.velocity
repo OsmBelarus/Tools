@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+    <meta charset="UTF-8">
+    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<style type="text/css">
+		body {
+		    font-family: sans-serif;
+		    font-size: 80%;
+		}
+		table {
+		    border-collapse: collapse;
+		}
+		td, th {
+		    border: 1px solid black;
+		}
+		.err {
+			background-color: #FF8080;
+		}
+	</style>
+</head>
+<body>
+
+<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
+
+<ul>
+	#foreach ( $c in $data.keySet() )
+	    <li><a href="vulicy-${c}.html">${c}</a> - памылак : ${data.get($c).size()}</li>
+	#end
+</ul>
+
+</body>
+</html>

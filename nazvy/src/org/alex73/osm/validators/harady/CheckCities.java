@@ -19,7 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-package org.alex73.osm.validators;
+package org.alex73.osm.validators.harady;
 
 import java.io.File;
 import java.net.URL;
@@ -43,6 +43,9 @@ import org.alex73.osm.utils.VelocityOutput;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * Правярае супадзеньне назваў населеных пунктаў OSM назвам деведніка.
+ */
 public class CheckCities {
     static public class WrongTags implements Comparable<WrongTags> {
         public String osmLink;
@@ -131,19 +134,14 @@ public class CheckCities {
             }
         }
         if (pbf == null || out == null || dav == null) {
-            System.err
-                    .println("CheckCities --pbf=http://download.geofabrik.de/europe/belarus-latest.osm.pbf --dav=https://github.com/OsmBelarus/Databases/raw/master/Nazvy_nasielenych_punktau/list.csv --out=/tmp/out.html");
+            System.err.println("CheckCities --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --out=/tmp/out.html");
             System.exit(1);
         }
-        System.out.println("Loading pbf from " + pbf + "...");
-        FileUtils.copyURLToFile(new URL(pbf), new File("tmp/pbf.pbf"));
-        System.out.println("Parsing pbf...");
-        osm = PbfDriver.process(new File("tmp/pbf.pbf"));
+        System.out.println("Parsing pbf from " + pbf);
+        osm = PbfDriver.process(new File(pbf));
 
-        System.out.println("Loading csv from " + dav + "...");
-        FileUtils.copyURLToFile(new URL(dav), new File("tmp/list.csv"));
-        System.out.println("Parsing csv...");
-        daviednik = new TSV('\t').readCSV("tmp/list.csv", Miesta.class);
+        System.out.println("Parsing csv from " + dav);
+        daviednik = new TSV('\t').readCSV(dav, Miesta.class);
 
         System.out.println("Checking...");
         findNonExistInOsm();
@@ -156,7 +154,7 @@ public class CheckCities {
         Collections.sort(result.unusedInDav);
         Collections.sort(result.incorrectTags);
         new File(out).getParentFile().mkdirs();
-        VelocityOutput.output("org/alex73/osm/validators/validatar.velocity", result, out);
+        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", result, out);
         System.out.println("done");
     }
 

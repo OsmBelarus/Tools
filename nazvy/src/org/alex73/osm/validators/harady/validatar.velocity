@@ -28,7 +28,7 @@
     }
 </script>
 
-<b><u>Вынікі ад ${data.currentDateTime}</u></b> <br/><br/>
+<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
 <a href="#p1">Выдаленыя на мапе (${data.nonExistInOsm.size()})</a><br/>
 <a href="#p2">Няправільныя назвы і тэгі (${data.incorrectTags.size()})</a><br/>
