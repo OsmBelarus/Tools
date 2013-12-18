@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.velocity.Template;
@@ -36,6 +37,7 @@ public class VelocityOutput {
     public static void output(String template, Object data, String file) throws Exception {
         VelocityContext context = new VelocityContext();
         context.put("data", data);
+        context.put("currentDateTime", new Date().toGMTString());
         Properties props = new Properties();
         InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
         try {

@@ -86,6 +86,10 @@ public class Geo {
         return result;
     }
 
+    public static Area way2area(MemoryStorage storage, long wayId) {
+        return new Area(way2path(storage, wayId));
+    }
+
     public static Area rel2area(MemoryStorage storage, long relId) {
         RelationObject rel = storage.getRelationById(relId);
         if (rel == null) {

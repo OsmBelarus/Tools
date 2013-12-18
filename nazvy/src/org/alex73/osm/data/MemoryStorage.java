@@ -123,23 +123,41 @@ public class MemoryStorage {
     }
 
     public boolean isInsideBelarus(NodeObject o) {
+        return isInside(Belarus, o);
+    }
+
+    public boolean isInsideBelarus(WayObject o) {
+        return isInside(Belarus, o);
+    }
+
+    public boolean isInsideBelarus(RelationObject o) {
+        return isInside(Belarus, o);
+    }
+
+    public boolean isInside(Area area, NodeObject o) {
         Point2D p = Geo.node2point(this, o.id);
         if (p == null) {
             return false;
         }
-        return Belarus.contains(p);
+        if (!area.getBounds2D().contains(p)) {
+            return false;
+        }
+        return area.contains(p);
     }
 
-    public boolean isInsideBelarus(WayObject o) {
+    public boolean isInside(Area area, WayObject o) {
         Path2D path = Geo.way2path(this, o.id);
         if (path == null) {
+            return false;
+        }
+        if (!area.intersects(path.getBounds2D())) {
             return false;
         }
         PathIterator it = path.getPathIterator(null);
         double[] c = new double[2];
         while (!it.isDone()) {
             it.currentSegment(c);
-            if (Belarus.contains(c[0], c[1])) {
+            if (area.contains(c[0], c[1])) {
                 return true;
             }
             it.next();
@@ -147,12 +165,15 @@ public class MemoryStorage {
         return false;
     }
 
-    public boolean isInsideBelarus(RelationObject o) {
+    public boolean isInside(Area area, RelationObject o) {
         Area p = Geo.rel2area(this, o.id);
         if (p == null) {
             return false;
         }
-        p.intersect(Belarus);
+        if (!area.intersects(p.getBounds2D())) {
+            return false;
+        }
+        p.intersect(area);
         return !p.isEmpty();
     }
 }
