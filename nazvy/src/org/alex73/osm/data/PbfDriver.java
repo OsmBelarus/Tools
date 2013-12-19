@@ -38,6 +38,8 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.pbf2.v0_6.PbfReader;
 
 public class PbfDriver {
+    static final String[] EMPTY_TAGS = new String[0];
+
     public static MemoryStorage process(File pbf) throws Exception {
         final MemoryStorage storage = new MemoryStorage();
 
@@ -80,6 +82,9 @@ public class PbfDriver {
     }
 
     static String[] createTags(Collection<Tag> tags) {
+        if (tags.isEmpty()) {
+            return EMPTY_TAGS;
+        }
         String[] r = new String[tags.size() * 2];
         int i = 0;
         for (Tag t : tags) {

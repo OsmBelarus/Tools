@@ -22,10 +22,9 @@
 package org.alex73.osm.validators.harady;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,6 @@ import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -75,10 +73,6 @@ public class CheckCities {
     }
 
     static public class Result {
-        public String getCurrentDateTime() {
-            return new Date().toGMTString();
-        }
-
         // Неіснуючыя ў osm аб'екты ў выглядзе
         public List<String> nonExistInOsm = new ArrayList<>();
 
@@ -134,8 +128,7 @@ public class CheckCities {
             }
         }
         if (pbf == null || out == null || dav == null) {
-            System.err
-                    .println("CheckCities --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --out=/tmp/out.html");
+            System.err.println("CheckCities --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --out=/tmp/out.html");
             System.exit(1);
         }
         System.out.println("Parsing pbf from " + pbf);
@@ -163,7 +156,7 @@ public class CheckCities {
         for (Miesta m : daviednik) {
             if (m.osmID != null) {
                 if (osm.getNodeById(m.osmID) == null) {
-                    result.nonExistInOsm.add("Няма " + OSM.hist("n" + m.osmID) + " на мапе, але ёсць у " + m);
+                    result.nonExistInOsm.add("Няма " + OSM.histText("n" + m.osmID) + " на мапе, але ёсць у " + m);
                 } else {
                     usedInDav.add("n" + m.osmID);
                 }
@@ -173,7 +166,7 @@ public class CheckCities {
                     try {
                         BaseObject o = osm.getObject(id);
                         if (o == null) {
-                            result.nonExistInOsm.add("Няма " + OSM.hist(id) + " на мапе, але ёсць у " + m);
+                            result.nonExistInOsm.add("Няма " + OSM.histText(id) + " на мапе, але ёсць у " + m);
                         } else {
                             usedInDav.add(id);
                         }
@@ -186,10 +179,17 @@ public class CheckCities {
     }
 
     /**
-     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі выдаленыя.
+     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі
+     * выдаленыя.
      */
     static void findUnusedInDav() {
-        for (BaseObject o : osm.allObjects) {
+        findUnusedInDavList(osm.nodes);
+        findUnusedInDavList(osm.ways);
+        findUnusedInDavList(osm.relations);
+    }
+
+    static void findUnusedInDavList(List<? extends BaseObject> list) {
+        for (BaseObject o : list) {
             String place = o.getTag("place");
             if (place == null || "island".equals(place) || "islet".equals(place)) {
                 continue;
@@ -207,16 +207,21 @@ public class CheckCities {
      * Шукаем аб'екты што ня маюць нейкіх патрэбных тэгаў.
      */
     static void findRequiredTags() {
-        for (BaseObject o : osm.allObjects) {
+        findRequiredTagsList(osm.nodes);
+        findRequiredTagsList(osm.ways);
+        findRequiredTagsList(osm.relations);
+    }
+
+    static void findRequiredTagsList(List<? extends BaseObject> list) {
+        for (BaseObject o : list) {
             String place = o.getTag("place");
             if (place == null || "island".equals(place) || "islet".equals(place)) {
                 continue;
             }
             if (osm.isInsideBelarus(o)) {
-                // TODO check correct values
                 NoTags w = new NoTags();
                 w.davName = o.getTag("name");
-                w.osmLink = OSM.hist(o.getCode());
+                w.osmLink = OSM.histIcon(o.getCode());
                 w.existCountry = o.getTag("addr:country") != null;
                 w.existRegion = o.getTag("addr:region") != null;
                 w.existDistrict = o.getTag("addr:district") != null;
@@ -225,8 +230,12 @@ public class CheckCities {
                 case "town":
                 case "village":
                     String population = o.getTag("population");
+                    String population_date = o.getTag("population_date");
                     w.correctPopulation = population != null && population.matches("[0-9]+")
-                            && Integer.parseInt(population) < 2500000 && Integer.parseInt(population) > 1000;
+                            && Integer.parseInt(population) < 2500000 && Integer.parseInt(population) > 1000
+                            && population_date != null && population_date.matches("[0-9]{4}")
+                            && Integer.parseInt(population_date) > Calendar.getInstance().get(Calendar.YEAR) - 40
+                            && Integer.parseInt(population_date) <= Calendar.getInstance().get(Calendar.YEAR);
                     break;
                 default:
                     w.correctPopulation = true;
@@ -341,14 +350,13 @@ public class CheckCities {
                 w.davName = m.sielsaviet + '|' + m.nazva;
                 try {
                     BaseObject o = osm.getObject(code);
-                    w.osmLink = OSM.hist(o.getCode());
+                    w.osmLink = OSM.histIcon(o.getCode());
                     Map<String, String> correctTags = CalcCorrectTags.calc(m, osm);
                     if ("suburb".equals(o.getTag("place")) && "hamlet".equals(correctTags.get("place"))) {
                         // hamlet => suburb - ok
                         correctTags.put("place", o.getTag("place"));
                     }
-                    if ("neighbourhood".equals(o.getTag("place"))
-                            && "hamlet".equals(correctTags.get("place"))) {
+                    if ("neighbourhood".equals(o.getTag("place")) && "hamlet".equals(correctTags.get("place"))) {
                         // hamlet => neighbourhood - ok
                         correctTags.put("place", o.getTag("place"));
                     }
@@ -434,8 +442,8 @@ public class CheckCities {
             if (!StringUtils.equals(exist, mustBe)) {
                 w.correct = false;
                 onError(w, "<span class='err'>" + exist + " => " + mustBe
-                        + " <input type='radio' onClick='send(\"load_object?objects=" + o.getCode()
-                        + "&addtags=" + tagName + "=" + mustBe + "\")'></span>");
+                        + " <input type='radio' onClick='send(\"load_object?objects=" + o.getCode() + "&addtags="
+                        + tagName + "=" + mustBe + "\")'></span>");
             } else {
                 onOk(w, mustBe);
             }

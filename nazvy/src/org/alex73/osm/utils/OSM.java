@@ -22,15 +22,35 @@
 package org.alex73.osm.utils;
 
 public class OSM {
+    static String ICON_NODE = "<img src=\"http://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png\"/>";
+    static String ICON_WAY = "<img src=\"http://wiki.openstreetmap.org/w/images/6/6a/Mf_way.png\"/>";
+    static String ICON_REL = "<img src=\"http://wiki.openstreetmap.org/w/images/5/59/Relation.png\"/>";
 
     public static String browse(String code) {
         return "<a href='http://www.openstreetmap.org/"
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "'>" + code + "</a>";
     }
 
-    public static String hist(String code) {
+    public static String histText(String code) {
         return "<a href='http://www.openstreetmap.org/"
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "/history'>" + code
                 + "</a>";
+    }
+
+    public static String histIcon(String code) {
+        String icon;
+        if (code.startsWith("n")) {
+            icon = ICON_NODE;
+        } else if (code.startsWith("w")) {
+            icon = ICON_WAY;
+        } else if (code.startsWith("r")) {
+            icon = ICON_REL;
+        } else {
+            icon = code;
+        }
+        String r = "<a href='http://www.openstreetmap.org/"
+                + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "/history'>";
+        r += icon + "</a>";
+        return r;
     }
 }

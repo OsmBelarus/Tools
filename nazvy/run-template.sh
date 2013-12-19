@@ -16,13 +16,13 @@ pushd $HOME/OsmBelarus-Databases/ || exit 1
 git pull || exit 1
 popd
 
-$JAVA_EXEC org.alex73.osm.validators.harady.CheckCities \
+time $JAVA_EXEC org.alex73.osm.validators.harady.CheckCities \
     --pbf=tmp/belarus-latest.osm.pbf \
     --dav=$HOME/OsmBelarus-Databases/Nazvy_nasielenych_punktau/list.csv \
     --out=$HOME/public_html/nazvy.html \
   || exit 1
 
-$JAVA_EXEC -DdisableAddrStreet org.alex73.osm.validators.vulicy.CheckStreets \
+time $JAVA_EXEC -DdisableAddrStreet org.alex73.osm.validators.vulicy.CheckStreets \
     --pbf=tmp/belarus-latest.osm.pbf \
     --dav=$HOME/OsmBelarus-Databases/Nazvy_nasielenych_punktau/list.csv \
     --po-dir=$HOME/OsmBelarus-Databases/Nazvy_vulic.OmegaT/target/ \

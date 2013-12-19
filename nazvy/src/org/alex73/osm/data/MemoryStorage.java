@@ -22,9 +22,6 @@
 package org.alex73.osm.data;
 
 import java.awt.geom.Area;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +37,6 @@ public class MemoryStorage {
     final public List<NodeObject> nodes = new ArrayList<>(9000000);
     final public List<WayObject> ways = new ArrayList<>(1400000);
     final public List<RelationObject> relations = new ArrayList<>(20000);
-    public List<BaseObject> allObjects;
     public Area Belarus;
 
     void finishLoading() {
@@ -50,10 +46,6 @@ public class MemoryStorage {
         Collections.sort(nodes);
         Collections.sort(ways);
         Collections.sort(relations);
-        allObjects = new ArrayList<>(nodes.size() + ways.size() + relations.size());
-        allObjects.addAll(nodes);
-        allObjects.addAll(ways);
-        allObjects.addAll(relations);
 
         Belarus = Geo.rel2area(this, rel_Belarus);
     }
@@ -123,57 +115,14 @@ public class MemoryStorage {
     }
 
     public boolean isInsideBelarus(NodeObject o) {
-        return isInside(Belarus, o);
+        return Geo.isInside(Belarus, Geo.node2point(this, o.id));
     }
 
     public boolean isInsideBelarus(WayObject o) {
-        return isInside(Belarus, o);
+        return Geo.isInside(Belarus, Geo.way2path(this, o.id));
     }
 
     public boolean isInsideBelarus(RelationObject o) {
-        return isInside(Belarus, o);
-    }
-
-    public boolean isInside(Area area, NodeObject o) {
-        Point2D p = Geo.node2point(this, o.id);
-        if (p == null) {
-            return false;
-        }
-        if (!area.getBounds2D().contains(p)) {
-            return false;
-        }
-        return area.contains(p);
-    }
-
-    public boolean isInside(Area area, WayObject o) {
-        Path2D path = Geo.way2path(this, o.id);
-        if (path == null) {
-            return false;
-        }
-        if (!area.intersects(path.getBounds2D())) {
-            return false;
-        }
-        PathIterator it = path.getPathIterator(null);
-        double[] c = new double[2];
-        while (!it.isDone()) {
-            it.currentSegment(c);
-            if (area.contains(c[0], c[1])) {
-                return true;
-            }
-            it.next();
-        }
-        return false;
-    }
-
-    public boolean isInside(Area area, RelationObject o) {
-        Area p = Geo.rel2area(this, o.id);
-        if (p == null) {
-            return false;
-        }
-        if (!area.intersects(p.getBounds2D())) {
-            return false;
-        }
-        p.intersect(area);
-        return !p.isEmpty();
+        return Geo.isInside(Belarus, Geo.rel2area(this, o.id));
     }
 }

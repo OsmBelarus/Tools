@@ -21,6 +21,7 @@
 package org.alex73.osm.validators.vulicy;
 
 import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -179,49 +180,40 @@ public class StreetsParse {
         }
     }
 
-    public void processWay(WayObject way) throws Exception {
-        // if (getTag(way, "highway") == null || !isInsideBelarus(way)) {
+    public void processWay(WayObject way) {
         if (way.getTag("highway") != null) {
+            Path2D wayPath = Geo.way2path(osm, way.id);
             for (City c : cities) {
-                if (osm.isInside(c.border, way)) {
-                    try {
-                        processTags(c, way, "name", "name:ru", "name:be", "int_name");
-                    } catch (ParseException ex) {
-                        // TODO
-                    }
+                if (Geo.isInside(c.border, wayPath)) {
+                    processTags(c, way, "name", "name:ru", "name:be", "int_name");
                     return;
                 }
             }
         } else if (System.getProperty("disableAddrStreet") == null && way.getTag("addr:street") != null) {
             for (City c : cities) {
-                if (osm.isInside(c.border, way)) {
-                    try {
-                        processTags(c, way, "addr:street", null, "addr:street:be", null);
-                    } catch (ParseException ex) {
-                        // TODO
-                    }
+                Path2D wayPath = Geo.way2path(osm, way.id);
+                if (Geo.isInside(c.border, wayPath)) {
+                    processTags(c, way, "addr:street", null, "addr:street:be", null);
                     return;
                 }
             }
         }
     }
 
-    public void processRelation(RelationObject relation) throws Exception {
+    public void processRelation(RelationObject relation) {
         if ("address".equals(relation.getTag("type"))) {
+            Area relArea;
+            try {
+                relArea = Geo.rel2area(osm, relation.id);
+            } catch (Exception ex) {
+                return;
+                // TODO wrong role in rel
+            }
             for (City c : cities) {
                 boolean inside;
-                try {
-                    inside = osm.isInside(c.border, relation);
-                } catch (Exception ex) {
-                    // wrong role in rel
-                    continue;
-                }
+                inside = Geo.isInside(c.border, relArea);
                 if (inside) {
-                    try {
-                        processTags(c, relation, "name", "name:ru", "name:be", "int_name");
-                    } catch (ParseException ex) {
-                        // TODO
-                    }
+                    processTags(c, relation, "name", "name:ru", "name:be", "int_name");
                     return;
                 }
             }
@@ -237,12 +229,16 @@ public class StreetsParse {
         public Names tags = new Names();
         public Names exist = new Names();
         public Names required = new Names();
+        public String error;
 
         public String getLink() {
-            return OSM.hist(objCode);
+            return OSM.histIcon(objCode);
         }
 
         public boolean needToChange() {
+            if (error != null) {
+                return true;
+            }
             return !StringUtils.equals(exist.name, required.name)
                     || !StringUtils.equals(exist.name_be, required.name_be)
                     || !StringUtils.equals(exist.name_ru, required.name_ru)
@@ -250,8 +246,7 @@ public class StreetsParse {
         }
     }
 
-    void processTags(City c, BaseObject obj, String nameTag, String nameRuTag, String nameBeTag,
-            String nameIntlTag) throws Exception {
+    void processTags(City c, BaseObject obj, String nameTag, String nameRuTag, String nameBeTag, String nameIntlTag) {
 
         StreetNames names = new StreetNames();
         names.tags.name = nameTag;
@@ -281,11 +276,17 @@ public class StreetsParse {
         if (name_be != null) {
             name_be = StreetNameParser.fix(name_be);
         }
-        process(c, obj, names, name, name_ru, name_be, names.exist.name);
+
+        try {
+            process(c, obj, names, name, name_ru, name_be, names.exist.name);
+        } catch (Exception ex) {
+            names.error = ex.getMessage();
+        }
+        storeResult(c, names);
     }
 
-    void process(City c, BaseObject obj, StreetNames streetNames, String name, String name_ru,
-            String name_be, String toComment) throws ParseException {
+    void process(City c, BaseObject obj, StreetNames streetNames, String name, String name_ru, String name_be,
+            String toComment) throws Exception {
         StreetName orig = StreetNameParser.parse(name);
         StreetNameBe be = null;
 
@@ -315,8 +316,11 @@ public class StreetsParse {
         postProcess(c, obj, streetNames, orig, name, name_ru, name_be);
     }
 
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name,
-            String name_ru, String name_be) {
+    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
+            String name_be) throws Exception {
+    }
+
+    void storeResult(City c, StreetNames streetNames) {
     }
 
     static class LocalizationInfo {

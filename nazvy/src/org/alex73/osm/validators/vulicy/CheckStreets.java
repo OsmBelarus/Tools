@@ -26,8 +26,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.alex73.osm.data.BaseObject;
 import org.alex73.osm.utils.Lat;
@@ -35,7 +33,7 @@ import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
 
 /**
- * Правярае несупадзеньне тэгаў OSM правіьлным назвам.
+ * Правярае несупадзеньне тэгаў OSM правільным назвам.
  * 
  * -DdisableAddrStreet - не правяраць назвы вуліц таксама ў relation.
  */
@@ -72,7 +70,6 @@ public class CheckStreets extends StreetsParse {
         s.run(pbfFile);
     }
 
-    Set<String> warnings = new TreeSet<>();
     List<String> log2 = new ArrayList<>();
     Map<City, List<StreetNames>> result = new HashMap<>();
 
@@ -93,11 +90,18 @@ public class CheckStreets extends StreetsParse {
             Collections.sort(list, new Comparator<StreetNames>() {
                 @Override
                 public int compare(StreetNames o1, StreetNames o2) {
-                    return nvl(o1.required.name).compareToIgnoreCase(nvl(o2.required.name));
+                    String s1 = nvl(o1.required.name, o1.exist.name);
+                    String s2 = nvl(o2.required.name, o2.exist.name);
+                    return s1.compareToIgnoreCase(s2);
                 }
 
-                String nvl(String s) {
-                    return s != null ? s : "";
+                String nvl(String... ss) {
+                    for (String s : ss) {
+                        if (s != null) {
+                            return s;
+                        }
+                    }
+                    return "";
                 }
             });
         }
@@ -110,25 +114,24 @@ public class CheckStreets extends StreetsParse {
         });
 
         System.out.println("Output to " + outDir + "/vulicy.html...");
-        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity",
-                outDir + "/vulicy.html", "harady", sortedList, "data", result);
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity", outDir + "/vulicy.html",
+                "harady", sortedList, "data", result);
         for (City c : cities) {
             System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
-                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
+            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-" + c.fn
+                    + ".html", "horad", c.nazva, "data", result.get(c));
         }
     }
 
     @Override
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name,
-            String name_ru, String name_be) {
+    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
+            String name_be) throws Exception {
         String trans = c.po.get(street.name);
         if ("".equals(trans)) {
             trans = null;
         }
         if (trans == null) {
-            warnings.add("Не перакладзена " + street.name);
-            return;
+            throw new Exception("Не перакладзена " + street.name);
         }
 
         if (street.term == null) {
@@ -137,8 +140,7 @@ public class CheckStreets extends StreetsParse {
 
         int pm = trans.indexOf('/');
         if (pm < 0) {
-            warnings.add("Не пазначана часьціна мовы: " + street.name + " => " + trans);
-            return;
+            throw new Exception("Не пазначана часьціна мовы: " + street.name + " => " + trans);
         }
         String mode = trans.substring(0, pm);
         trans = trans.substring(pm + 1);
@@ -156,44 +158,42 @@ public class CheckStreets extends StreetsParse {
             street.prym = true;
             be.prym = true;
             if (street.term.getRodRu() != StreetTermRod.ZAN | be.term.getRodBe() != StreetTermRod.ZAN) {
-                warnings.add("Не супадае род: " + streetNames.exist.name + " => " + be);
-                return;
+                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
             }
             break;
         case "пм": // прыметнік мужчынскага роду
             street.prym = true;
             be.prym = true;
             if (street.term.getRodRu() != StreetTermRod.MUZ | be.term.getRodBe() != StreetTermRod.MUZ) {
-                warnings.add("Не супадае род: " + streetNames.exist.name + " => " + be);
-                return;
+                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
             }
             break;
         case "пн":
             street.prym = true;
             be.prym = true;
             if (street.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.NI) {
-                warnings.add("Не супадае род: " + streetNames.exist.name + " => " + be);
-                return;
+                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
             }
             break;
         case "пнж":
             street.prym = true;
             be.prym = true;
             if (street.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.ZAN) {
-                warnings.add("Не супадае род: " + streetNames.exist.name + " => " + be);
-                return;
+                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
             }
             break;
         default:
-            warnings.add("Невядомы прэфікс: " + c.po.get(street.name));
+            throw new Exception("Невядомы прэфікс у перакладзе: " + c.po.get(street.name));
         }
 
         streetNames.required.name = streetNames.tags.name == null ? null : street.getRightName();
         streetNames.required.name_ru = streetNames.tags.name_ru == null ? null : streetNames.required.name;
         streetNames.required.name_be = streetNames.tags.name_be == null ? null : be.getRightName();
-        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(),
-                false);
+        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(), false);
+    }
 
+    @Override
+    void storeResult(City c, StreetNames streetNames) {
         if (streetNames.needToChange()) {
             result.get(c).add(streetNames);
         }

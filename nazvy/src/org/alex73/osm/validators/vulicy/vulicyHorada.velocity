@@ -15,6 +15,9 @@
 		    border: 1px solid black;
 		}
 		.err {
+			background-color: #FFC0C0;
+		}
+		.error {
 			background-color: #FF8080;
 		}
 	</style>
@@ -48,7 +51,7 @@ RadioButton - выправіць ў JOSM.
     #set ($r = "")
   #end
     #if ($e != $r)
-      <td><span class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></span></td>
+      <td class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></td>
     #else
       <td>$!exist</td>
     #end
@@ -56,7 +59,7 @@ RadioButton - выправіць ў JOSM.
 
     <table>
       <tr>
-        <td>ID</td>
+        <td>osm</td>
         <td>name</td>
         <td>name:ru</td>
         <td>name:be</td>
@@ -65,10 +68,14 @@ RadioButton - выправіць ў JOSM.
     #foreach ( $s in $data )
       <tr>
         <td>$s.link</td>
-        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
-        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
-        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
-        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
+        #if ($s.error)
+            <td colspan="4" class="error">$s.exist.name : ERROR: $s.error</td>
+        #else
+	        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
+	        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
+	        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
+	        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
+	    #end
       </tr>
     #end
     </table>

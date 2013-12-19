@@ -49,15 +49,15 @@
 <h1 id="p2">Няправільныя назвы і тэгі (${data.incorrectTags.size()}):</h1> несупадзенне тэгаў па даведніку і тых што на мапе. RadioButton - выправіць ў JOSM.
 <table>
 	<tr>
-	  <td>osm ID</td><td>Раён|Назва</td>
-	  <td>place</td><td>name</td><td>name:be</td><td>name:ru</td>
-	  <td>int_name</td><td>іншыя</td>
+	  <td>osm</td><td>Раён|Назва</td>
+	  <td>place</td><td>name</td><td>name:ru</td>
+	  <td>name:be</td><td>int_name</td><td>іншыя</td>
 	</tr>
     #foreach ( $r in $data.incorrectTags )
     <tr>
       <td>${r.osmLink}</td><td>${r.davName}</td>
-      <td>$!{r.type}</td><td>$!{r.name}</td><td>$!{r.nameBe}</td><td>$!{r.nameRu}</td>
-      <td>$!{r.intName}</td><td>$!{r.other}</td>
+      <td>$!{r.type}</td><td>$!{r.name}</td><td>$!{r.nameRu}</td>
+      <td>$!{r.nameBe}</td><td>$!{r.intName}</td><td>$!{r.other}</td>
     </tr>
     #end
 </table>
@@ -65,32 +65,32 @@
 <h1 id="p3">Нявызначаныя тэгі (${data.requiredTags.size()}):</h1> невызначаныя абавязковыя тэгі аб'ектаў на мапе
 <table>
 	<tr>
-	  <td>osm ID</td><td>Назва</td>
+	  <td>osm</td><td>Назва</td>
 	  <td>addr:country</td><td>addr:region</td><td>addr:district</td><td>population</td>
 	</tr>
     #foreach ( $r in $data.requiredTags )
         <tr>
 	      <td>${r.osmLink}</td><td>$!{r.davName}</td>
-	      <td>
 			#if (!$r.existCountry)
-			  <span class="err">няма</span>
+	          <td span class="err">няма</td>
+			#else
+			  <td></td>
 			#end
-		  </td>
-	      <td>
 			#if (!$r.existRegion)
-			  <span class="err">няма</span>
+			  <td span class="err">няма</td>
+			#else
+			  <td></td>
 			#end
-		  </td>
-	      <td>
 			#if (!$r.existDistrict)
-			  <span class="err">няма</span>
+			  <td span class="err">няма</td>
+			#else
+			  <td></td>
 			#end
-		  </td>
-	      <td>
 			#if (!$r.correctPopulation)
-			  <span class="err">выправіць</span>
+			  <td span class="err">выправіць</td>
+			#else
+			  <td></td>
 			#end
-		  </td>
 	    </tr>
     #end
 </table>

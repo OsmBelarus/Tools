@@ -194,7 +194,8 @@ public class Geo {
         Point2D.Double firstPoint = pathFirst(result); //
         Point2D.Double endPoint = pathLast(result);
         if (!firstPoint.equals(endPoint)) {
-            System.out.println("Non-closed for r#" + relId + ": " + firstPoint + "/" + endPoint);
+            // System.out.println("Non-closed for r#" + relId + ": " +
+            // firstPoint + "/" + endPoint);
         }
         return result;
     }
@@ -253,5 +254,45 @@ public class Geo {
             }
         }
         return result;
+    }
+
+    public static boolean isInside(Area area, Point2D p) {
+        if (p == null) {
+            return false;
+        }
+        if (!area.getBounds2D().contains(p)) {
+            return false;
+        }
+        return area.contains(p);
+    }
+
+    public static boolean isInside(Area area, Path2D path) {
+        if (path == null) {
+            return false;
+        }
+        if (!area.intersects(path.getBounds2D())) {
+            return false;
+        }
+        PathIterator it = path.getPathIterator(null);
+        double[] c = new double[2];
+        while (!it.isDone()) {
+            it.currentSegment(c);
+            if (area.contains(c[0], c[1])) {
+                return true;
+            }
+            it.next();
+        }
+        return false;
+    }
+
+    public static boolean isInside(Area area, Area a) {
+        if (a == null) {
+            return false;
+        }
+        if (!area.intersects(a.getBounds2D())) {
+            return false;
+        }
+        a.intersect(area);
+        return !a.isEmpty();
     }
 }
