@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x
 
-JAVA_OPTS="-Xmx1200m"
-JAVA_CLASSPATH="libs/*.jar":classes/
+JAVA_OPTS="-Xmx800m"
+JAVA_CLASSPATH=$(find lib/ -name '*.jar' -printf '%p:')classes/
 JAVA_EXEC="java $JAVA_OPTS -cp $JAVA_CLASSPATH"
 
 ant || exit 1
@@ -22,7 +22,7 @@ $JAVA_EXEC org.alex73.osm.validators.harady.CheckCities \
     --out=$HOME/public_html/nazvy.html \
   || exit 1
 
-$JAVA_EXEC org.alex73.osm.validators.vulicy.CheckStreets \
+$JAVA_EXEC -DdisableAddrStreet org.alex73.osm.validators.vulicy.CheckStreets \
     --pbf=tmp/belarus-latest.osm.pbf \
     --dav=$HOME/OsmBelarus-Databases/Nazvy_nasielenych_punktau/list.csv \
     --po-dir=$HOME/OsmBelarus-Databases/Nazvy_vulic.OmegaT/target/ \
