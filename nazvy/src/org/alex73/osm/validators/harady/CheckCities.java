@@ -126,15 +126,16 @@ public class CheckCities {
         String dav = null;
         for (String a : args) {
             if (a.startsWith("--pbf=")) {
-                pbf = a.substring(6);
+                pbf = a.substring(6).replace("$HOME", System.getProperty("user.home"));
             } else if (a.startsWith("--dav=")) {
-                dav = a.substring(6);
+                dav = a.substring(6).replace("$HOME", System.getProperty("user.home"));
             } else if (a.startsWith("--out=")) {
                 out = a.substring(6).replace("$HOME", System.getProperty("user.home"));
             }
         }
         if (pbf == null || out == null || dav == null) {
-            System.err.println("CheckCities --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --out=/tmp/out.html");
+            System.err
+                    .println("CheckCities --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --out=/tmp/out.html");
             System.exit(1);
         }
         System.out.println("Parsing pbf from " + pbf);
@@ -154,7 +155,7 @@ public class CheckCities {
         Collections.sort(result.unusedInDav);
         Collections.sort(result.incorrectTags);
         new File(out).getParentFile().mkdirs();
-        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", result, out);
+        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", out, "data", result);
         System.out.println("done");
     }
 
@@ -185,8 +186,7 @@ public class CheckCities {
     }
 
     /**
-     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі
-     * выдаленыя.
+     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі выдаленыя.
      */
     static void findUnusedInDav() {
         for (BaseObject o : osm.allObjects) {
@@ -347,7 +347,8 @@ public class CheckCities {
                         // hamlet => suburb - ok
                         correctTags.put("place", o.getTag("place"));
                     }
-                    if ("neighbourhood".equals(o.getTag("place")) && "hamlet".equals(correctTags.get("place"))) {
+                    if ("neighbourhood".equals(o.getTag("place"))
+                            && "hamlet".equals(correctTags.get("place"))) {
                         // hamlet => neighbourhood - ok
                         correctTags.put("place", o.getTag("place"));
                     }
@@ -433,8 +434,8 @@ public class CheckCities {
             if (!StringUtils.equals(exist, mustBe)) {
                 w.correct = false;
                 onError(w, "<span class='err'>" + exist + " => " + mustBe
-                        + " <input type='radio' onClick='send(\"load_object?objects=" + o.getCode() + "&addtags="
-                        + tagName + "=" + mustBe + "\")'></span>");
+                        + " <input type='radio' onClick='send(\"load_object?objects=" + o.getCode()
+                        + "&addtags=" + tagName + "=" + mustBe + "\")'></span>");
             } else {
                 onOk(w, mustBe);
             }

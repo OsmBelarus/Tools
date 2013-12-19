@@ -22,6 +22,7 @@
 package org.alex73.osm.utils;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -34,9 +35,11 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 public class VelocityOutput {
-    public static void output(String template, Object data, String file) throws Exception {
+    public static void output(String template, String file, Object... args) throws Exception {
         VelocityContext context = new VelocityContext();
-        context.put("data", data);
+        for (int i = 0; i < args.length; i += 2) {
+            context.put((String) args[i], args[i + 1]);
+        }
         context.put("currentDateTime", new Date().toGMTString());
         Properties props = new Properties();
         InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
@@ -47,6 +50,7 @@ public class VelocityOutput {
         }
         Velocity.init(props);
         Template t = Velocity.getTemplate(template);
+        new File(file).getParentFile().mkdirs();
         Writer wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
         t.merge(context, wr);
         wr.close();

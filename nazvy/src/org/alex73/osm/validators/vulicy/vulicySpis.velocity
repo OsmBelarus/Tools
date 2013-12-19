@@ -24,8 +24,10 @@
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
 <ul>
-	#foreach ( $c in $data.keySet() )
-	    <li><a href="vulicy-${c}.html">${c}</a> - памылак : ${data.get($c).size()}</li>
+	#foreach ( $c in $harady )
+	  #if (${data.get($c).size()} > 0)
+	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - памылак : ${data.get($c).size()}</li>
+	  #end
 	#end
 </ul>
 

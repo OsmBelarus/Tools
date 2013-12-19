@@ -21,6 +21,7 @@
 package org.alex73.osm.utils;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -37,7 +38,7 @@ public class TMX extends HashMap<String, String> {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
 
-    public void save(String file) throws Exception {
+    public void save(File file) throws Exception {
         List<String> keys = new ArrayList<>(keySet());
         Collections.sort(keys, new Comparator<String>() {
             @Override

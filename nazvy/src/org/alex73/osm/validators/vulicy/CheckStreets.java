@@ -53,14 +53,16 @@ public class CheckStreets extends StreetsParse {
 
         for (String a : args) {
             if (a.startsWith("--pbf=")) {
-                pbfFile = a.substring(6);
+                pbfFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
+            } else if (a.startsWith("--dav=")) {
+                davFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
             } else if (a.startsWith("--po-dir=")) {
                 poInputDir = a.substring(9).replace("$HOME", System.getProperty("user.home"));
             } else if (a.startsWith("--out-dir=")) {
                 outDir = a.substring(10).replace("$HOME", System.getProperty("user.home"));
             }
         }
-        if (pbfFile == null || poInputDir == null || outDir == null) {
+        if (pbfFile == null || davFile == null || poInputDir == null || outDir == null) {
             System.err
                     .println("CheckStreets --pbf=tmp/belarus-latest.osm.pbf --po-dir=../strstr/target/ --out-dir=$HOME/");
             System.exit(1);
@@ -72,16 +74,16 @@ public class CheckStreets extends StreetsParse {
 
     Set<String> warnings = new TreeSet<>();
     List<String> log2 = new ArrayList<>();
-    Map<String, List<StreetNames>> result = new HashMap<>();
+    Map<City, List<StreetNames>> result = new HashMap<>();
 
     @Override
     public void init() throws Exception {
         super.init();
         for (City c : cities) {
-            result.put(c.name, new ArrayList<StreetNames>());
+            result.put(c, new ArrayList<StreetNames>());
         }
         for (City c : cities) {
-            c.po = new POReader(poInputDir + '/' + c.name + ".po");
+            c.po = new POReader(poInputDir + '/' + c.fn + ".po");
         }
     }
 
@@ -99,18 +101,27 @@ public class CheckStreets extends StreetsParse {
                 }
             });
         }
+
+        List<City> sortedList = new ArrayList<>(result.keySet());
+        Collections.sort(sortedList, new Comparator<City>() {
+            public int compare(City o1, City o2) {
+                return o1.nazva.compareToIgnoreCase(o2.nazva);
+            }
+        });
+
         System.out.println("Output to " + outDir + "/vulicy.html...");
-        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity", result, outDir + "/vulicy.html");
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity",
+                outDir + "/vulicy.html", "harady", sortedList, "data", result);
         for (City c : cities) {
-            System.out.println("Output to " + outDir + "/vulicy-" + c.name + ".html...");
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", result.get(c.name), outDir
-                    + "/vulicy-" + c.name + ".html");
+            System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
+            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
+                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
         }
     }
 
     @Override
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
-            String name_be) {
+    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name,
+            String name_ru, String name_be) {
         String trans = c.po.get(street.name);
         if ("".equals(trans)) {
             trans = null;
@@ -180,10 +191,11 @@ public class CheckStreets extends StreetsParse {
         streetNames.required.name = streetNames.tags.name == null ? null : street.getRightName();
         streetNames.required.name_ru = streetNames.tags.name_ru == null ? null : streetNames.required.name;
         streetNames.required.name_be = streetNames.tags.name_be == null ? null : be.getRightName();
-        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(), false);
+        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(),
+                false);
 
         if (streetNames.needToChange()) {
-            result.get(c.name).add(streetNames);
+            result.get(c).add(streetNames);
         }
     }
 }

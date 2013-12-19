@@ -1,12 +1,4 @@
-<project>
-  <!-- Commands to execute can be: -->
-  <!-- rm -rf tmp/ -->
-  <!-- wget -O tmp/belarus-latest.osm.pbf http://download.geofabrik.de/europe/belarus-latest.osm.pbf || exit 1 -->
-  <!-- wget -O tmp/daviednik.tsv https://github.com/OsmBelarus/Databases/raw/master/Nazvy_nasielenych_punktau/list.csv || 
-    exit 1 -->
-  <!-- pushd ../streets.OmegaT || exit 1; git pull || exit 1; popd -->
-  <!-- ant harady -->
-  <!-- ant vulicy -->
+<project default="build">
 
   <target name="clean">
     <delete dir="classes" />
@@ -23,31 +15,5 @@
     <copy todir="classes">
       <fileset dir="src" />
     </copy>
-  </target>
-
-  <target name="harady" depends="build">
-    <java classname="org.alex73.osm.validators.harady.CheckCities" fork="yes" failonerror="yes">
-      <jvmarg value="-Xmx800m" />
-      <arg value="--pbf=tmp/belarus-latest.osm.pbf" />
-      <arg value="--dav=tmp/daviednik.tsv" />
-      <arg value="--out=$HOME/public_html/nazvy.html" />
-      <classpath>
-        <pathelement location="classes/" />
-        <fileset dir="lib" includes="**/*.jar" />
-      </classpath>
-    </java>
-  </target>
-
-  <target name="vulicy" depends="build">
-    <java classname="org.alex73.osm.validators.vulicy.CheckStreets" fork="yes" failonerror="yes">
-      <jvmarg value="-Xmx800m" />
-      <arg value="--pbf=tmp/belarus-latest.osm.pbf" />
-      <arg value="--po-dir=../../OsmBelarus.OmegaT/target/" />
-      <arg value="--out-dir=$HOME/public_html/" />
-      <classpath>
-        <pathelement location="classes/" />
-        <fileset dir="lib" includes="**/*.jar" />
-      </classpath>
-    </java>
   </target>
 </project>

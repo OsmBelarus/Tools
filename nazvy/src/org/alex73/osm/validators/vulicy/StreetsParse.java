@@ -43,10 +43,13 @@ import org.alex73.osm.data.MemoryStorage;
 import org.alex73.osm.data.PbfDriver;
 import org.alex73.osm.data.RelationObject;
 import org.alex73.osm.data.WayObject;
+import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Geo;
+import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
+import org.alex73.osm.utils.TSV;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -58,18 +61,41 @@ public class StreetsParse {
 
     static String poOutputDir;
     static String tmxOutputDir;
+    static String davFile;
 
     MemoryStorage osm;
+    List<Miesta> daviednik;
     List<City> cities = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
+        String pbfFile = null;
+        for (String a : args) {
+            if (a.startsWith("--pbf=")) {
+                pbfFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
+            } else if (a.startsWith("--dav=")) {
+                davFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
+            } else if (a.startsWith("--po-out-dir=")) {
+                poOutputDir = a.substring(13).replace("$HOME", System.getProperty("user.home"));
+            } else if (a.startsWith("--tmx-out-dir=")) {
+                tmxOutputDir = a.substring(14).replace("$HOME", System.getProperty("user.home"));
+            }
+        }
+        if (pbfFile == null || davFile == null || poOutputDir == null || tmxOutputDir == null) {
+            System.err
+                    .println("StreetsParse --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --po-out-dir=../strstr/source/ --tmx-out-dir=../strstr/tm/");
+            System.exit(1);
+        }
+
         StreetsParse s = new StreetsParse();
-        s.run("data-orig/belarus-latest.osm.pbf");
+        s.run(pbfFile);
     }
 
     void run(String pbfFile) throws Exception {
         System.out.println("Parsing pbf from " + pbfFile);
         osm = PbfDriver.process(new File(pbfFile));
+
+        System.out.println("Parsing csv from " + davFile);
+        daviednik = new TSV('\t').readCSV(davFile, Miesta.class);
 
         System.out.println("Checking...");
         init();
@@ -85,27 +111,32 @@ public class StreetsParse {
     }
 
     public void init() throws Exception {
-        cities.add(new City("Minsk", Geo.rel2area(osm, Const.rel_Minsk)));
-        cities.add(new City("Brest", Geo.rel2area(osm, Const.rel_Brest)));
-        cities.add(new City("Hrodna", Geo.rel2area(osm, Const.rel_Hrodna)));
-        cities.add(new City("Viciebsk", Geo.rel2area(osm, Const.rel_Viciebsk)));
-        cities.add(new City("Mahilou", Geo.rel2area(osm, Const.rel_Mahilou)));
-        cities.add(new City("Homiel", Geo.rel2area(osm, Const.rel_Homiel)));
-
-        cities.add(new City("Babrujsk", Geo.rel2area(osm, Const.rel_Babrujsk)));
-        cities.add(new City("Baranavicy", Geo.way2area(osm, Const.way_Baranavicy)));
-        cities.add(new City("Barysau", Geo.rel2area(osm, Const.rel_Barysau)));
-        cities.add(new City("Pinsk", Geo.rel2area(osm, Const.rel_Pinsk)));
-
-        cities.add(new City("Orsa", Geo.rel2area(osm, Const.rel_Orsa)));
-        cities.add(new City("Mazyr", Geo.rel2area(osm, Const.rel_Mazyr)));
-        cities.add(new City("Salihorsk", Geo.way2area(osm, Const.way_Salihorsk)));
-        cities.add(new City("Navapolack", Geo.rel2area(osm, Const.rel_Navapolack)));
-
-        cities.add(new City("Dobrus", Geo.rel2area(osm, Const.rel_Dobrus)));
-
-        // cities.add(new City("Insyja",
-        // getBorderOfRelationAsPoly(Consts.rel_Belarus)));
+        for (Miesta m : daviednik) {
+            Area border = null;
+            switch (m.typ) {
+            case "г.":
+                if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
+                    for (String id : m.osmIDother.split(";")) {
+                        try {
+                            BaseObject o = osm.getObject(id);
+                            if (o.getType() == BaseObject.TYPE.WAY) {
+                                border = Geo.way2area(osm, o.id);
+                            } else if (o.getType() == BaseObject.TYPE.RELATION) {
+                                border = Geo.rel2area(osm, o.id);
+                            }
+                        } catch (Exception ex) {
+                        }
+                        if (border != null) {
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            if (border != null) {
+                cities.add(new City(m, border));
+            }
+        }
     }
 
     void end() throws Exception {
@@ -119,8 +150,11 @@ public class StreetsParse {
             });
 
             TMX tmx = new TMX();
-            BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poOutputDir + '/'
-                    + c.name + ".po")));
+            File poFile = new File(poOutputDir + '/' + c.fn + ".po");
+            File tmxFile = new File(tmxOutputDir + '/' + c.fn + ".tmx");
+            poFile.getParentFile().mkdirs();
+            tmxFile.getParentFile().mkdirs();
+            BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
             for (String u : us) {
                 LocalizationInfo li = c.uniq.get(u);
                 wr.write("# Objects : " + li.ways + "\n");
@@ -140,8 +174,8 @@ public class StreetsParse {
                 }
             }
             wr.close();
-            tmx.save(tmxOutputDir + '/' + c.name + ".tmx");
-            System.out.println(c.name + ": " + c.uniq.size());
+            tmx.save(tmxFile);
+            System.out.println(c.nazva + ": " + c.uniq.size());
         }
     }
 
@@ -216,8 +250,8 @@ public class StreetsParse {
         }
     }
 
-    void processTags(City c, BaseObject obj, String nameTag, String nameRuTag, String nameBeTag, String nameIntlTag)
-            throws Exception {
+    void processTags(City c, BaseObject obj, String nameTag, String nameRuTag, String nameBeTag,
+            String nameIntlTag) throws Exception {
 
         StreetNames names = new StreetNames();
         names.tags.name = nameTag;
@@ -250,8 +284,8 @@ public class StreetsParse {
         process(c, obj, names, name, name_ru, name_be, names.exist.name);
     }
 
-    void process(City c, BaseObject obj, StreetNames streetNames, String name, String name_ru, String name_be,
-            String toComment) throws ParseException {
+    void process(City c, BaseObject obj, StreetNames streetNames, String name, String name_ru,
+            String name_be, String toComment) throws ParseException {
         StreetName orig = StreetNameParser.parse(name);
         StreetNameBe be = null;
 
@@ -281,8 +315,8 @@ public class StreetsParse {
         postProcess(c, obj, streetNames, orig, name, name_ru, name_be);
     }
 
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
-            String name_be) {
+    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name,
+            String name_ru, String name_be) {
     }
 
     static class LocalizationInfo {
@@ -291,16 +325,32 @@ public class StreetsParse {
         Set<String> name_be = new TreeSet<>();
     }
 
-    static class City {
-        String name;
-        Area border;
+    public static class City {
+        public final String fn;
+        public final String nazva;
+        public final Area border;
         POReader po;
         Map<String, LocalizationInfo> uniq = new HashMap<>();
         Map<String, Set<String>> renames = new TreeMap<>();
 
-        public City(String name, Area border) {
-            this.name = name;
+        public City(Miesta m, Area border) {
+            this.nazva = m.voblasc + '/' + m.nazvaNoStress;
+            this.fn = Lat.unhac(Lat.lat(nazva, false));
             this.border = border;
+        }
+
+        @Override
+        public int hashCode() {
+            return nazva.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof City) {
+                return nazva.equals(((City) obj).nazva);
+            } else {
+                return false;
+            }
         }
     }
 }

@@ -28,7 +28,9 @@
     }
 </script>
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
+<b><u>Вынікі ад ${currentDateTime}</u></b> <br/>
+<h1>${horad}</h1>
+<br/>
 Памылак : ${data.size()}
 <br/>
 RadioButton - выправіць ў JOSM.
