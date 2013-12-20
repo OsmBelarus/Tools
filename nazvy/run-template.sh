@@ -10,7 +10,7 @@ ant || exit 1
 rm -rf tmp
 mkdir -p tmp/
 
-wget -O tmp/belarus-latest.osm.pbf http://download.geofabrik.de/europe/belarus-latest.osm.pbf || exit 1
+wget -nv -O tmp/belarus-latest.osm.pbf http://download.geofabrik.de/europe/belarus-latest.osm.pbf || exit 1
 
 pushd $HOME/OsmBelarus-Databases/ || exit 1
 git pull || exit 1

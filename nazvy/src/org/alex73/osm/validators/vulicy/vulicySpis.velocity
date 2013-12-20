@@ -25,9 +25,13 @@
 
 <ul>
 	#foreach ( $c in $harady )
-	  #if (${data.get($c).size()} > 0)
-	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - памылак : ${data.get($c).size()}</li>
-	  #end
+	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - 
+		  #if (${data.get($c).errCount} > 0)
+		    <span class="err">памылак : ${data.get($c).errCount}</span>
+		  #else
+		    няма памылак
+		  #end
+	    </li>
 	#end
 </ul>
 

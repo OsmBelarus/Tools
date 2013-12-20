@@ -15,10 +15,7 @@
 		    border: 1px solid black;
 		}
 		.err {
-			background-color: #FFC0C0;
-		}
-		.error {
-			background-color: #FF8080;
+			background-color: #FF9090;
 		}
 	</style>
 </head>
@@ -34,7 +31,7 @@
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/>
 <h1>${horad}</h1>
 <br/>
-Памылак : ${data.size()}
+Памылак : ${data.errCount}
 <br/>
 RadioButton - выправіць ў JOSM.
 <br/>
@@ -57,6 +54,25 @@ RadioButton - выправіць ў JOSM.
     #end
 #end
 
+<h2>Агульныя памылкі</h2>
+    <table>
+      <tr>
+        <td>Памылка</td>
+        <td>osm</td>
+      </tr>
+    #foreach ( $s in $data.pamylki.entrySet() )
+      <tr>
+        <td class="err">ERROR: $s.key</td>
+        <td>
+          #foreach ($n in $s.value)
+            $n.link
+          #end
+        </td>
+      </tr>
+    #end
+    </table>
+
+<h2>Памылкі вуліц</h2>
     <table>
       <tr>
         <td>osm</td>
@@ -65,17 +81,38 @@ RadioButton - выправіць ў JOSM.
         <td>name:be</td>
         <td>int_name</td>
       </tr>
-    #foreach ( $s in $data )
+    #foreach ( $s in $data.vulicy )
       <tr>
         <td>$s.link</td>
-        #if ($s.error)
-            <td colspan="4" class="error">$s.exist.name : ERROR: $s.error</td>
-        #else
-	        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
-	        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
-	        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
-	        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
-	    #end
+        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
+        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
+        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
+        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
+      </tr>
+    #end
+    </table>
+
+<h2>Памылкі дамоў</h2>
+    <table>
+      <tr>
+        <td>name</td>
+        <td>name:ru</td>
+        <td>name:be</td>
+        <td>int_name</td>
+        <td>osm</td>
+      </tr>
+    #foreach ( $entry in $data.damy.entrySet() )
+      <tr>
+        #set ($s = $entry.key)
+        #cell ($data.mergeCodes($entry.value) $s.tags.name, $s.exist.name, $s.required.name)
+        #cell ($data.mergeCodes($entry.value) $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
+        #cell ($data.mergeCodes($entry.value) $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
+        #cell ($data.mergeCodes($entry.value) $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
+        <td>
+          #foreach ($n in $entry.value)
+            $n.link
+          #end
+        </td>
       </tr>
     #end
     </table>

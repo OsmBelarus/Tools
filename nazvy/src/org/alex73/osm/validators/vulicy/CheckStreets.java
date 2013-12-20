@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.alex73.osm.data.BaseObject;
 import org.alex73.osm.utils.Lat;
@@ -36,6 +37,10 @@ import org.alex73.osm.utils.VelocityOutput;
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
  * 
  * -DdisableAddrStreet - не правяраць назвы вуліц таксама ў relation.
+ * 
+ * -DdisableIntName - не правяраць int_name
+ * 
+ * -DdisableAddressStreetBe - не правяраць address:street:be
  */
 public class CheckStreets extends StreetsParse {
     static String pbfFile;
@@ -71,23 +76,47 @@ public class CheckStreets extends StreetsParse {
     }
 
     List<String> log2 = new ArrayList<>();
-    Map<City, List<StreetNames>> result = new HashMap<>();
+    Map<City, Result> result = new HashMap<>();
 
     @Override
     public void init() throws Exception {
         super.init();
         for (City c : cities) {
-            result.put(c, new ArrayList<StreetNames>());
+            result.put(c, new Result());
         }
         for (City c : cities) {
-            c.po = new POReader(poInputDir + '/' + c.fn + ".po");
+            String file = poInputDir + '/' + c.fn + ".po";
+            c.po = new POReader(file);
+            System.out.println("Read " + c.po.size() + " translations from " + file);
         }
     }
 
     @Override
     void end() throws Exception {
-        for (List<StreetNames> list : result.values()) {
-            Collections.sort(list, new Comparator<StreetNames>() {
+        for (StreetNames n : resultStreets) {
+            if (n.error == null) {
+                result.get(n.c).vulicy.add(n);
+            } else {
+                addWithCreate(result.get(n.c).pamylki, n.error, n);
+            }
+        }
+        for (StreetNames n : resultHouses) {
+            if (n.error == null) {
+                addWithCreate(result.get(n.c).damy, n, n);
+            } else {
+                addWithCreate(result.get(n.c).pamylki, n.error, n);
+            }
+        }
+        for (StreetNames n : resultRelations) {
+            if (n.error == null) {
+                result.get(n.c).vulicy.add(n);
+            } else {
+                addWithCreate(result.get(n.c).pamylki, n.error, n);
+            }
+        }
+
+        for (Result r : result.values()) {
+            Collections.sort(r.vulicy, new Comparator<StreetNames>() {
                 @Override
                 public int compare(StreetNames o1, StreetNames o2) {
                     String s1 = nvl(o1.required.name, o1.exist.name);
@@ -131,7 +160,7 @@ public class CheckStreets extends StreetsParse {
             trans = null;
         }
         if (trans == null) {
-            throw new Exception("Не перакладзена " + street.name);
+            throw new Exception("Не перакладзена '" + street.name + "'");
         }
 
         if (street.term == null) {
@@ -192,10 +221,70 @@ public class CheckStreets extends StreetsParse {
         streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(), false);
     }
 
-    @Override
-    void storeResult(City c, StreetNames streetNames) {
-        if (streetNames.needToChange()) {
-            result.get(c).add(streetNames);
+    static <K, V> void addWithCreate(Map<K, List<V>> map, K key, V value) {
+        List<V> list = map.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            map.put(key, list);
+        }
+        list.add(value);
+    }
+
+    public static class Result {
+        public int getErrCount() {
+            return vulicy.size() + pamylki.size() + damy.size();
+        }
+
+        public List<StreetNames> vulicy = new ArrayList<>();
+
+        public Map<String, List<StreetNames>> pamylki = new TreeMap<>();
+
+        public Map<StreetNames, List<StreetNames>> damy = new TreeMap<>(new Comparator<StreetNames>() {
+            public int compare(StreetNames o1, StreetNames o2) {
+                int c = 0;
+                if (c == 0) {
+                    c = cmp(o1.exist.name, o2.exist.name);
+                }
+                if (c == 0) {
+                    c = cmp(o1.required.name, o2.required.name);
+                }
+                if (c == 0) {
+                    c = cmp(o1.exist.name_be, o2.exist.name_be);
+                }
+                if (c == 0) {
+                    c = cmp(o1.required.name_be, o2.required.name_be);
+                }
+                if (c == 0) {
+                    c = cmp(o1.exist.name_ru, o2.exist.name_ru);
+                }
+                if (c == 0) {
+                    c = cmp(o1.required.name_ru, o2.required.name_ru);
+                }
+                if (c == 0) {
+                    c = cmp(o1.exist.int_name, o2.exist.int_name);
+                }
+                if (c == 0) {
+                    c = cmp(o1.required.int_name, o2.required.int_name);
+                }
+                return c;
+            }
+
+            int cmp(String s1, String s2) {
+                if (s1 == null)
+                    s1 = "";
+                if (s2 == null)
+                    s2 = "";
+                return s1.compareTo(s2);
+            }
+        });
+
+        public String mergeCodes(List<StreetNames> list) {
+            StringBuilder o = new StringBuilder();
+            for (StreetNames n : list) {
+                o.append(',');
+                o.append(n.objCode);
+            }
+            return o.substring(1);
         }
     }
 }
