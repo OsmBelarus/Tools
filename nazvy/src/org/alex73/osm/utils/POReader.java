@@ -33,7 +33,7 @@ public class POReader extends HashMap<String, String> {
     static final Pattern RE_BE = Pattern.compile("msgstr \"(.*)\"");
 
     public POReader(String filename) throws Exception {
-        BufferedReader rd = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+        BufferedReader rd = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
         String s;
         String ru = null;
         while ((s = rd.readLine()) != null) {
