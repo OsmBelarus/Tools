@@ -197,7 +197,12 @@ public class StreetsParse {
 
     public StreetNames processWayStreets(WayObject way) {
         if (way.getTag("highway") != null) {
-            Path2D wayPath = Geo.way2path(osm, way.id);
+            Path2D wayPath;
+            try {
+                wayPath = Geo.way2path(osm, way.id);
+            } catch (IndexOutOfBoundsException ex) {
+                return null;
+            }
             for (City c : cities) {
                 if (Geo.isInside(c.border, wayPath)) {
                     return processTags(c, way, "name", "name:ru", "name:be",
