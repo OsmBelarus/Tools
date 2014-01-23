@@ -8,11 +8,13 @@
 	<classpathentry kind="lib" path="lib/velocity-1.6.3.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.6.jar"/>
-	<classpathentry kind="lib" path="lib/osmosis-pbf2-0.43.1.jar"/>
-	<classpathentry kind="lib" path="lib/osmosis-core-0.43.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.1.jar"/>
-	<classpathentry kind="lib" path="lib/osmosis-osm-binary-0.43.1.jar"/>
-	<classpathentry kind="lib" path="lib/protobuf-java-2.4.1.jar"/>
-	<classpathentry kind="lib" path="lib/mybatis-3.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/mybatis/mybatis-3.2.3.jar" sourcepath="/tmp/mybatis-3-mybatis-3.2.3.zip"/>
+	<classpathentry kind="lib" path="lib/pbf/osmosis-core-0.43.1.jar"/>
+	<classpathentry kind="lib" path="lib/pbf/osmosis-osm-binary-0.43.1.jar"/>
+	<classpathentry kind="lib" path="lib/pbf/osmosis-pbf2-0.43.1.jar"/>
+	<classpathentry kind="lib" path="lib/pbf/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/postgres/postgis.jar"/>
+	<classpathentry kind="lib" path="lib/postgres/postgresql-jdbc3-9.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

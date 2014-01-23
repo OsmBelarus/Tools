@@ -24,6 +24,8 @@ package org.alex73.osm.validators.vulicy;
  * Сьпіс родавых тэрмінаў з пазначэньнем іх роду ў беларускай і расейскай мовах.
  */
 public enum StreetTerm {
+    няма("", StreetTermRod.NI, "", StreetTermRod.NI),
+
     бульвар("бульвар", StreetTermRod.MUZ, "бульвар", StreetTermRod.MUZ),
 
     завулак("переулок", StreetTermRod.MUZ, "завулак", StreetTermRod.MUZ),

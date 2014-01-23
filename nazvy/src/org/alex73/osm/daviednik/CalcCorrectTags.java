@@ -27,25 +27,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.NodeObject;
+import org.alex73.osm.validators.vulicy2.OsmPlace;
+import org.apache.ibatis.session.SqlSession;
 
 /**
  * Вызначае правільныя тэгі для назваў населеных пунктаў.
  */
 public class CalcCorrectTags {
-    static public Map<String, String> calc(Miesta m, MemoryStorage osm) throws Exception {
+    static public OsmPlace calc(Miesta m, SqlSession db) throws Exception {
         String typ;
         switch (m.typ) {
         case "г.":
             if (m.osmID == null) {
                 throw new Exception("Node ID не вызначана для горада: " + m);
             }
-            NodeObject n = osm.getNodeById(m.osmID);
+            OsmPlace n = db.selectOne("getPlaceById", m.osmID);
             if (n == null) {
                 throw new Exception("Няма горада: " + m);
             }
-            String population = n.getTag("population");
+            String population = n.population;
             if (population != null && Integer.parseInt(population) >= 50000) {
                 typ = "city";
             } else {
@@ -88,20 +88,18 @@ public class CalcCorrectTags {
         sdel(vru, name_ru);
         String variants_ru = variantsToString(vru);
 
-        Map<String, String> result = new TreeMap<>();
-        result.put("name", name_ru);
-        result.put("name:ru", name_ru);
-        result.put("name:be", name_be);
-        result.put("int_name", int_name);
-        result.put("name:be-tarask", name_be_tarask);
-        result.put("name:be-x-old", null);
+        OsmPlace result = new OsmPlace();
+        result.name= name_ru;
+        result.name_ru= name_ru;
+        result.name_be= name_be;
+        result.int_name=int_name;
+        result.name_be_tarask= name_be_tarask;
         if (typ != null) {
-            result.put("place", typ);
+            result.place= typ;
         }
-        result.put("alt_name:ru", variants_ru);
-        result.put("alt_name:be", variants_be);
-        result.put("alt_name", null);
-        result.put("alt_name:en", null);
+        result.alt_name_ru= variants_ru;
+        result.alt_name_be= variants_be;
+        result.alt_name= null;
 
         return result;
     }

@@ -20,11 +20,10 @@
  **************************************************************************/
 package org.alex73.osm.validators.vulicy;
 
-import java.awt.geom.Area;
-import java.awt.geom.Path2D;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.text.Collator;
 import java.text.ParseException;
@@ -39,24 +38,25 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.alex73.osm.data.BaseObject;
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.PbfDriver;
-import org.alex73.osm.data.RelationObject;
-import org.alex73.osm.data.WayObject;
 import org.alex73.osm.daviednik.Miesta;
-import org.alex73.osm.utils.Geo;
+import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.TSV;
+import org.alex73.osm.validators.vulicy2.OsmNamed;
+import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 /**
  * Стварае файлы .po для перакладу назваў вуліц.
  */
-public class StreetsParse {
+public class StreetsParse2 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
 
@@ -64,93 +64,76 @@ public class StreetsParse {
     static String tmxOutputDir;
     static String davFile;
 
-    MemoryStorage osm;
+    SqlSession db;
     List<Miesta> daviednik;
+    List<String> errors=new ArrayList<>();
     List<City> cities = new ArrayList<>();
     List<StreetNames> resultStreets = new ArrayList<>();
     List<StreetNames> resultHouses = new ArrayList<>();
     List<StreetNames> resultRelations = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
-        String pbfFile = null;
-        for (String a : args) {
-            if (a.startsWith("--pbf=")) {
-                pbfFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--dav=")) {
-                davFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--po-out-dir=")) {
-                poOutputDir = a.substring(13).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--tmx-out-dir=")) {
-                tmxOutputDir = a.substring(14).replace("$HOME", System.getProperty("user.home"));
-            }
-        }
-        if (pbfFile == null || davFile == null || poOutputDir == null || tmxOutputDir == null) {
-            System.err
-                    .println("StreetsParse --pbf=tmp/belarus-latest.osm.pbf --dav=tmp/list.csv --po-out-dir=../strstr/source/ --tmx-out-dir=../strstr/tm/");
-            System.exit(1);
-        }
+        Env.load();
+        poOutputDir = Env.readProperty("po.source.dir");
+        tmxOutputDir = Env.readProperty("tmx.output.dir");
+        davFile = Env.readProperty("dav");
 
-        StreetsParse s = new StreetsParse();
-        s.run(pbfFile);
+        StreetsParse2 s = new StreetsParse2();
+        s.run();
     }
 
-    void run(String pbfFile) throws Exception {
-        System.out.println("Parsing pbf from " + pbfFile);
-        osm = PbfDriver.process(new File(pbfFile));
-
+    void run() throws Exception {
         System.out.println("Parsing csv from " + davFile);
         daviednik = new TSV('\t').readCSV(davFile, Miesta.class);
 
         System.out.println("Checking...");
         init();
 
-        for (WayObject w : osm.ways) {
-            StreetNames n = processWayStreets(w);
-            if (n != null && n.needToChange()) {
-                resultStreets.add(n);
-            }
-        }
-        for (WayObject w : osm.ways) {
-            StreetNames n = processWayHouses(w);
-            if (n != null && n.needToChange()) {
-                resultHouses.add(n);
-            }
-        }
-        for (RelationObject r : osm.relations) {
-            StreetNames n = processRelation(r);
-            if (n != null && n.needToChange()) {
-                resultRelations.add(n);
-            }
-        }
+        processStreets();
+        processHouses();
+        processRelations();
 
         end();
     }
 
     public void init() throws Exception {
+        String resource = "osm.xml";
+        SqlSessionFactory sqlSessionFactory;
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        try {
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
+        } finally {
+            inputStream.close();
+        }
+        db = sqlSessionFactory.openSession();       
+        
+        
         for (Miesta m : daviednik) {
-            Area border = null;
             switch (m.typ) {
             case "г.":
                 if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
+                    String border = null;
                     for (String id : m.osmIDother.split(";")) {
-                        try {
-                            BaseObject o = osm.getObject(id);
-                            if (o.getType() == BaseObject.TYPE.WAY) {
-                                border = Geo.way2area(osm, o.id);
-                            } else if (o.getType() == BaseObject.TYPE.RELATION) {
-                                border = Geo.rel2area(osm, o.id);
-                            }
-                        } catch (Exception ex) {
+                        long cid = Long.parseLong(id.substring(1));
+                        String rqName;
+                        if (id.charAt(0) == 'r') {
+                            rqName = "osm.getPlaceByRelationId";
+                        } else {
+                            rqName = "osm.getPlaceByWayId";
                         }
-                        if (border != null) {
+                        OsmPlace city = db.selectOne(rqName, cid);
+                        if (city != null) {
+                            border = city.geom_text;
                             break;
                         }
                     }
+                    if (border != null) {
+                        cities.add(new City(m, border));
+                    } else {
+                        errors.add("Няма межаў горада "+m.nazva);
+                    }
                 }
                 break;
-            }
-            if (border != null) {
-                cities.add(new City(m, border));
             }
         }
     }
@@ -173,6 +156,14 @@ public class StreetsParse {
             BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
             for (String u : us) {
                 LocalizationInfo li = c.uniq.get(u);
+                Collections.sort(li.ways, new Comparator<String>() {
+                    @Override
+                    public int compare(String o1, String o2) {
+                        long i1=Long.parseLong(o1.substring(1));
+                        long i2=Long.parseLong(o2.substring(1));
+                        return Long.compare(i1, i2);
+                    }
+                });
                 wr.write("# Objects : " + li.ways + "\n");
                 wr.write("# Names: " + li.name + "\n");
                 wr.write("msgid \"" + u + "\"\n");
@@ -195,56 +186,43 @@ public class StreetsParse {
         }
     }
 
-    public StreetNames processWayStreets(WayObject way) {
-        if (way.getTag("highway") != null) {
-            Path2D wayPath;
-            try {
-                wayPath = Geo.way2path(osm, way.id);
-            } catch (IndexOutOfBoundsException ex) {
-                return null;
-            }
-            for (City c : cities) {
-                if (Geo.isInside(c.border, wayPath)) {
-                    return processTags(c, way, "name", "name:ru", "name:be",
-                            System.getProperty("disableIntName") == null ? "int_name" : null);
+    public void processStreets() {
+        for (City c : cities) {
+            for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getStreetsInsideGeom",c.geomText)) {
+                StreetNames n = processTags(c, s, "w", "name", "name:ru", "name:be",
+                        System.getProperty("disableIntName") == null ? "int_name" : null);
+                if (n != null && n.needToChange()) {
+                    resultStreets.add(n);
                 }
             }
         }
-        return null;
     }
 
-    public StreetNames processWayHouses(WayObject way) {
-        if (System.getProperty("disableAddrStreet") == null && way.getTag("addr:street") != null) {
-            for (City c : cities) {
-                Path2D wayPath = Geo.way2path(osm, way.id);
-                if (Geo.isInside(c.border, wayPath)) {
-                    return processTags(c, way, "addr:street", null,
-                            System.getProperty("disableAddressStreetBe") == null ? "addr:street:be" : null, null);
+    public void processHouses() {
+        if (System.getProperty("disableAddrStreet") != null) {
+            return;
+        }
+        String beTag = System.getProperty("disableAddressStreetBe") == null ? "addr:street:be" : null;
+        for (City c : cities) {
+            for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getHousesInsideGeom",c.geomText)) {
+                StreetNames n = processTags(c, s, "w", "addr:street", null, beTag, null);
+                if (n != null && n.needToChange()) {
+                    resultHouses.add(n);
                 }
             }
         }
-        return null;
     }
 
-    public StreetNames processRelation(RelationObject relation) {
-        if ("address".equals(relation.getTag("type"))) {
-            Area relArea;
-            try {
-                relArea = Geo.rel2area(osm, relation.id);
-            } catch (Exception ex) {
-                return null;
-                // TODO wrong role in rel
-            }
-            for (City c : cities) {
-                boolean inside;
-                inside = Geo.isInside(c.border, relArea);
-                if (inside) {
-                    return processTags(c, relation, "name", "name:ru", "name:be",
-                            System.getProperty("disableIntName") == null ? "int_name" : null);
+    public void processRelations() {
+        for (City c : cities) {
+            for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getAddressesInsideGeom",c.geomText)) {
+                StreetNames n = processTags(c, s, "w", "name", "name:ru", "name:be",
+                        System.getProperty("disableIntName") == null ? "int_name" : null);
+                if (n != null && n.needToChange()) {
+                    resultRelations.add(n);
                 }
             }
         }
-        return null;
     }
 
     public static class Names {
@@ -274,7 +252,7 @@ public class StreetsParse {
         }
     }
 
-    StreetNames processTags(City c, BaseObject obj, String nameTag, String nameRuTag, String nameBeTag,
+    StreetNames processTags(City c, OsmNamed obj, String objType, String nameTag, String nameRuTag, String nameBeTag,
             String nameIntlTag) {
 
         StreetNames names = new StreetNames();
@@ -284,13 +262,13 @@ public class StreetsParse {
         names.tags.name_ru = nameRuTag;
         names.tags.int_name = nameIntlTag;
 
-        names.objCode = obj.getCode();
-        names.exist.name = nameTag == null ? null : obj.getTag(nameTag);
-        names.exist.name_be = nameBeTag == null ? null : obj.getTag(nameBeTag);
-        names.exist.name_ru = nameRuTag == null ? null : obj.getTag(nameRuTag);
-        names.exist.int_name = nameIntlTag == null ? null : obj.getTag(nameIntlTag);
+        names.objCode = objType + obj.id;
+        names.exist.name = nameTag == null ? null : obj.name;
+        names.exist.name_be = nameBeTag == null ? null : obj.name_be;
+        names.exist.name_ru = nameRuTag == null ? null : obj.name_ru;
+        names.exist.int_name = nameIntlTag == null ? null : obj.int_name;
 
-        String nameOSM = obj.getTag(names.tags.name);
+        String nameOSM = names.exist.name;
         if (nameOSM == null) {
             return null;
         }
@@ -298,10 +276,10 @@ public class StreetsParse {
         String name_ru = null;
         String name_be = null;
         if (names.tags.name_ru != null) {
-            name_ru = obj.getTag(names.tags.name_ru);
+            name_ru = names.exist.name_ru;
         }
         if (names.tags.name_be != null) {
-            name_be = obj.getTag(names.tags.name_be);
+            name_be = names.exist.name_be;
         }
         if (name_be != null) {
             name_be = StreetNameParser.fix(name_be);
@@ -315,7 +293,7 @@ public class StreetsParse {
         return names;
     }
 
-    void process(City c, BaseObject obj, StreetNames streetNames, String name, String name_ru, String name_be,
+    void process(City c, OsmNamed obj, StreetNames streetNames, String name, String name_ru, String name_be,
             String toComment) throws Exception {
         StreetName orig = StreetNameParser.parse(name);
         StreetNameBe be = null;
@@ -346,7 +324,7 @@ public class StreetsParse {
         postProcess(c, obj, streetNames, orig, name, name_ru, name_be);
     }
 
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
+    void postProcess(City c, OsmNamed obj, StreetNames streetNames, StreetName street, String name, String name_ru,
             String name_be) throws Exception {
     }
 
@@ -359,15 +337,15 @@ public class StreetsParse {
     public static class City {
         public final String fn;
         public final String nazva;
-        public final Area border;
+        public final String geomText;
         POReader po;
         Map<String, LocalizationInfo> uniq = new HashMap<>();
         Map<String, Set<String>> renames = new TreeMap<>();
 
-        public City(Miesta m, Area border) {
+        public City(Miesta m, String geomText) {
             this.nazva = m.voblasc + '/' + m.nazvaNoStress;
-            this.fn = Lat.unhac(Lat.lat(nazva, false));
-            this.border = border;
+            this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_');
+            this.geomText = geomText;
         }
 
         @Override

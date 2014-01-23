@@ -91,7 +91,7 @@ public class StreetName {
             o.append(getRodavyTermin()).append(' ');
             o.append(name);
         }
-        return o.toString();
+        return o.toString().trim();
     }
 
     protected String getRodavyTermin() {

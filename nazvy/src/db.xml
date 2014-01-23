@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="osm">
+
+  <resultMap type="org.alex73.osm.validators.vulicy2.OsmNamed" id="OsmNamed" />
+
+  <resultMap type="org.alex73.osm.validators.vulicy2.OsmPlace" id="OsmPlace" />
+
+  <sql id="BelarusBorder">
+       (SELECT geom FROM relations_geom WHERE id=59065)
+  </sql>
+  <sql id="fieldsNamed">
+       tags->'name' as name,
+       tags->'name:be' as name_be,
+       tags->'name:be-tarask' as name_be_tarask,
+       tags->'name:ru' as name_ru,
+       tags->'int_name' as int_name,
+       tags->'alt_name' as alt_name,
+       tags->'alt_name:be' as alt_name_be,
+       tags->'alt_name:ru' as alt_name_ru
+  </sql>
+  <sql id="fieldsPlace">
+       <include refid="fieldsNamed"/>,
+       tags->'place' as place,
+       tags->'addr:country' as addr_country,
+       tags->'addr:region' as addr_region,
+       tags->'addr:district' as addr_district,
+       tags->'population' as population,
+       tags->'population_date' as population_date
+  </sql>
+
+  <select id="getPlaces" resultMap="OsmPlace">
+      SELECT id, 'NODE' as type, <include refid="fieldsPlace"/>
+        FROM nodes_geom n
+       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
+    UNION
+      SELECT id, 'WAY' as type, <include refid="fieldsPlace"/>
+        FROM ways_geom n
+       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
+    UNION
+      SELECT id, 'RELATION' as type, <include refid="fieldsPlace"/>
+        FROM relations_geom n
+       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
+  </select>
+
+  <select id="getPlaceByNodeId" parameterType="long" resultMap="OsmPlace">
+    SELECT id, 'NODE' as type, <include refid="fieldsPlace"/>
+        FROM nodes_geom n
+       WHERE id = #{value}
+  </select>
+  <select id="getPlaceByWayId" parameterType="long" resultMap="OsmPlace">
+    SELECT id, 'WAY' as type, <include refid="fieldsPlace"/>, ST_AsEWKT(geom) as geom_text
+        FROM ways_geom n
+       WHERE id = #{value}
+  </select>
+  <select id="getPlaceByRelationId" parameterType="long" resultMap="OsmPlace">
+    SELECT id, 'RELATION' as type, <include refid="fieldsPlace"/>, ST_AsEWKT(geom) as geom_text
+        FROM relations_geom n
+       WHERE id = #{value}
+  </select>
+
+  <select id="getStreetsInsideGeom" parameterType="long" resultMap="OsmNamed">
+    SELECT id, 'WAY' as type, <include refid="fieldsNamed"/>
+        FROM ways_geom w
+       WHERE exist_key(tags, 'highway') AND 
+             tags->'highway' NOT IN ('raceway','cycleway','path') AND
+             NOT exist_key(tags, 'int_ref') AND
+             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+  </select>
+  <select id="getHousesInsideGeom" parameterType="long" resultMap="OsmNamed">
+    SELECT id, 'WAY' as type,
+           tags->'addr:street' as name,
+           tags->'addr:street:be' as name_be
+        FROM ways_geom w
+       WHERE exist_key(tags, 'addr:street') AND 
+             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+  </select>
+  <select id="getAddressesInsideGeom" parameterType="long" resultMap="OsmNamed">
+    SELECT id, 'RELATION' as type, <include refid="fieldsNamed"/>
+        FROM relations_geom r
+       WHERE tags->'type' = 'address' AND 
+             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+  </select>
+  
+  <!-- Мяжа вакол кропкі горада: вяртае найменьшы палігон вакол кропкі з вызначаным place -->
+  <select id="city_border">
+     SELECT a.osm_id, a.name, a."name:be", a.place
+       FROM osm_polygon a, osm_point p
+      WHERE ST_Contains(a.way, p.way) AND 
+            p.osm_id=#{cityId} AND 
+            a.place IN ('city','town','village','hamlet','isolated_dwelling')
+      ORDER BY ST_Area(a.way)
+  </select>
+  
+  <select id="checkRelationClosed" parameterType="long">
+    select ST_IsClosed(ST_LineMerge(ST_Collect(w.linestring)))
+      from relation_members rm,ways w
+     where rm.relation_id=#{value} and rm.member_type='W' and rm.member_role='outer' and rm.member_id=w.id
+  </select>
+  
+  <select id="">
+      <!-- Незачыненыя межы -->
+      SELECT id,tags->'name',tags->'name:be'
+        FROM WAYS
+       WHERE (tags->'place') IS NOT NULL AND NOT ST_IsClosed(linestring)
+  </select>
+</mapper>

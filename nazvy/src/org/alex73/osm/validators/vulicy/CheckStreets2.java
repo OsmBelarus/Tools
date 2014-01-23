@@ -27,11 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
-import org.alex73.osm.data.BaseObject;
+import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.vulicy2.OsmNamed;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -42,37 +44,21 @@ import org.alex73.osm.utils.VelocityOutput;
  * 
  * -DdisableAddressStreetBe - не правяраць address:street:be
  */
-public class CheckStreets extends StreetsParse {
-    static String pbfFile;
+public class CheckStreets2 extends StreetsParse2 {
+    static final Pattern RE_ALLOWED_CHARS = Pattern
+            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]+");
     static String outDir;
     static String poInputDir;
 
     public static void main(String[] args) throws Exception {
-        long mem = Runtime.getRuntime().maxMemory() / 1024 / 1024;
-        if (mem < 700) {
-            System.err.println("Using memory: " + mem + "MiB, add memory using -Xmx800m");
-            System.exit(1);
-        }
+        Env.load();
 
-        for (String a : args) {
-            if (a.startsWith("--pbf=")) {
-                pbfFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--dav=")) {
-                davFile = a.substring(6).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--po-dir=")) {
-                poInputDir = a.substring(9).replace("$HOME", System.getProperty("user.home"));
-            } else if (a.startsWith("--out-dir=")) {
-                outDir = a.substring(10).replace("$HOME", System.getProperty("user.home"));
-            }
-        }
-        if (pbfFile == null || davFile == null || poInputDir == null || outDir == null) {
-            System.err
-                    .println("CheckStreets --pbf=tmp/belarus-latest.osm.pbf --po-dir=../strstr/target/ --out-dir=$HOME/");
-            System.exit(1);
-        }
+        davFile = Env.readProperty("dav");
+        poInputDir = Env.readProperty("po.target.dir");
+        outDir = Env.readProperty("out.dir");
 
-        CheckStreets s = new CheckStreets();
-        s.run(pbfFile);
+        CheckStreets2 s = new CheckStreets2();
+        s.run();
     }
 
     List<String> log2 = new ArrayList<>();
@@ -144,7 +130,7 @@ public class CheckStreets extends StreetsParse {
 
         System.out.println("Output to " + outDir + "/vulicy.html...");
         VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity", outDir + "/vulicy.html",
-                "harady", sortedList, "data", result);
+                "harady", sortedList, "data", result, "errors", errors);
         for (City c : cities) {
             System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
             VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-" + c.fn
@@ -153,7 +139,7 @@ public class CheckStreets extends StreetsParse {
     }
 
     @Override
-    void postProcess(City c, BaseObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
+    void postProcess(City c, OsmNamed obj, StreetNames streetNames, StreetName street, String name, String name_ru,
             String name_be) throws Exception {
         String trans = c.po.get(street.name);
         if ("".equals(trans)) {
@@ -161,6 +147,9 @@ public class CheckStreets extends StreetsParse {
         }
         if (trans == null) {
             throw new Exception("Не перакладзена '" + street.name + "'");
+        }
+        if (!RE_ALLOWED_CHARS.matcher(trans).matches()) {
+            throw new Exception("Невядомыя літары ў '" + trans + "'");
         }
 
         if (street.term == null) {

@@ -56,6 +56,10 @@ public class StreetNameParser {
             orig = new StreetName();
             orig.name = "20-й дивизии";
             orig.term = StreetTerm.вуліца;
+        } else if (name.equals("МКАД")) {
+            orig = new StreetName();
+            orig.name = "МКАД";
+            orig.term = StreetTerm.няма;
         } else {
             orig = new StreetName();
             orig.parseAny(name);
@@ -72,6 +76,7 @@ public class StreetNameParser {
         name = name.replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").trim();
         name = name.replace("- ", "-").replaceAll("\" ([ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮИЩ])", "\"$1");
         name = name.replace("Б С С Р", "БССР");
+        name = name.replace("М К А Д", "МКАД");
         name = name.replace("С С С Р", "СССР");
         name = name.replace("В Л К С М", "ВЛКСМ");
         name = name.replace("4 пер. Транзитный", "пер. 4-й Транзитный");

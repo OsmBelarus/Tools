@@ -24,6 +24,12 @@
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
 <ul>
+	#foreach ( $e in $errors )
+	    <li>${e}</li>
+	#end 
+</ul>
+
+<ul>
 	#foreach ( $c in $harady )
 	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - 
 		  #if (${data.get($c).errCount} > 0)
