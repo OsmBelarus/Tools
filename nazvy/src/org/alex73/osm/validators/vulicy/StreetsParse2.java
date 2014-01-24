@@ -189,7 +189,7 @@ public class StreetsParse2 {
     public void processStreets() {
         for (City c : cities) {
             for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getStreetsInsideGeom",c.geomText)) {
-                StreetNames n = processTags(c, s, "w", "name", "name:ru", "name:be",
+                StreetNames n = processTags(c, s, "name", "name:ru", "name:be",
                         System.getProperty("disableIntName") == null ? "int_name" : null);
                 if (n != null && n.needToChange()) {
                     resultStreets.add(n);
@@ -205,7 +205,7 @@ public class StreetsParse2 {
         String beTag = System.getProperty("disableAddressStreetBe") == null ? "addr:street:be" : null;
         for (City c : cities) {
             for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getHousesInsideGeom",c.geomText)) {
-                StreetNames n = processTags(c, s, "w", "addr:street", null, beTag, null);
+                StreetNames n = processTags(c, s, "addr:street", null, beTag, null);
                 if (n != null && n.needToChange()) {
                     resultHouses.add(n);
                 }
@@ -216,7 +216,7 @@ public class StreetsParse2 {
     public void processRelations() {
         for (City c : cities) {
             for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getAddressesInsideGeom",c.geomText)) {
-                StreetNames n = processTags(c, s, "w", "name", "name:ru", "name:be",
+                StreetNames n = processTags(c, s, "name", "name:ru", "name:be",
                         System.getProperty("disableIntName") == null ? "int_name" : null);
                 if (n != null && n.needToChange()) {
                     resultRelations.add(n);
@@ -252,7 +252,7 @@ public class StreetsParse2 {
         }
     }
 
-    StreetNames processTags(City c, OsmNamed obj, String objType, String nameTag, String nameRuTag, String nameBeTag,
+    StreetNames processTags(City c, OsmNamed obj, String nameTag, String nameRuTag, String nameBeTag,
             String nameIntlTag) {
 
         StreetNames names = new StreetNames();
@@ -262,7 +262,7 @@ public class StreetsParse2 {
         names.tags.name_ru = nameRuTag;
         names.tags.int_name = nameIntlTag;
 
-        names.objCode = objType + obj.id;
+        names.objCode = obj.getCode();
         names.exist.name = nameTag == null ? null : obj.name;
         names.exist.name_be = nameBeTag == null ? null : obj.name_be;
         names.exist.name_ru = nameRuTag == null ? null : obj.name_ru;

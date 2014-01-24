@@ -10,9 +10,6 @@
 
   <resultMap type="org.alex73.osm.validators.vulicy2.OsmPlace" id="OsmPlace" />
 
-  <sql id="BelarusBorder">
-       (SELECT geom FROM relations_geom WHERE id=59065)
-  </sql>
   <sql id="fieldsNamed">
        tags->'name' as name,
        tags->'name:be' as name_be,
@@ -30,60 +27,57 @@
        tags->'addr:region' as addr_region,
        tags->'addr:district' as addr_district,
        tags->'population' as population,
-       tags->'population_date' as population_date
+       tags->'population_date' as population_date,
+       ST_AsEWKT(geom) as geom_text
   </sql>
 
   <select id="getPlaces" resultMap="OsmPlace">
-      SELECT id, 'NODE' as type, <include refid="fieldsPlace"/>
-        FROM nodes_geom n
-       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
-    UNION
-      SELECT id, 'WAY' as type, <include refid="fieldsPlace"/>
-        FROM ways_geom n
-       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
-    UNION
-      SELECT id, 'RELATION' as type, <include refid="fieldsPlace"/>
-        FROM relations_geom n
-       WHERE exist_key(tags, 'place') AND ST_Intersects(n.geom, <include refid="BelarusBorder"/>)
+      SELECT id, type, <include refid="fieldsPlace"/>
+        FROM geo_cities
   </select>
 
   <select id="getPlaceByNodeId" parameterType="long" resultMap="OsmPlace">
-    SELECT id, 'NODE' as type, <include refid="fieldsPlace"/>
-        FROM nodes_geom n
-       WHERE id = #{value}
+      SELECT id, type, <include refid="fieldsPlace"/>
+        FROM geo_cities
+       WHERE id = #{value} AND type='NODE'
   </select>
   <select id="getPlaceByWayId" parameterType="long" resultMap="OsmPlace">
-    SELECT id, 'WAY' as type, <include refid="fieldsPlace"/>, ST_AsEWKT(geom) as geom_text
-        FROM ways_geom n
-       WHERE id = #{value}
+      SELECT id, type, <include refid="fieldsPlace"/>
+        FROM geo_cities
+       WHERE id = #{value} AND type='WAY'
   </select>
   <select id="getPlaceByRelationId" parameterType="long" resultMap="OsmPlace">
-    SELECT id, 'RELATION' as type, <include refid="fieldsPlace"/>, ST_AsEWKT(geom) as geom_text
-        FROM relations_geom n
-       WHERE id = #{value}
+      SELECT id, type, <include refid="fieldsPlace"/>
+        FROM geo_cities
+       WHERE id = #{value} AND type='RELATION'
   </select>
 
   <select id="getStreetsInsideGeom" parameterType="long" resultMap="OsmNamed">
     SELECT id, 'WAY' as type, <include refid="fieldsNamed"/>
-        FROM ways_geom w
-       WHERE exist_key(tags, 'highway') AND 
-             tags->'highway' NOT IN ('raceway','cycleway','path') AND
+        FROM (
+          SELECT *
+            FROM geo_roads
+           WHERE tags->'highway' NOT IN ('raceway','cycleway','path') AND
              NOT exist_key(tags, 'int_ref') AND
-             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+             NOT exist_key(tags, 'ref')
+        ) as w
+       WHERE ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
   </select>
   <select id="getHousesInsideGeom" parameterType="long" resultMap="OsmNamed">
     SELECT id, 'WAY' as type,
            tags->'addr:street' as name,
            tags->'addr:street:be' as name_be
-        FROM ways_geom w
-       WHERE exist_key(tags, 'addr:street') AND 
-             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+        FROM (
+          SELECT *
+            FROM geo_houses
+           WHERE exist_key(tags, 'addr:street')
+        ) as w
+       WHERE ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
   </select>
   <select id="getAddressesInsideGeom" parameterType="long" resultMap="OsmNamed">
     SELECT id, 'RELATION' as type, <include refid="fieldsNamed"/>
-        FROM relations_geom r
-       WHERE tags->'type' = 'address' AND 
-             ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
+        FROM geo_address_streets r
+       WHERE ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
   </select>
   
   <!-- Мяжа вакол кропкі горада: вяртае найменьшы палігон вакол кропкі з вызначаным place -->
@@ -96,16 +90,4 @@
       ORDER BY ST_Area(a.way)
   </select>
   
-  <select id="checkRelationClosed" parameterType="long">
-    select ST_IsClosed(ST_LineMerge(ST_Collect(w.linestring)))
-      from relation_members rm,ways w
-     where rm.relation_id=#{value} and rm.member_type='W' and rm.member_role='outer' and rm.member_id=w.id
-  </select>
-  
-  <select id="">
-      <!-- Незачыненыя межы -->
-      SELECT id,tags->'name',tags->'name:be'
-        FROM WAYS
-       WHERE (tags->'place') IS NOT NULL AND NOT ST_IsClosed(linestring)
-  </select>
 </mapper>

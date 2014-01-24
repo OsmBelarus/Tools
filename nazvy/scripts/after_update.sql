@@ -1,7 +1,9 @@
+SELECT GET_BORDER();
+
 -- ствараем табліцы геамэтрыі наноў
-DROP TABLE IF EXISTS nodes_geom;
-DROP TABLE IF EXISTS ways_geom;
-DROP TABLE IF EXISTS relations_geom;
+--DROP TABLE IF EXISTS nodes_geom;
+--DROP TABLE IF EXISTS ways_geom;
+--DROP TABLE IF EXISTS relations_geom;
 DROP TABLE IF EXISTS NODES_ERROR;
 DROP TABLE IF EXISTS WAYS_ERROR;
 DROP TABLE IF EXISTS RELATIONS_ERROR;
@@ -24,67 +26,70 @@ CREATE INDEX pk_relations_error ON RELATIONS_ERROR(ID);
 
 CREATE TABLE NODES_GEOM (
   ID int8 NOT NULL PRIMARY KEY,
+  TYP VARCHAR(128),
   TAGS hstore NOT NULL
 );
 SELECT AddGeometryColumn('nodes_geom', 'geom', 4326, 'GEOMETRY', 2);
 CREATE TABLE WAYS_GEOM (
   ID int8 NOT NULL PRIMARY KEY,
+  TYP VARCHAR(128),
   TAGS hstore NOT NULL
 );
 SELECT AddGeometryColumn('ways_geom', 'geom', 4326, 'GEOMETRY', 2);
 CREATE TABLE RELATIONS_GEOM (
   ID int8 NOT NULL PRIMARY KEY,
+  TYP VARCHAR(128),
   TAGS hstore NOT NULL
 );
 SELECT AddGeometryColumn('relations_geom', 'geom', 4326, 'GEOMETRY', 2);
 
 -- Памылкі
-INSERT INTO WAYS_ERROR
-SELECT id,'Ёсьць тэгі building і highway адначасова'
-  FROM ways
- WHERE exist_key(tags, 'building') and exist_key(tags, 'highway');
+--INSERT INTO WAYS_ERROR
+--SELECT id,'Ёсьць тэгі building і highway адначасова'
+--  FROM ways
+-- WHERE exist_key(tags, 'building') and exist_key(tags, 'highway');
 
-INSERT INTO WAYS_ERROR
-SELECT id,'Ёсьць тэгі building і place адначасова'
-  FROM ways
- WHERE exist_key(tags, 'building') and exist_key(tags, 'place');
+--INSERT INTO WAYS_ERROR
+--SELECT id,'Ёсьць тэгі building і place адначасова'
+--  FROM ways
+-- WHERE exist_key(tags, 'building') and exist_key(tags, 'place');
 
-INSERT INTO RELATIONS_ERROR
-SELECT id,'Ёсьць тэгі place і type=address адначасова'
-  FROM relations
- WHERE exist_key(tags, 'place') and tags->'type'='address';
+--INSERT INTO RELATIONS_ERROR
+--SELECT id,'Ёсьць тэгі place і type=address адначасова'
+--  FROM relations
+-- WHERE exist_key(tags, 'place') and tags->'type'='address';
 
-INSERT INTO RELATIONS_ERROR
-SELECT DISTINCT relation_id,'Няма ролі ў нейкай частцы relation'
-  FROM relation_members
- WHERE member_role='';
+--INSERT INTO RELATIONS_ERROR
+--SELECT DISTINCT relation_id,'Няма ролі ў нейкай частцы relation'
+--  FROM relation_members
+-- WHERE member_role='';
 
 -- Усе кропкі з тэгамі
-INSERT INTO nodes_geom(id,tags,geom)
-SELECT n.id,n.tags,n.geom
-  FROM nodes n
- WHERE tags<>hstore(ROW());
+--INSERT INTO nodes_geom(id,tags,typ,geom)
+--SELECT n.id,n.tags,'Кропка з тэгамі',n.geom
+--  FROM nodes n
+-- WHERE tags<>hstore(ROW());
 
 -- Мяжа Беларусі
-INSERT INTO relations_geom(id,tags,geom)
-SELECT r.id,r.tags,ST_MakePolygon(ST_LineMerge(ST_Collect(w.linestring)))
+INSERT INTO relations_geom(id,tags,typ,geom)
+SELECT r.id,r.tags,'Мяжа Беларусі',ST_MakePolygon(ST_LineMerge(ST_Collect(w.linestring)))
   FROM relation_members rm,ways w,relations r
  WHERE r.id=59065 AND rm.relation_id=r.id and rm.member_type='W' and rm.member_role='outer' and rm.member_id=w.id
  GROUP BY r.id,r.tags;
 
 -- Вуліцы
-INSERT INTO ways_geom(id,tags,geom)
-SELECT id,tags,linestring
+INSERT INTO ways_geom(id,tags,typ,geom)
+SELECT id,tags,'Вуліца ці дарога',linestring
   FROM ways
  WHERE exist_key(tags, 'highway') AND ST_NPoints(linestring)>1 AND id NOT IN (SELECT id FROM ways_error);
 -- Дамы
-INSERT INTO ways_geom(id,tags,geom)
-SELECT id,tags,ST_MakePolygon(linestring)
+INSERT INTO ways_geom(id,tags,typ,geom)
+SELECT id,tags,'Будынак',ST_MakePolygon(linestring)
   FROM ways
  WHERE exist_key(tags, 'building') AND ST_IsClosed(linestring) AND ST_NPoints(linestring)>3 AND id NOT IN (SELECT id FROM ways_error);
 -- Адрасы
-INSERT INTO relations_geom(id,tags,geom)
-SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
+INSERT INTO relations_geom(id,tags,typ,geom)
+SELECT r.id,r.tags,'Адрасы',ST_CollectionExtract(ST_Polygonize(w.linestring),3)
   FROM relation_members rm,ways w,relations r
  WHERE rm.relation_id=r.id and 
        rm.member_type='W' and rm.member_id=w.id AND
@@ -94,8 +99,8 @@ SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
  GROUP BY r.id,r.tags;
 
 -- Межы гарадоў: ways
-INSERT INTO ways_geom(id,tags,geom)
-SELECT id,tags,ST_MakePolygon(linestring)
+INSERT INTO ways_geom(id,tags,typ,geom)
+SELECT id,tags,'Мяжа горада',ST_MakePolygon(linestring)
   FROM ways
  WHERE exist_key(tags, 'place') AND 
        ST_IsClosed(linestring) AND 
@@ -103,8 +108,8 @@ SELECT id,tags,ST_MakePolygon(linestring)
        id NOT IN (SELECT id FROM ways_error);
 
 -- Межы гарадоў: relations
-INSERT INTO relations_geom(id,tags,geom)
-SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
+INSERT INTO relations_geom(id,tags,typ,geom)
+SELECT r.id,r.tags,'Мяжа горада',ST_CollectionExtract(ST_Polygonize(w.linestring),3)
   FROM relation_members rm,ways w,relations r
  WHERE rm.relation_id=r.id and 
        rm.member_type='W' and 
@@ -115,8 +120,8 @@ SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
        r.id NOT IN (SELECT id FROM relations_error)
  GROUP BY r.id,r.tags;
 
-INSERT INTO relations_geom(id,tags,geom)
-SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
+INSERT INTO relations_geom(id,tags,typ,geom)
+SELECT r.id,r.tags,'Мяжа горада',ST_CollectionExtract(ST_Polygonize(w.linestring),3)
   FROM relation_members rm,ways w,relations r
  WHERE rm.relation_id=r.id and 
        rm.member_type='W' and 
@@ -127,8 +132,8 @@ SELECT r.id,r.tags,ST_CollectionExtract( ST_Polygonize (w.linestring),3)
        r.id NOT IN (SELECT id FROM relations_error)
  GROUP BY r.id,r.tags;
 
-INSERT INTO relations_geom(id,tags,geom)
-SELECT r.id,r.tags,w.geom
+INSERT INTO relations_geom(id,tags,typ,geom)
+SELECT r.id,r.tags,'Мяжа горада',w.geom
   FROM relations r,relation_members rm,relations_geom w
  WHERE rm.relation_id=r.id and 
        rm.member_type='R' and 
