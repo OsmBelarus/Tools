@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="be" ng-app>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <script src="data.js"></script>
+    <script src="control.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.4/angular.min.js"></script>
+    
+
+<style type="text/css">
+	body {
+	    font-family: sans-serif;
+	    font-size: 80%;
+	}
+	table {
+	    border-collapse: collapse;
+	}
+	td, th {
+	    border: 1px solid black;
+	}
+</style>
+
+</head>
+<body ng-controller="Dav">
+
+
+<div style="width: 400px; float: left">
+	
+	Раён : <select ng-model="rajon" ng-options="r as c for (r,c) in rajony"></select>
+	
+	<br/>
+	<br/>
+	
+	<div ng-repeat="(key,value) in sielsaviety(rvioski)">
+		<input ng-model="$parent.sielsaviet" type="radio" value="{{key}}" name="ss"/>{{value}}
+	</div>
+	
+	<table>
+	<tr>
+	<th>Назва</th>
+	<th>Аўтаматычны пошук</th>
+	<th>osmID</th>
+	</tr>
+	<tr ng-repeat="v in svioski" ng-style="v.osmID == undefined && {'background-color': '#FFCCCC'}">
+	<td>{{v.nameRu}}<br/>{{v.nameBe}} {{v.varyjanty}}</td>
+	<td>{{v.why}}</td>
+	<td>{{v.osmID}}</td>
+	</tr>
+	</table>
+
+	<hr/>
+	Выбраць раён, потым сельсавет.Клікнуць на мапе па вёсцы - пакажа назву і id.<br/>
+	Чорныя - няма ў даведніку, чырвоныя - ёсьць і яны ў абраным сельсавеце, памаранчавыя - ёсьць у даведніку ў іншых сельсаветах.
+
+</div>
+
+<div id="map" style="height: 1000px"> </div>
+
+
+</body>
+</html>
+
+<script>
+var map = L.map('map').setView([54,27.5], 7);
+L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+    maxZoom: 18
+}).addTo(map);
+//var circle = L.circle([53,27], 500, {color: 'red', fillColor: '#f03', fillOpacity: 0.5}).addTo(map);
+
+
+
+</script>
