@@ -16,8 +16,6 @@ psql --dbname=osm --username=osm --file=../osmosis/script/pgsnapshot_schema_0.6.
 ## Дадаем геамэтрыю для ways
 psql --dbname=osm --username=osm --file=../osmosis/script/pgsnapshot_schema_0.6_linestring.sql
 
-psql --dbname=osm --username=osm --command="VACUUM FULL" || exit 1
-
 ## Канвэртуем pbf у базу. Фільтраваць па палігоне краіны нельга, бо выкідае некаторыя кропкі !
 ../osmosis/bin/osmosis --read-pbf file=tmp/belarus-latest.osm.pbf --write-pgsql host=localhost database=osm user=osm || exit 1
 ../osmosis/bin/osmosis --read-xml-change file=tmp/day.osc.gz --write-pgsql-change host=localhost database=osm user=osm

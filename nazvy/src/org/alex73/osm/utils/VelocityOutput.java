@@ -27,8 +27,10 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -40,7 +42,11 @@ public class VelocityOutput {
         for (int i = 0; i < args.length; i += 2) {
             context.put((String) args[i], args[i + 1]);
         }
-        context.put("currentDateTime", new Date().toGMTString());
+
+        SimpleDateFormat format = new SimpleDateFormat("dd MMM YYYY HH:mm:ss Z");
+        format.setTimeZone(TimeZone.getTimeZone("Europe/Minsk"));
+        context.put("currentDateTime", format.format(new Date()));
+
         Properties props = new Properties();
         InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
         try {
