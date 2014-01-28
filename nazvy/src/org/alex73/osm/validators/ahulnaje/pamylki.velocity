@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+    <meta charset="UTF-8">
+    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<style type="text/css">
+		body {
+		    font-family: sans-serif;
+		    font-size: 80%;
+		}
+		table {
+		    border-collapse: collapse;
+		}
+		td, th {
+		    border: 1px solid black;
+		}
+		.err {
+			background-color: #FF9090;
+		}
+	</style>
+</head>
+<body>
+<script language="javascript">
+    function send(cmd) {
+#set ( $d = "$")
+        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
+        return false;
+    }
+</script>
+
+<b><u>Вынікі ад ${currentDateTime}</u></b> <br/>
+
+#macro ( cell $code $tag $exist $required)
+  #if ($exist)
+    #set ($e = $exist)
+  #else
+    #set ($e = "")
+  #end
+  #if ($required)
+    #set ($r = $required)
+  #else
+    #set ($r = "")
+  #end
+    #if ($e != $r)
+      <td class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></td>
+    #else
+      <td>$!exist</td>
+    #end
+#end
+
+<h2>Агульныя памылкі мапы</h2>
+Колькасьць: $count
+    <table>
+      <tr>
+        <td>Памылка</td>
+        <td>osm</td>
+      </tr>
+    #foreach ( $s in $data.entrySet() )
+      <tr>
+        <td class="err">ERROR: $s.key</td>
+        <td>
+          #foreach ($n in $s.value)
+            $n
+          #end
+        </td>
+      </tr>
+    #end
+    </table>
+
+</body>
+</html>

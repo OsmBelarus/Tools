@@ -6,6 +6,8 @@
 
 <mapper namespace="osm">
 
+  <resultMap type="org.alex73.osm.validators.ahulnaje.Error" id="Error" />
+
   <resultMap type="org.alex73.osm.validators.vulicy2.OsmNamed" id="OsmNamed" />
 
   <resultMap type="org.alex73.osm.validators.vulicy2.OsmPlace" id="OsmPlace" />
@@ -88,6 +90,18 @@
             p.osm_id=#{cityId} AND 
             a.place IN ('city','town','village','hamlet','isolated_dwelling')
       ORDER BY ST_Area(a.way)
+  </select>
+
+  <!-- Чытае ўсе памылкі разбору -->
+  <select id="getAllErrors" resultMap="Error">
+    SELECT error, 'n' as type, id
+        FROM nodes_error
+      UNION
+    SELECT error, 'w' as type, id
+        FROM ways_error
+      UNION
+    SELECT error, 'r' as type, id
+        FROM relations_error
   </select>
   
 </mapper>
