@@ -16,5 +16,6 @@
 	<classpathentry kind="lib" path="lib/pbf/protobuf-java-2.4.1.jar"/>
 	<classpathentry kind="lib" path="lib/postgres/postgis.jar"/>
 	<classpathentry kind="lib" path="lib/postgres/postgresql-jdbc3-9.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-compress-1.5.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
