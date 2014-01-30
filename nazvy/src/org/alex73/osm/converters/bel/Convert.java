@@ -39,7 +39,7 @@ public class Convert {
 
     public static void main(String[] args) throws Exception {
         InputStream in = new BZip2CompressorInputStream(new BufferedInputStream(new FileInputStream(
-                "osmand-tmp/belarus-latest.osm.bz2"), BUFFER_SIZE));
+                "tmp/belarus-latest.osm.bz2"), BUFFER_SIZE));
 
         // create xml event reader for input stream
         XMLEventFactory eventFactory = XMLEventFactory.newInstance();
@@ -48,9 +48,9 @@ public class Convert {
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
         XMLEventReader reader = xif.createXMLEventReader(in);
         XMLEventWriter wrCyr = xof.createXMLEventWriter(new BufferedOutputStream(new FileOutputStream(
-                "osmand-tmp/belarus-bel.osm"), BUFFER_SIZE));
+                "tmp/belarus-bel.osm"), BUFFER_SIZE));
         XMLEventWriter wrInt = xof.createXMLEventWriter(new BufferedOutputStream(new FileOutputStream(
-                "osmand-tmp/belarus-intl.osm"), BUFFER_SIZE));
+                "tmp/belarus-intl.osm"), BUFFER_SIZE));
  
         // initialize jaxb
         JAXBContext jaxbCtx = JAXBContext.newInstance(Node.class, Way.class, Relation.class);
