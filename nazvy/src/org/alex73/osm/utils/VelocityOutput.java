@@ -28,9 +28,14 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.TimeZone;
+
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -46,6 +51,10 @@ public class VelocityOutput {
         SimpleDateFormat format = new SimpleDateFormat("dd MMM YYYY HH:mm:ss Z");
         format.setTimeZone(TimeZone.getTimeZone("Europe/Minsk"));
         context.put("currentDateTime", format.format(new Date()));
+
+        GregorianCalendar c = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        XMLGregorianCalendar xmlc = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+        context.put("currentDateTimeXML", xmlc.toXMLFormat());
 
         Properties props = new Properties();
         InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");

@@ -20,45 +20,9 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="create" maxOccurs="unbounded" minOccurs="0">
- *           &lt;complexType>
- *             &lt;complexContent>
- *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                 &lt;sequence>
- *                   &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
- *                 &lt;/sequence>
- *               &lt;/restriction>
- *             &lt;/complexContent>
- *           &lt;/complexType>
- *         &lt;/element>
- *         &lt;element name="modify" maxOccurs="unbounded" minOccurs="0">
- *           &lt;complexType>
- *             &lt;complexContent>
- *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                 &lt;sequence>
- *                   &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
- *                 &lt;/sequence>
- *               &lt;/restriction>
- *             &lt;/complexContent>
- *           &lt;/complexType>
- *         &lt;/element>
- *         &lt;element name="delete" maxOccurs="unbounded" minOccurs="0">
- *           &lt;complexType>
- *             &lt;complexContent>
- *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                 &lt;sequence>
- *                   &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
- *                   &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
- *                 &lt;/sequence>
- *               &lt;/restriction>
- *             &lt;/complexContent>
- *           &lt;/complexType>
- *         &lt;/element>
+ *         &lt;element name="create" type="{}osmBasicChange" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="modify" type="{}osmBasicChange" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="delete" type="{}osmBasicChange" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="version" use="required" type="{http://www.w3.org/2001/XMLSchema}float" fixed="0.6" />
  *       &lt;attribute name="generator" type="{http://www.w3.org/2001/XMLSchema}string" />
@@ -81,9 +45,9 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "osmChange")
 public class OsmChange {
 
-    protected List<OsmChange.Create> create;
-    protected List<OsmChange.Modify> modify;
-    protected List<OsmChange.Delete> delete;
+    protected List<OsmBasicChange> create;
+    protected List<OsmBasicChange> modify;
+    protected List<OsmBasicChange> delete;
     @XmlAttribute(name = "version", required = true)
     protected float version;
     @XmlAttribute(name = "generator")
@@ -113,13 +77,13 @@ public class OsmChange {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link OsmChange.Create }
+     * {@link OsmBasicChange }
      * 
      * 
      */
-    public List<OsmChange.Create> getCreate() {
+    public List<OsmBasicChange> getCreate() {
         if (create == null) {
-            create = new ArrayList<OsmChange.Create>();
+            create = new ArrayList<OsmBasicChange>();
         }
         return this.create;
     }
@@ -142,13 +106,13 @@ public class OsmChange {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link OsmChange.Modify }
+     * {@link OsmBasicChange }
      * 
      * 
      */
-    public List<OsmChange.Modify> getModify() {
+    public List<OsmBasicChange> getModify() {
         if (modify == null) {
-            modify = new ArrayList<OsmChange.Modify>();
+            modify = new ArrayList<OsmBasicChange>();
         }
         return this.modify;
     }
@@ -171,13 +135,13 @@ public class OsmChange {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link OsmChange.Delete }
+     * {@link OsmBasicChange }
      * 
      * 
      */
-    public List<OsmChange.Delete> getDelete() {
+    public List<OsmBasicChange> getDelete() {
         if (delete == null) {
-            delete = new ArrayList<OsmChange.Delete>();
+            delete = new ArrayList<OsmBasicChange>();
         }
         return this.delete;
     }
@@ -292,375 +256,6 @@ public class OsmChange {
      */
     public void setLicense(String value) {
         this.license = value;
-    }
-
-
-    /**
-     * <p>Java class for anonymous complex type.
-     * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
-     * <pre>
-     * &lt;complexType>
-     *   &lt;complexContent>
-     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *       &lt;sequence>
-     *         &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
-     *       &lt;/sequence>
-     *     &lt;/restriction>
-     *   &lt;/complexContent>
-     * &lt;/complexType>
-     * </pre>
-     * 
-     * 
-     */
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {
-        "node",
-        "way",
-        "relation"
-    })
-    public static class Create {
-
-        protected List<Node> node;
-        protected List<Way> way;
-        protected List<Relation> relation;
-
-        /**
-         * Gets the value of the node property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the node property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getNode().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Node }
-         * 
-         * 
-         */
-        public List<Node> getNode() {
-            if (node == null) {
-                node = new ArrayList<Node>();
-            }
-            return this.node;
-        }
-
-        /**
-         * Gets the value of the way property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the way property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getWay().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Way }
-         * 
-         * 
-         */
-        public List<Way> getWay() {
-            if (way == null) {
-                way = new ArrayList<Way>();
-            }
-            return this.way;
-        }
-
-        /**
-         * Gets the value of the relation property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the relation property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getRelation().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Relation }
-         * 
-         * 
-         */
-        public List<Relation> getRelation() {
-            if (relation == null) {
-                relation = new ArrayList<Relation>();
-            }
-            return this.relation;
-        }
-
-    }
-
-
-    /**
-     * <p>Java class for anonymous complex type.
-     * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
-     * <pre>
-     * &lt;complexType>
-     *   &lt;complexContent>
-     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *       &lt;sequence>
-     *         &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
-     *       &lt;/sequence>
-     *     &lt;/restriction>
-     *   &lt;/complexContent>
-     * &lt;/complexType>
-     * </pre>
-     * 
-     * 
-     */
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {
-        "node",
-        "way",
-        "relation"
-    })
-    public static class Delete {
-
-        protected List<Node> node;
-        protected List<Way> way;
-        protected List<Relation> relation;
-
-        /**
-         * Gets the value of the node property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the node property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getNode().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Node }
-         * 
-         * 
-         */
-        public List<Node> getNode() {
-            if (node == null) {
-                node = new ArrayList<Node>();
-            }
-            return this.node;
-        }
-
-        /**
-         * Gets the value of the way property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the way property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getWay().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Way }
-         * 
-         * 
-         */
-        public List<Way> getWay() {
-            if (way == null) {
-                way = new ArrayList<Way>();
-            }
-            return this.way;
-        }
-
-        /**
-         * Gets the value of the relation property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the relation property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getRelation().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Relation }
-         * 
-         * 
-         */
-        public List<Relation> getRelation() {
-            if (relation == null) {
-                relation = new ArrayList<Relation>();
-            }
-            return this.relation;
-        }
-
-    }
-
-
-    /**
-     * <p>Java class for anonymous complex type.
-     * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
-     * <pre>
-     * &lt;complexType>
-     *   &lt;complexContent>
-     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *       &lt;sequence>
-     *         &lt;element ref="{}node" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}way" maxOccurs="unbounded" minOccurs="0"/>
-     *         &lt;element ref="{}relation" maxOccurs="unbounded" minOccurs="0"/>
-     *       &lt;/sequence>
-     *     &lt;/restriction>
-     *   &lt;/complexContent>
-     * &lt;/complexType>
-     * </pre>
-     * 
-     * 
-     */
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {
-        "node",
-        "way",
-        "relation"
-    })
-    public static class Modify {
-
-        protected List<Node> node;
-        protected List<Way> way;
-        protected List<Relation> relation;
-
-        /**
-         * Gets the value of the node property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the node property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getNode().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Node }
-         * 
-         * 
-         */
-        public List<Node> getNode() {
-            if (node == null) {
-                node = new ArrayList<Node>();
-            }
-            return this.node;
-        }
-
-        /**
-         * Gets the value of the way property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the way property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getWay().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Way }
-         * 
-         * 
-         */
-        public List<Way> getWay() {
-            if (way == null) {
-                way = new ArrayList<Way>();
-            }
-            return this.way;
-        }
-
-        /**
-         * Gets the value of the relation property.
-         * 
-         * <p>
-         * This accessor method returns a reference to the live list,
-         * not a snapshot. Therefore any modification you make to the
-         * returned list will be present inside the JAXB object.
-         * This is why there is not a <CODE>set</CODE> method for the relation property.
-         * 
-         * <p>
-         * For example, to add a new item, do as follows:
-         * <pre>
-         *    getRelation().add(newItem);
-         * </pre>
-         * 
-         * 
-         * <p>
-         * Objects of the following type(s) are allowed in the list
-         * {@link Relation }
-         * 
-         * 
-         */
-        public List<Relation> getRelation() {
-            if (relation == null) {
-                relation = new ArrayList<Relation>();
-            }
-            return this.relation;
-        }
-
     }
 
 }

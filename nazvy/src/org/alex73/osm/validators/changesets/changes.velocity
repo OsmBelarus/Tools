@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+ 
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+	<title>OSM: Зьмены па Беларусі</title>
+	<subtitle>OpenStreetMap: Зьмены па Беларусі</subtitle>
+	<id>http://openstreetmap.org/Belarus</id>
+	<updated>${currentDateTimeXML}</updated>
+
+#foreach ( $ch in $changes )
+    <entry>
+        <title>${ch.author} у ${ch.shortTime}: ${ch.comment}</title>
+        <id>${ch.changesetId}</id>
+        <link href="http://www.openstreetmap.org/changeset/${ch.changesetId}" />
+        <updated>${ch.closedDate}</updated>
+        <summary>
+        Зьмены: ${ch.countM}, +${ch.countC}, -${ch.countD}
+        </summary>
+        <author><name>${ch.author}</name></author>
+    </entry>
+#end
+
+</feed>

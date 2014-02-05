@@ -25,6 +25,7 @@ import java.awt.geom.Area;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,9 +38,9 @@ import org.alex73.osm.data.RelationObject;
 import org.alex73.osm.data.WayObject;
 
 public class Geo {
-
     static final DecimalFormat N2 = new DecimalFormat("00");
     static final StringBuilder o = new StringBuilder();
+    public static final Area BELARUS = box2area(22.55, 50.716667, 32.708056, 56.066667);
 
     public synchronized static String coord2str(double lat, double lon) {
         o.setLength(0);
@@ -63,6 +64,10 @@ public class Geo {
             throw new IndexOutOfBoundsException("There is no node #" + nodeId);
         }
         return new Point2D.Double(node.lon, node.lat);
+    }
+
+    public static Area box2area(double min_lon, double min_lat, double max_lon, double max_lat) {
+        return new Area(new Rectangle2D.Double(min_lon, min_lat, max_lon - min_lon, max_lat - min_lat));
     }
 
     public static Path2D way2path(MemoryStorage storage, long wayId) {

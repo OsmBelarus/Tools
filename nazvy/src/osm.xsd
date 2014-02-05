@@ -90,33 +90,9 @@
   <xs:element name="osmChange">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="create" minOccurs="0" maxOccurs="unbounded">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element ref="node" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="way" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="relation" minOccurs="0" maxOccurs="unbounded" />
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="modify" minOccurs="0" maxOccurs="unbounded">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element ref="node" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="way" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="relation" minOccurs="0" maxOccurs="unbounded" />
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="delete" minOccurs="0" maxOccurs="unbounded">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element ref="node" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="way" minOccurs="0" maxOccurs="unbounded" />
-              <xs:element ref="relation" minOccurs="0" maxOccurs="unbounded" />
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
+        <xs:element name="create" minOccurs="0" maxOccurs="unbounded" type="osmBasicChange"/>
+        <xs:element name="modify" minOccurs="0" maxOccurs="unbounded" type="osmBasicChange"/>
+        <xs:element name="delete" minOccurs="0" maxOccurs="unbounded" type="osmBasicChange"/>
       </xs:sequence>
       <xs:attribute name="version" type="xs:float" use="required" fixed="0.6" />
       <xs:attribute name="generator" type="xs:string" use="optional" />
@@ -181,6 +157,14 @@
     <xs:attribute name="changeset" type="ID" use="optional" />
     <xs:attribute name="version" type="xs:int" use="required" />
     <xs:attribute name="visible" type="xs:boolean" use="optional" />
+  </xs:complexType>
+
+  <xs:complexType name="osmBasicChange">
+     <xs:sequence>
+       <xs:element ref="node" minOccurs="0" maxOccurs="unbounded" />
+       <xs:element ref="way" minOccurs="0" maxOccurs="unbounded" />
+       <xs:element ref="relation" minOccurs="0" maxOccurs="unbounded" />
+     </xs:sequence>
   </xs:complexType>
 
 </xs:schema>

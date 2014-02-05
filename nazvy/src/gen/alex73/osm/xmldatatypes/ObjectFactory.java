@@ -30,14 +30,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link OsmChange }
-     * 
-     */
-    public OsmChange createOsmChange() {
-        return new OsmChange();
-    }
-
-    /**
      * Create an instance of {@link Member }
      * 
      */
@@ -54,27 +46,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link OsmChange.Create }
+     * Create an instance of {@link OsmChange }
      * 
      */
-    public OsmChange.Create createOsmChangeCreate() {
-        return new OsmChange.Create();
+    public OsmChange createOsmChange() {
+        return new OsmChange();
     }
 
     /**
-     * Create an instance of {@link OsmChange.Modify }
+     * Create an instance of {@link OsmBasicChange }
      * 
      */
-    public OsmChange.Modify createOsmChangeModify() {
-        return new OsmChange.Modify();
-    }
-
-    /**
-     * Create an instance of {@link OsmChange.Delete }
-     * 
-     */
-    public OsmChange.Delete createOsmChangeDelete() {
-        return new OsmChange.Delete();
+    public OsmBasicChange createOsmBasicChange() {
+        return new OsmBasicChange();
     }
 
     /**
