@@ -201,3 +201,26 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+DROP TABLE IF EXISTS geo_belarus;
+DROP TABLE IF EXISTS nodes_in_Belarus;
+
+-- Мяжа Беларусі
+CREATE TABLE geo_belarus();
+SELECT AddGeometryColumn('geo_belarus', 'geom', 4326, 'GEOMETRY', 2);
+
+INSERT INTO geo_belarus(geom)
+SELECT makeBelarus();
+
+-- кропкі ў Беларусі
+CREATE TABLE nodes_in_Belarus(
+  ID int8 NOT NULL
+);
+
+INSERT INTO nodes_in_Belarus(id)
+SELECT n.id
+  FROM nodes n, geo_Belarus b
+ WHERE ST_Intersects(b.geom, n.geom);
+
+CREATE UNIQUE INDEX pk_nodes_in_Belarus ON nodes_in_Belarus  (id);
+

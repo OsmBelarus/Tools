@@ -3,7 +3,7 @@ set -x
 cd `dirname $0`
 PATH=../osmutils:$PATH
 
-rm -rf tmp
+rm -rf tmp/ osmupdate_temp/
 mkdir -p tmp/
 
 ## Агульная мапа Беларусі на пачатак дня

@@ -4,8 +4,6 @@ DROP TABLE IF EXISTS NODES_ERROR;
 DROP TABLE IF EXISTS WAYS_ERROR;
 DROP TABLE IF EXISTS RELATIONS_ERROR;
 
-DROP TABLE IF EXISTS nodes_in_Belarus;
-DROP TABLE IF EXISTS geo_belarus;
 DROP TABLE IF EXISTS geo_roads;
 DROP TABLE IF EXISTS geo_houses;
 DROP TABLE IF EXISTS geo_cities;
@@ -27,24 +25,23 @@ CREATE TABLE RELATIONS_ERROR (
 );
 CREATE INDEX pk_relations_error ON RELATIONS_ERROR(ID);
 
--- Мяжа Беларусі
-CREATE TABLE geo_belarus();
-SELECT AddGeometryColumn('geo_belarus', 'geom', 4326, 'GEOMETRY', 2);
+-- Абнаўляем сёньняшнія кропкі
+DELETE 
+  FROM nodes_in_Belarus i
+ WHERE EXISTS (SELECT 1 FROM nodes n WHERE i.id=n.id AND n.tstamp > (current_date - interval '1 day'));
 
-INSERT INTO geo_belarus(geom)
-SELECT makeBelarus();
-
--- кропкі ў Беларусі
-CREATE TABLE nodes_in_Belarus(
-  ID int8 NOT NULL
-);
+DELETE 
+  FROM nodes_in_Belarus i
+ WHERE NOT EXISTS (SELECT 1 FROM nodes n WHERE i.id=n.id);
 
 INSERT INTO nodes_in_Belarus(id)
-SELECT n.id
-  FROM nodes n, geo_Belarus b
- WHERE ST_Intersects(b.geom, n.geom);
-
-CREATE UNIQUE INDEX pk_nodes_in_Belarus ON nodes_in_Belarus  (id);
+SELECT i.id
+  FROM (
+	SELECT n.id, n.geom
+	  FROM nodes n
+	 WHERE n.tstamp > (current_date - interval '1 day')
+       ) i, geo_Belarus b
+ WHERE ST_Intersects(b.geom, i.geom);
 
 -- Вуліцы і дарогі
 CREATE TABLE geo_roads(
