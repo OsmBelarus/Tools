@@ -17,6 +17,10 @@ public class OsmNamed {
     public String alt_name_be;
 
     public String getCode() {
+        return getCode(type, id);
+    }
+
+    static String getCode(TYPE type, long id) {
         switch (type) {
         case NODE:
             return "n" + id;

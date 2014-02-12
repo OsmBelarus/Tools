@@ -41,6 +41,8 @@ public class Geo {
     static final DecimalFormat N2 = new DecimalFormat("00");
     static final StringBuilder o = new StringBuilder();
     public static final Area BELARUS = box2area(22.55, 50.716667, 32.708056, 56.066667);
+    public static double LATITUDE_SIZE = 111.321;
+    public static double LONGTITUDE_BELARUS_SIZE = 67.138;
 
     public synchronized static String coord2str(double lat, double lon) {
         o.setLength(0);

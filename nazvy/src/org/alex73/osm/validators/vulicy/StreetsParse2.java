@@ -45,6 +45,7 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.TSV;
+import org.alex73.osm.validators.vulicy2.OsmHouseStreet;
 import org.alex73.osm.validators.vulicy2.OsmNamed;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.apache.commons.lang.StringUtils;
@@ -70,7 +71,6 @@ public class StreetsParse2 {
     List<City> cities = new ArrayList<>();
     List<StreetNames> resultStreets = new ArrayList<>();
     List<StreetNames> resultHouses = new ArrayList<>();
-    List<StreetNames> resultRelations = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         Env.load();
@@ -91,7 +91,6 @@ public class StreetsParse2 {
 
         processStreets();
         processHouses();
-        processRelations();
 
         end();
     }
@@ -199,27 +198,44 @@ public class StreetsParse2 {
     }
 
     public void processHouses() {
-        if (System.getProperty("disableAddrStreet") != null) {
-            return;
-        }
-        String beTag = System.getProperty("disableAddressStreetBe") == null ? "addr:street:be" : null;
         for (City c : cities) {
-            for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getHousesInsideGeom",c.geomText)) {
-                StreetNames n = processTags(c, s, "addr:street", null, beTag, null);
-                if (n != null && n.needToChange()) {
-                    resultHouses.add(n);
+            List<OsmHouseStreet> list = db.selectList("getHousesAndStreetsInsideGeom", c.geomText);
+            Map<Long, String> names = new HashMap<>();
+            Map<Long, String> names_be = new HashMap<>();
+            for (OsmHouseStreet s : list) {
+                if (s.name==null) {
+                    // няма тэга addr:street
+                    StreetNames e = new StreetNames();
+                    e.c = c;
+                    e.objCode = s.getHouseCode();
+                    e.error = "Няма тэга addr:street для дому";
+                    resultHouses.add(e);
+                    continue;
                 }
-            }
-        }
-    }
-
-    public void processRelations() {
-        for (City c : cities) {
-            for (OsmNamed s :(List<OsmNamed>)(List) db.selectList("getAddressesInsideGeom",c.geomText)) {
-                StreetNames n = processTags(c, s, "name", "name:ru", "name:be",
-                        System.getProperty("disableIntName") == null ? "int_name" : null);
-                if (n != null && n.needToChange()) {
-                    resultRelations.add(n);
+                if (s.rid == null) {
+                    // няма вуліцы для гэтага дому
+                    StreetNames e = new StreetNames();
+                    e.c = c;
+                    e.objCode = s.getHouseCode();
+                    e.error = "Няма вуліцы '" + s.name + "' для дому";
+                    resultHouses.add(e);
+                    continue;
+                }
+                String prevName = names.get(s.hid);
+                String prevNameBe = names_be.get(s.hid);
+                if (prevName != null) {
+                    // ужо была нейкая вуліца для гэтага дому
+                    if (!StringUtils.equals(prevNameBe, s.name_be)) {
+                        // і беларуская назва не супадае
+                        StreetNames e = new StreetNames();
+                        e.c = c;
+                        e.objCode = s.getHouseCode();
+                        e.error = "Беларускія назвы вуліц побач не супадаюць для дому";
+                        resultHouses.add(e);
+                        continue;
+                    }
+                    names.put(s.hid, s.name);
+                    names_be.put(s.hid, s.name_be);
                 }
             }
         }

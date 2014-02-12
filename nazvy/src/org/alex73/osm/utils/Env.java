@@ -7,14 +7,13 @@ public class Env {
     public static Properties env;
 
     public static void load() {
+        load("env.properties");
+    }
+
+    public static void load(String file) {
         env = new Properties();
-        try {
-            FileInputStream e = new FileInputStream("env.properties");
-            try {
-                env.load(e);
-            } finally {
-                e.close();
-            }
+        try (FileInputStream e = new FileInputStream(file)) {
+            env.load(e);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

@@ -9,9 +9,11 @@
   <resultMap type="org.alex73.osm.validators.ahulnaje.Error" id="Error" />
 
   <resultMap type="org.alex73.osm.validators.vulicy2.OsmNamed" id="OsmNamed" />
-
   <resultMap type="org.alex73.osm.validators.vulicy2.OsmPlace" id="OsmPlace" />
-
+  <resultMap type="org.alex73.osm.validators.vulicy2.OsmHouseStreet" id="OsmHouseStreet" />
+  
+  <resultMap type="org.alex73.osm.validators.vulicy2.VialikiDom" id="VialikiDom" />
+  
   <sql id="fieldsNamed">
        tags->'name' as name,
        tags->'name:be' as name_be,
@@ -81,7 +83,35 @@
         FROM geo_address_streets r
        WHERE ST_Intersects(geom, ST_GeomFromEWKT(#{value}))
   </select>
-  
+
+  <!-- Дастаем дамы і вуліцы для іх у месьце -->
+  <select id="getHousesAndStreetsInsideGeom" parameterType="long" resultMap="OsmHouseStreet">
+          SELECT 'WAY' as htype,
+                 h.id as hid, 
+                 'WAY' as htype,
+                 r.id as rid, 
+                 h.tags->'addr:street' as name, 
+                 r.tags->'name:be' as name_be
+            FROM geo_houses h LEFT OUTER JOIN geo_roads r 
+                                ON h.tags->'addr:street' = r.tags->'name' AND 
+                                   ST_Distance(h.geom, r.geom) &lt; 0.1
+           WHERE ST_Intersects(h.geom, ST_GeomFromEWKT(#{value})) AND
+                 exist_key(h.tags, 'addr:housenumber')
+  </select>
+  <select id="getStreetNameBeForAllHouses" parameterType="long" resultMap="OsmHouseStreet">
+          SELECT 'WAY' as htype,
+                 h.id as hid, 
+                 'WAY' as htype,
+                 r.id as rid, 
+                 h.tags->'addr:street' as name, 
+                 r.tags->'name:be' as name_be
+            FROM geo_houses h LEFT OUTER JOIN geo_roads r 
+                                ON h.tags->'addr:street' = r.tags->'name' AND 
+                                   ST_Distance(h.geom, r.geom) &lt; 0.1
+           WHERE exist_key(h.tags, 'addr:housenumber') AND 
+                 h.geom IS NOT NULL
+  </select>
+
   <!-- Мяжа вакол кропкі горада: вяртае найменьшы палігон вакол кропкі з вызначаным place -->
   <select id="city_border">
      SELECT a.osm_id, a.name, a."name:be", a.place
@@ -91,6 +121,20 @@
             a.place IN ('city','town','village','hamlet','isolated_dwelling')
       ORDER BY ST_Area(a.way)
   </select>
+
+  <!-- Дамы большыя за 600 мэтраў па адным з памераў -->
+  <select id="big_buildings" resultMap="VialikiDom">
+    SELECT id, GREATEST(h.dx,h.dy) maxsize
+      FROM (
+                  SELECT id,
+                         (ST_XMax(geom)-ST_XMin(geom))*67138 dx,
+                         (ST_YMax(geom)-ST_YMin(geom))*111321 dy 
+                    FROM geo_houses
+                   WHERE geom IS NOT NULL) h
+     WHERE h.dx>600 OR h.dy>600
+     ORDER BY GREATEST(h.dx,h.dy) DESC
+  </select>
+
 
   <!-- Чытае ўсе памылкі разбору -->
   <select id="getAllErrors" resultMap="Error">

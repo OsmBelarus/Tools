@@ -10,7 +10,9 @@ import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,11 +24,18 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
+import org.alex73.osm.validators.vulicy2.OsmHouseStreet;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 
 
@@ -36,8 +45,11 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 public class Convert {
     static final int BUFFER_SIZE = 1024 * 1024;
     static Set<String> uniqueTranslatedTags = new TreeSet<>();
+    static Map<Long,String> houseStreetBe = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
+        loadStreetNamesForHouses();
+
         InputStream in = new BZip2CompressorInputStream(new BufferedInputStream(new FileInputStream(
                 "tmp/belarus-latest.osm.bz2"), BUFFER_SIZE));
 
@@ -67,8 +79,14 @@ public class Convert {
                 switch (se.getName().getLocalPart()) {
                 case "way":
                     Way way = um.unmarshal(reader, Way.class).getValue();
-                    fixBel(way.getTag(),"name:be","name");
-                    fixBel(way.getTag(),"addr:street:be","addr:street");
+                    if (way.getId()==25439425) {
+                        System.out.println();
+                    }
+                    fixBel(way.getTag(), "name:be", "name");
+                    String nameBeHouse = houseStreetBe.get(way.getId());
+                    if (nameBeHouse != null) {
+                        setTag(way.getTag(), "addr:street", nameBeHouse);
+                    }
                     m.marshal(way, wrCyr);
                     fixInt(way.getTag());
                     m.marshal(way, wrInt);
@@ -79,7 +97,7 @@ public class Convert {
                 case "node":
                     Node node = um.unmarshal(reader, Node.class).getValue();
                     fixBel(node.getTag(),"name:be","name");
-                    fixBel(node.getTag(),"addr:street:be","addr:street");
+                    //fixBel(node.getTag(),"addr:street:be","addr:street");
                     m.marshal(node, wrCyr);
                     fixInt(node.getTag());
                     m.marshal(node, wrInt);
@@ -90,7 +108,7 @@ public class Convert {
                 case "relation":
                     Relation relation = um.unmarshal(reader, Relation.class).getValue();
                     fixBel(relation.getTag(),"name:be","name");
-                    fixBel(relation.getTag(),"addr:street:be","addr:street");
+                    //fixBel(relation.getTag(),"addr:street:be","addr:street");
                     m.marshal(relation, wrCyr);
                     fixInt(relation.getTag());
                     m.marshal(relation, wrInt);
@@ -114,11 +132,40 @@ public class Convert {
         System.out.println("UniqueTranslatedTags: " + uniqueTranslatedTags);
     }
 
+    static void loadStreetNamesForHouses() throws Exception {
+        Env.load("../nazvy/env.properties");
+        SqlSession db;
+        String resource = "osm.xml";
+        SqlSessionFactory sqlSessionFactory;
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        try {
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
+        } finally {
+            inputStream.close();
+        }
+        db = sqlSessionFactory.openSession();
+        List<OsmHouseStreet> list = db.selectList("getStreetNameBeForAllHouses");
+        for (OsmHouseStreet h : list) {
+            if (h.name_be != null) {
+                houseStreetBe.put(h.hid, h.name_be);
+            }
+        }
+    }
+
     static void fixInt(List<Tag> tags) {
         for (int i = 0; i < tags.size(); i++) {
             Tag tag = tags.get(i);
             if ("name".equals(tag.getK())) {
                 tag.setV(Lat.lat(tag.getV(), false));
+            }
+        }
+    }
+
+    static void setTag(List<Tag> tags, String tagName, String tagValue) {
+        for (int i = 0; i < tags.size(); i++) {
+            if (tagName.equals(tags.get(i).getK())) {
+                tags.get(i).setV(tagValue);
+                break;
             }
         }
     }

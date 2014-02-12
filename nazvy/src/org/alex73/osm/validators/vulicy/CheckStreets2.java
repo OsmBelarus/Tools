@@ -38,11 +38,7 @@ import org.alex73.osm.validators.vulicy2.OsmNamed;
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
  * 
- * -DdisableAddrStreet - не правяраць назвы вуліц таксама ў relation.
- * 
  * -DdisableIntName - не правяраць int_name
- * 
- * -DdisableAddressStreetBe - не правяраць address:street:be
  */
 public class CheckStreets2 extends StreetsParse2 {
     static final Pattern RE_ALLOWED_CHARS = Pattern
@@ -89,13 +85,6 @@ public class CheckStreets2 extends StreetsParse2 {
         for (StreetNames n : resultHouses) {
             if (n.error == null) {
                 addWithCreate(result.get(n.c).damy, n, n);
-            } else {
-                addWithCreate(result.get(n.c).pamylki, n.error, n);
-            }
-        }
-        for (StreetNames n : resultRelations) {
-            if (n.error == null) {
-                result.get(n.c).vulicy.add(n);
             } else {
                 addWithCreate(result.get(n.c).pamylki, n.error, n);
             }

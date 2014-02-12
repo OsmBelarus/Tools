@@ -55,7 +55,7 @@
         <td>Памылка</td>
         <td>osm</td>
       </tr>
-    #foreach ( $s in $data.entrySet() )
+    #foreach ( $s in $pamylki.entrySet() )
       <tr>
         <td class="err">ERROR: $s.key</td>
         <td>
@@ -63,6 +63,20 @@
             $n
           #end
         </td>
+      </tr>
+    #end
+    </table>
+
+<h2>Заўвагі: занадта вялікія будынкі</h2>
+    <table>
+      <tr>
+        <td>Заўвага</td>
+        <td>osm</td>
+      </tr>
+    #foreach ( $s in $vialikija_damy )
+      <tr>
+        <td class="err">WARNING: $s.text</td>
+        <td>$s.osmLink</td>
       </tr>
     #end
     </table>

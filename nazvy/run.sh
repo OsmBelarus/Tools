@@ -10,5 +10,5 @@ git pull || exit 1
 popd
 
 time $JAVA_EXEC org.alex73.osm.validators.harady.CheckCities2 || exit 1
-time $JAVA_EXEC -DdisableAddrStreet org.alex73.osm.validators.vulicy.CheckStreets2 || exit 1
+time $JAVA_EXEC org.alex73.osm.validators.vulicy.CheckStreets2 || exit 1
 time $JAVA_EXEC org.alex73.osm.validators.ahulnaje.CheckLoadingErrors || exit 1

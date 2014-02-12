@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.vulicy2.VialikiDom;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -19,14 +20,15 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 public class CheckLoadingErrors {
     static SqlSession db;
     public static Map<String, List<String>> pamylki = new TreeMap<>();
+    public static List<Zauvaha> vialikija_damy = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         Env.load();
 
         String out = Env.readProperty("out.dir") + "/pamylki.html";
         int count = read();
-        VelocityOutput.output("org/alex73/osm/validators/ahulnaje/pamylki.velocity", out, "data", pamylki, "count",
-                count);
+        VelocityOutput.output("org/alex73/osm/validators/ahulnaje/pamylki.velocity", out, "pamylki", pamylki,
+                "vialikija_damy", vialikija_damy, "count", count);
     }
 
     static int read() throws Exception {
@@ -71,6 +73,20 @@ public class CheckLoadingErrors {
             }
             p.add(OSM.histIcon(err.getCode()));
         }
+
+        List<VialikiDom> vdb = db.selectList("big_buildings");
+        for (VialikiDom d : vdb) {
+            Zauvaha z = new Zauvaha();
+            z.text = "Будынак працягласьцю больш за " + ((int) d.maxsize) + " мэтраў";
+            z.osmLink = OSM.histIcon("w" + d.id);
+            vialikija_damy.add(z);
+        }
+
         return errors.size();
+    }
+
+    public static class Zauvaha {
+        public String text;
+        public String osmLink;
     }
 }
