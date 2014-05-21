@@ -77,6 +77,11 @@ BEGIN
   ELSE
     RETURN geom;
   END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    INSERT INTO WAYS_ERROR(id,error)
+    VALUES(_way_id,'Невалідная геамэтрыя way #'||_way_id||': '||SQLSTATE||' '||SQLERRM);
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
