@@ -34,6 +34,7 @@ import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.vulicy2.OsmNamed;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -197,6 +198,55 @@ public class CheckStreets2 extends StreetsParse2 {
         streetNames.required.name_ru = streetNames.tags.name_ru == null ? null : streetNames.required.name;
         streetNames.required.name_be = streetNames.tags.name_be == null ? null : be.getRightName();
         streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(), false);
+
+        switch (Env.readProperty("nazvy_vulic.name")) {
+        case "skip":
+            streetNames.required.name = null;
+            streetNames.exist.name = null;
+            break;
+        case "change":
+            if (StringUtils.isEmpty(streetNames.exist.name)) {
+                streetNames.required.name = null;
+                streetNames.exist.name = null;
+            }
+            break;
+        }
+        switch (Env.readProperty("nazvy_vulic.name_ru")) {
+        case "skip":
+            streetNames.required.name_ru = null;
+            streetNames.exist.name_ru = null;
+            break;
+        case "change":
+            if (StringUtils.isEmpty(streetNames.exist.name_ru)) {
+                streetNames.required.name_ru = null;
+                streetNames.exist.name_ru = null;
+            }
+            break;
+        }
+        switch (Env.readProperty("nazvy_vulic.name_be")) {
+        case "skip":
+            streetNames.required.name_be = null;
+            streetNames.exist.name_be = null;
+            break;
+        case "change":
+            if (StringUtils.isEmpty(streetNames.exist.name_be)) {
+                streetNames.required.name_be = null;
+                streetNames.exist.name_be = null;
+            }
+            break;
+        }
+        switch (Env.readProperty("nazvy_vulic.int_name")) {
+        case "skip":
+            streetNames.required.int_name = null;
+            streetNames.exist.int_name = null;
+            break;
+        case "change":
+            if (StringUtils.isEmpty(streetNames.exist.int_name)) {
+                streetNames.required.int_name = null;
+                streetNames.exist.int_name = null;
+            }
+            break;
+        }
     }
 
     static <K, V> void addWithCreate(Map<K, List<V>> map, K key, V value) {
