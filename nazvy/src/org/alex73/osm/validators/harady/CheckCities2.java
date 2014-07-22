@@ -321,8 +321,12 @@ public class CheckCities2 {
                     // правяраем тэгі
                     tcName.check(w, p, correctTags);
                     tcNameBe.check(w, p, correctTags);
-                    tcNameRu.check(w, p, correctTags);
-                    tcIntName.check(w, p, correctTags);
+                    if (!"skip".equals(Env.readProperty("nazvy_viosak.name_ru"))) {
+                        tcNameRu.check(w, p, correctTags);
+                    }
+                    if (!"skip".equals(Env.readProperty("nazvy_viosak.int_name"))) {
+                        tcIntName.check(w, p, correctTags);
+                    }
                     tcNameBeTarask.check(w, p, correctTags);
                     if (correctTags.place!=null) {
                         tcPlace.check(w, p, correctTags);
