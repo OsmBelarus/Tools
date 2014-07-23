@@ -53,18 +53,21 @@ public class StreetName {
             }
         }
 
-        for (int i = 0; i < words.size(); i++) {
-            Matcher m = RE_INDEX.matcher(words.get(i));
-            if (m.matches()) {
-                if (index != null) {
-                    throw new ParseException("Зашмат індэксаў: " + nameOrig, 0);
-                }
-                index = Integer.parseInt(m.group(1));
-                if (index > 20) {
-                    index = null;
-                } else {
-                    words.remove(i);
-                    i--;
+        if (!nameOrig.contains("Линия")) {
+            // для "Ліній" індэксы толькі ў назве, акрамя "Другая Шостая Линия" :)
+            for (int i = 0; i < words.size(); i++) {
+                Matcher m = RE_INDEX.matcher(words.get(i));
+                if (m.matches()) {
+                    if (index != null) {
+                        throw new ParseException("Зашмат індэксаў: " + nameOrig, 0);
+                    }
+                    index = Integer.parseInt(m.group(1));
+                    if (index > 20) {
+                        index = null;
+                    } else {
+                        words.remove(i);
+                        i--;
+                    }
                 }
             }
         }
@@ -166,6 +169,10 @@ public class StreetName {
         case "площадка":
         case "пляцоўка":
             return StreetTerm.пляцоўка;
+        case "путепровод":
+        case "пуцепровад":
+        case "пуцеправод":
+            return StreetTerm.пуцеправод;
         default:
             return null;
         }

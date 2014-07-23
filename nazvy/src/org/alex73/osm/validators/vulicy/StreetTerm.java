@@ -50,6 +50,8 @@ public enum StreetTerm {
 
     пляцоўка("площадка", StreetTermRod.ZAN, "пляцоўка", StreetTermRod.ZAN),
 
+    пуцеправод("путепровод", StreetTermRod.MUZ, "пуцеправод", StreetTermRod.MUZ),
+
     шаша("шоссе", StreetTermRod.NI, "шаша", StreetTermRod.ZAN);
 
     private final String nameRu;

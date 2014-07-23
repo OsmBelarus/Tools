@@ -56,10 +56,26 @@ public class StreetNameParser {
             orig = new StreetName();
             orig.name = "20-й дивизии";
             orig.term = StreetTerm.вуліца;
+        } else if (name.equals("улица 6-й Гвардейской Армии")) {
+            orig = new StreetName();
+            orig.name = "6-й Гвардейской Армии";
+            orig.term = StreetTerm.вуліца;
         } else if (name.equals("МКАД")) {
             orig = new StreetName();
             orig.name = "МКАД";
             orig.term = StreetTerm.няма;
+        } else if (name.equals("улица 5-й Форт")) {
+            orig = new StreetName();
+            orig.name = "5-й Форт";
+            orig.term = StreetTerm.вуліца;
+        } else if (name.equals("улица Красная Площадь")) {
+            orig = new StreetName();
+            orig.name = "Красная Площадь";
+            orig.term = StreetTerm.вуліца;
+        } else if (name.equals("улица Тупик")) {
+            orig = new StreetName();
+            orig.name = "Тупик";
+            orig.term = StreetTerm.вуліца;
         } else {
             orig = new StreetName();
             orig.parseAny(name);
@@ -69,6 +85,7 @@ public class StreetNameParser {
 
     public static String fix(String name) {
         name = name.replace(".", ". ").replace("-й", "-й ").replace("-ый", "-ый ").replace("-я", "-я ");
+        name = name.replace("МОПРовс", "Мопровс");
         name = name.replaceAll("([ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮИЩ])", " $1");
         name = name.replaceAll("([ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮИЩ])", " $1");
         name = name.replaceAll("([ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮИЩ])", " $1");

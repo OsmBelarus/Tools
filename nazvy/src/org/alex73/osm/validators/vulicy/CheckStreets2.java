@@ -138,7 +138,9 @@ public class CheckStreets2 extends StreetsParse2 {
         if (trans == null) {
             throw new Exception("Не перакладзена '" + street.name + "'");
         }
-        if (!RE_ALLOWED_CHARS.matcher(trans).matches()) {
+        // выдаляем лацінскія нумары
+        String test = trans.replaceAll("^[XVI]+ ", "").replaceAll(" [XVI]+$", "").replaceAll(" [XVI]+ ", " ");
+        if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
             throw new Exception("Невядомыя літары ў '" + trans + "'");
         }
 
