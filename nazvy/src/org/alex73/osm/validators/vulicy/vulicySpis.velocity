@@ -33,9 +33,14 @@
 	#foreach ( $c in $harady )
 	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - 
 		  #if (${data.get($c).errCount} > 0)
-		    <span class="err">памылак : ${data.get($c).errCount}</span>
+		    <span class="err">памылак : ${data.get($c).errCount}</span>,
 		  #else
-		    няма памылак
+		    няма памылак,
+		  #end
+		  #if (${data.get($c).houseErrCount} > 0)
+		    <span class="err"><a href="damy-${c.fn}.html">памылак дамоў: ${data.get($c).houseErrCount}</a></span>
+		  #else
+		    няма памылак дамоў
 		  #end
 	    </li>
 	#end

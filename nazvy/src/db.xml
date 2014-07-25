@@ -91,7 +91,12 @@
                  'WAY' as htype,
                  r.id as rid, 
                  h.tags->'addr:street' as name, 
-                 r.tags->'name:be' as name_be
+                 r.tags->'name:be' as name_be,
+                 ST_XMin(h.geom) as xmin,
+                 ST_XMax(h.geom) as xmax,
+                 ST_YMin(h.geom) as ymin,
+                 ST_YMax(h.geom) as ymax,
+                 hstore_to_array(h.tags) as tags
             FROM geo_houses h LEFT OUTER JOIN geo_roads r 
                                 ON h.tags->'addr:street' = r.tags->'name' AND 
                                    ST_Distance(h.geom, r.geom) &lt; 0.1

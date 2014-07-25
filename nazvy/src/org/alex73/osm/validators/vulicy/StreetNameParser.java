@@ -94,8 +94,10 @@ public class StreetNameParser {
         name = name.replace("- ", "-").replaceAll("\" ([ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮИЩ])", "\"$1");
         name = name.replace("Б С С Р", "БССР");
         name = name.replace("М К А Д", "МКАД");
+        name = name.replace("К П С С", "КПСС");
         name = name.replace("С С С Р", "СССР");
         name = name.replace("В Л К С М", "ВЛКСМ");
+        name = name.replace("Л К С М Б", "ЛКСМБ");
         name = name.replace("4 пер. Транзитный", "пер. 4-й Транзитный");
         name = name.replace("1905 г. ул.", "ул. 1905 года");
         name = name.replace("8-го Марта", "8 Марта");
@@ -151,7 +153,6 @@ public class StreetNameParser {
         name = name.replace("Житняя улица", "Житная улица");
         name = name.replace("1-й Зап. тупик", "1-й Западный тупик");
         name = name.replace("Францыска Скарыны", "Франциска Скорыны");
-        name = name.replace("Адровский", "Андровский");
         name = name.replace("Рогачевский", "Рогачёвский");
         name = name.replace("ПЕР. 1-Й МАНЕВИЧА", "пер. 1-й Маневича");
         name = name.replace("Пинский проезд улица", "Пинский проезд");

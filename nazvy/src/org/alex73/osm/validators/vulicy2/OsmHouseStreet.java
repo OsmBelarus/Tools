@@ -9,6 +9,8 @@ public class OsmHouseStreet {
     public Long rid;
     public String name;
     public String name_be;
+    public double xmin, xmax, ymin, ymax;
+    public Object tags;
 
     public String getHouseCode() {
         return OsmNamed.getCode(htype, hid);

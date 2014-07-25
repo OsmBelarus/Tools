@@ -80,14 +80,43 @@ public class CheckStreets2 extends StreetsParse2 {
             if (n.error == null) {
                 result.get(n.c).vulicy.add(n);
             } else {
-                addWithCreate(result.get(n.c).pamylki, n.error, n);
+                addWithCreate(result.get(n.c).pamylkiVulic, n.error, n);
             }
         }
-        for (StreetNames n : resultHouses) {
-            if (n.error == null) {
-                addWithCreate(result.get(n.c).damy, n, n);
-            } else {
-                addWithCreate(result.get(n.c).pamylki, n.error, n);
+        for (HouseError n : resultHouses) {
+            result.get(n.c).pamylkiDamou.add(n);
+        }
+        for(Result r:result.values()) {
+            r.pamylkiDamouG = groupBy(r.pamylkiDamou, new Group.Keyer<HouseError>() {
+                public String getKey(HouseError data) {
+                    return data.error;
+                }
+            }, new Group.Creator<HouseError>() {
+                public Group<HouseError> create(HouseError data) {
+                    return new HouseGroup(data.error);
+                }
+            });
+            Collections.sort(r.pamylkiDamouG, new Comparator<Group<HouseError>>() {
+                @Override
+                public int compare(Group<HouseError> o1, Group<HouseError> o2) {
+                    return o1.getKey().compareTo(o2.getKey());
+                }
+            });
+            for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
+                hg.xmin = Double.MAX_VALUE;
+                hg.xmax = Double.MIN_VALUE;
+                hg.ymin = Double.MAX_VALUE;
+                hg.ymax = Double.MIN_VALUE;
+                for (HouseError he : hg.objects) {
+                    hg.xmin = Math.min(hg.xmin, he.object.xmin);
+                    hg.xmax = Math.max(hg.xmax, he.object.xmax);
+                    hg.ymin = Math.min(hg.ymin, he.object.ymin);
+                    hg.ymax = Math.max(hg.ymax, he.object.ymax);
+                }
+                hg.xmin -= 0.002;
+                hg.xmax += 0.002;
+                hg.ymin -= 0.002;
+                hg.ymax += 0.002;
             }
         }
 
@@ -125,6 +154,8 @@ public class CheckStreets2 extends StreetsParse2 {
             System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
             VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-" + c.fn
                     + ".html", "horad", c.nazva, "data", result.get(c));
+            VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-" + c.fn
+                    + ".html", "horad", c.nazva, "data", result.get(c));
         }
     }
 
@@ -139,7 +170,7 @@ public class CheckStreets2 extends StreetsParse2 {
             throw new Exception("Не перакладзена '" + street.name + "'");
         }
         // выдаляем лацінскія нумары
-        String test = trans.replaceAll("^[XVI]+ ", "").replaceAll(" [XVI]+$", "").replaceAll(" [XVI]+ ", " ");
+        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "").replaceAll(" [XVI]+ ", " ");
         if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
             throw new Exception("Невядомыя літары ў '" + trans + "'");
         }
@@ -260,14 +291,34 @@ public class CheckStreets2 extends StreetsParse2 {
         list.add(value);
     }
 
+    static <T> List<Group<T>> groupBy(List<T> data, Group.Keyer<T> keyer, Group.Creator<T> creator) {
+        Map<String, Group<T>> groups = new HashMap<>();
+        for (T d : data) {
+            String key = keyer.getKey(d);
+            Group<T> g = groups.get(key);
+            if (g == null) {
+                g = creator.create(d);
+                groups.put(key, g);
+            }
+            g.add(d);
+        }
+        return new ArrayList<>(groups.values());
+    }
+
     public static class Result {
         public int getErrCount() {
-            return vulicy.size() + pamylki.size() + damy.size();
+            return vulicy.size() + pamylkiVulic.size() + damy.size();
+        }
+        public int getHouseErrCount() {
+            return pamylkiDamou.size();
         }
 
         public List<StreetNames> vulicy = new ArrayList<>();
 
-        public Map<String, List<StreetNames>> pamylki = new TreeMap<>();
+        public Map<String, List<StreetNames>> pamylkiVulic = new TreeMap<>();
+        
+        public List<HouseError> pamylkiDamou = new ArrayList<>(); 
+        public List<Group<HouseError>> pamylkiDamouG = new ArrayList<>();
 
         public Map<StreetNames, List<StreetNames>> damy = new TreeMap<>(new Comparator<StreetNames>() {
             public int compare(StreetNames o1, StreetNames o2) {
@@ -313,6 +364,22 @@ public class CheckStreets2 extends StreetsParse2 {
             for (StreetNames n : list) {
                 o.append(',');
                 o.append(n.objCode);
+            }
+            return o.substring(1);
+        }
+    }
+
+    public static class HouseGroup extends Group<HouseError> {
+        public double xmin, xmax, ymin, ymax;
+
+        public HouseGroup(String key) {
+            super(key);
+        }
+
+        public String getCommaObjectIds() {
+            StringBuilder o = new StringBuilder(200);
+            for (HouseError h : objects) {
+                o.append(",way").append(Long.toString(h.object.hid));
             }
             return o.substring(1);
         }

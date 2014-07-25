@@ -60,7 +60,7 @@ RadioButton - выправіць ў JOSM.
         <td>Памылка</td>
         <td>osm</td>
       </tr>
-    #foreach ( $s in $data.pamylki.entrySet() )
+    #foreach ( $s in $data.pamylkiVulic.entrySet() )
       <tr>
         <td class="err">ERROR: $s.key</td>
         <td>
@@ -92,7 +92,7 @@ RadioButton - выправіць ў JOSM.
     #end
     </table>
 
-<h2>Памылкі дамоў</h2>
+<!--h2>Памылкі дамоў</h2>
     <table>
       <tr>
         <td>name</td>
@@ -115,7 +115,7 @@ RadioButton - выправіць ў JOSM.
         </td>
       </tr>
     #end
-    </table>
+    </table-->
 
 </body>
 </html>

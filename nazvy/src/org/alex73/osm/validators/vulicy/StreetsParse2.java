@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Env;
@@ -53,6 +54,7 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.postgresql.jdbc3.Jdbc3Array;
 
 /**
  * Стварае файлы .po для перакладу назваў вуліц.
@@ -60,6 +62,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 public class StreetsParse2 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
+    public static final Pattern RE_HOUSENUMBER = Pattern.compile("[1-9][0-9]*(/[1-9][0-9]*)?[АБВГ]?");
 
     static String poOutputDir;
     static String tmxOutputDir;
@@ -70,7 +73,7 @@ public class StreetsParse2 {
     List<String> errors=new ArrayList<>();
     List<City> cities = new ArrayList<>();
     List<StreetNames> resultStreets = new ArrayList<>();
-    List<StreetNames> resultHouses = new ArrayList<>();
+    List<HouseError> resultHouses = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         Env.load();
@@ -197,7 +200,7 @@ public class StreetsParse2 {
         }
     }
 
-    public void processHouses() {
+    public void processHouses() throws Exception {
         for (City c : cities) {
             List<OsmHouseStreet> list = db.selectList("getHousesAndStreetsInsideGeom", c.geomText);
             Map<Long, String> names = new HashMap<>();
@@ -205,18 +208,18 @@ public class StreetsParse2 {
             for (OsmHouseStreet s : list) {
                 if (s.name==null) {
                     // няма тэга addr:street
-                    StreetNames e = new StreetNames();
+                    HouseError e = new HouseError();
                     e.c = c;
-                    e.objCode = s.getHouseCode();
+                    e.object = s;
                     e.error = "Няма тэга addr:street для дому";
                     resultHouses.add(e);
                     continue;
                 }
                 if (s.rid == null) {
                     // няма вуліцы для гэтага дому
-                    StreetNames e = new StreetNames();
+                    HouseError e = new HouseError();
                     e.c = c;
-                    e.objCode = s.getHouseCode();
+                    e.object = s;
                     e.error = "Няма вуліцы '" + s.name + "' для дому";
                     resultHouses.add(e);
                     continue;
@@ -227,9 +230,9 @@ public class StreetsParse2 {
                     // ужо была нейкая вуліца для гэтага дому
                     if (!StringUtils.equals(prevNameBe, s.name_be)) {
                         // і беларуская назва не супадае
-                        StreetNames e = new StreetNames();
+                        HouseError e = new HouseError();
                         e.c = c;
-                        e.objCode = s.getHouseCode();
+                        e.object = s;
                         e.error = "Беларускія назвы вуліц побач не супадаюць для дому";
                         resultHouses.add(e);
                         continue;
@@ -237,6 +240,48 @@ public class StreetsParse2 {
                     names.put(s.hid, s.name);
                     names_be.put(s.hid, s.name_be);
                 }
+                //checkHouseTags(c,s);
+            }
+        }
+    }
+    
+    void checkHouseTags(City c, OsmHouseStreet s) throws Exception {        
+        String[] arr = (String[]) ((Jdbc3Array) s.tags).getArray(1, 0);
+        for(int i=0;i<arr.length;i+=2) {
+            String k=arr[i];
+            String v=arr[i+1];
+            switch (k) {
+            case "addr:street":
+                break;
+            case "addr:postcode":
+                break;
+            case "building:levels":
+                break;
+            case "addr:housenumber":
+                if (!RE_HOUSENUMBER.matcher(v).matches()) {
+                    HouseError e = new HouseError();
+                    e.c = c;
+                    e.object = s;
+                    e.error = "Няправільны нумар дому: "+v;
+                    resultHouses.add(e);
+                }
+                break;
+            case "building":
+                if (!"yes".equals(v)) {
+                    HouseError e = new HouseError();
+                    e.c = c;
+                    e.object = s;
+                    e.error = "Няправільны тэг building для дому: "+v;
+                    resultHouses.add(e);
+                }
+                break;
+            default:
+                HouseError e = new HouseError();
+                e.c = c;
+                e.object = s;
+                e.error = "Невядомы тэг для дому : " + k + "=" + v;
+                resultHouses.add(e);
+                break;
             }
         }
     }
@@ -376,6 +421,16 @@ public class StreetsParse2 {
             } else {
                 return false;
             }
+        }
+    }
+
+    public static class HouseError {
+        public City c;
+        public OsmHouseStreet object;
+        public String error;
+        public String geom;
+        public String getLink() {
+            return OSM.histIcon(object.getHouseCode());
         }
     }
 }
