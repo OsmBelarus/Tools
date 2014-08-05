@@ -5,6 +5,9 @@
 5. org.alex73.osm.validators.vioski.Export, vioski - старонка для пошуку населеных пунктаў
 
 ####### Падрыхтоўка базы #######
+Дадаць першым радком у /etc/posgres/.../pg_hba.conf:
+    local osm osm trust
+    host  osm osm 127.0.0.1/32 trust
 ## Ствараем карыстальніка osm і базу osm
 sudo -u postgres createuser osm
 sudo -u postgres createdb --encoding=UTF8 --owner=osm osm
