@@ -26,7 +26,8 @@ public class StreetNameParser {
     public static StreetName parse(String name) throws ParseException {
         StreetName orig;
         if (name.equals("Набережная улица") || name.equals("ул. Набережная") || name.equals("улица Набережная")
-                || name.equals("Набярэжная вул.") || name.equals("Набережная ул.") || name.equals("Набережная Улица")) {
+                || name.equals("Набярэжная вул.") || name.equals("Набережная ул.") || name.equals("Набережная Улица")
+                || name.equals("Набережная")) {
             orig = new StreetName();
             orig.name = "Набережная";
             orig.term = StreetTerm.вуліца;
