@@ -117,14 +117,16 @@
                  h.geom IS NOT NULL
   </select>
 
-  <!-- Мяжа вакол кропкі горада: вяртае найменьшы палігон вакол кропкі з вызначаным place -->
-  <select id="city_border">
-     SELECT a.osm_id, a.name, a."name:be", a.place
-       FROM osm_polygon a, osm_point p
-      WHERE ST_Contains(a.way, p.way) AND 
-            p.osm_id=#{cityId} AND 
-            a.place IN ('city','town','village','hamlet','isolated_dwelling')
-      ORDER BY ST_Area(a.way)
+  <!-- Мяжа вакол кропкі горада: вяртае палігоны вакол кропкі з вызначаным place -->
+  <select id="city_border" resultMap="OsmNamed" parameterType="long" >
+     SELECT B.type as type, B.id as id, B.tags->'name' as name, B.tags->'name:be' as name_be
+       FROM geo_cities C, geo_cities B
+      WHERE ST_Covers(B.geom, C.geom) AND 
+            C.id=#{cityId} AND
+            B.type &lt;&gt; 'NODE' AND 
+            (B.tags->'place' IN ('city','town','village','hamlet','isolated_dwelling') OR
+            exist_key(B.tags, 'boundary')) 
+      ORDER BY ST_Area(B.geom)
   </select>
 
   <!-- Дамы большыя за 600 мэтраў па адным з памераў -->

@@ -1,7 +1,7 @@
 package org.alex73.osm.validators.vulicy2;
 
 public class OsmNamed {
-    enum TYPE {
+    public enum TYPE {
         NODE, WAY, RELATION
     };
 
