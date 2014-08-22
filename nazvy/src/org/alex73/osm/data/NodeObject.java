@@ -39,4 +39,8 @@ public class NodeObject extends BaseObject {
     public String getCode() {
         return "n" + id;
     }
+
+    public static String getCode(long id) {
+        return "n" + id;
+    }
 }

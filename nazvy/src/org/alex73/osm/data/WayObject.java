@@ -38,4 +38,8 @@ public class WayObject extends BaseObject {
     public String getCode() {
         return "w" + id;
     }
+
+    public static String getCode(long id) {
+        return "w" + id;
+    }
 }

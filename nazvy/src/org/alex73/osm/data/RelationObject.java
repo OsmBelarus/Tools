@@ -39,6 +39,10 @@ public class RelationObject extends BaseObject {
         return "r" + id;
     }
 
+    public static String getCode(long id) {
+        return "r" + id;
+    }
+
     public static class Member {
         final public long id;
         final public String role;

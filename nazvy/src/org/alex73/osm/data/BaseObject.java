@@ -47,6 +47,14 @@ public abstract class BaseObject implements Comparable<BaseObject> {
         return null;
     }
 
+    public String[] getTagNames() {
+        String[] r = new String[tags.length / 2];
+        for (int i = 0; i < r.length; i++) {
+            r[i] = tags[i * 2];
+        }
+        return r;
+    }
+
     @Override
     public int compareTo(BaseObject o) {
         return Long.compare(id, o.id);

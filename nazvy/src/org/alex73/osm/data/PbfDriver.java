@@ -22,6 +22,7 @@
 package org.alex73.osm.data;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,10 @@ public class PbfDriver {
     static final String[] EMPTY_TAGS = new String[0];
 
     public static MemoryStorage process(File pbf) throws Exception {
+        return process(pbf, null);
+    }
+
+    public static MemoryStorage process(File pbf, final Filter filter) throws Exception {
         final MemoryStorage storage = new MemoryStorage();
 
         PbfReader rd = new PbfReader(pbf, 1);
@@ -55,7 +60,10 @@ public class PbfDriver {
 
                 switch (e.getType()) {
                 case Node:
-                    storage.nodes.add(create((Node) e));
+                    Node n = (Node) e;
+                    if (filter == null || filter.acceptNode(n)) {
+                        storage.nodes.add(create(n));
+                    }
                     break;
                 case Way:
                     storage.ways.add(create((Way) e));
@@ -78,6 +86,27 @@ public class PbfDriver {
         });
         rd.run();
         storage.finishLoading();
+
+        if (filter != null) {
+            List<WayObject> newWays = new ArrayList<WayObject>(storage.ways.size());
+            for (WayObject w : storage.ways) {
+                if (filter.acceptWay(storage, w)) {
+                    newWays.add(w);
+                }
+            }
+            storage.ways.clear();
+            storage.ways.addAll(newWays);
+
+            List<RelationObject> newRelations = new ArrayList<RelationObject>(storage.relations.size());
+            for (RelationObject r : storage.relations) {
+                if (filter.acceptRelation(storage, r)) {
+                    newRelations.add(r);
+                }
+            }
+            storage.relations.clear();
+            storage.relations.addAll(newRelations);
+        }
+
         return storage;
     }
 
@@ -132,5 +161,13 @@ public class PbfDriver {
         }
 
         return new RelationObject(in.getId(), createTags(in.getTags()), members);
+    }
+
+    public interface Filter {
+        boolean acceptNode(Node n);
+
+        boolean acceptWay(MemoryStorage storage, WayObject w);
+
+        boolean acceptRelation(MemoryStorage storage, RelationObject r);
     }
 }
