@@ -1,3 +1,24 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.vioski;
 
 import java.io.File;
@@ -18,6 +39,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
+/**
+ * Стварае html+js для прагляду вёсак на мапе (http://latlon.org/~alex73/vioski/vioski.html).
+ */
 public class Export {
 
     public static void main(String[] args) throws Exception {
@@ -71,6 +95,10 @@ public class Export {
             }
         }
 
+        String outDir = Env.readProperty("out.dir");
+        File foutDir = new File(outDir+"/vioski");
+        foutDir.mkdirs();
+
         List<PadzielOsmNas> padziel = new TSV('\t').readCSV("vioski/padziel.csv", PadzielOsmNas.class);
         Map<String, String> padzielo = new TreeMap<>();
         for(PadzielOsmNas p:padziel) {
@@ -84,7 +112,9 @@ public class Export {
         o += "data.dav=" + om.writeValueAsString(rajony) + "\n";
         o += "data.map=" + om.writeValueAsString(map) + "\n";
         o += "data.padziel=" + om.writeValueAsString(padzielo) + "\n";
-        FileUtils.writeStringToFile(new File("vioski/data.js"), o);
+        FileUtils.writeStringToFile(new File(outDir+"/vioski/data.js"), o);
+		FileUtils.copyFileToDirectory(new File("vioski/control.js"), foutDir);
+		FileUtils.copyFileToDirectory(new File("vioski/vioski.html"), foutDir);
     }
 
     @JsonSerialize(include = Inclusion.NON_NULL)
