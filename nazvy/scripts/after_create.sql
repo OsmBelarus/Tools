@@ -98,7 +98,7 @@ BEGIN
     INSERT INTO WAYS_ERROR(id,error)
     VALUES(_way_id,'Пустая геамэтрыя way для polygon');
     RETURN NULL;
-  ELSEIF ST_NPoints(ST_Simplify(geom,0.00001))<4 THEN
+  ELSEIF ST_NPoints(geom)<3 THEN
     INSERT INTO WAYS_ERROR(id,error)
     VALUES(_way_id,'Недастаткова кропак way для polygon');
     RETURN NULL;
