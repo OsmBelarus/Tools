@@ -1,0 +1,10 @@
+/set term_charset utf-8
+/set recode_autodetect_utf8 ON
+/set recode_fallback cp1251
+/set recode_out_default_charset cp1251
+/set recode_transliterate ON
+/set recode ON
+
+/LOG OPEN -targets #osm /var/www/osm/irclogs/%Y/%m.txt
+
+/j #osm
