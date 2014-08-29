@@ -21,12 +21,15 @@
 
 package org.alex73.osm.monitors.export;
 
+import gen.alex73.osm.monitor.Config;
+import gen.alex73.osm.monitor.Monitor;
+
 import java.io.File;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.alex73.osm.data.BaseObject;
+import javax.xml.bind.JAXBContext;
+
 import org.alex73.osm.data.MemoryStorage;
 import org.alex73.osm.data.NodeObject;
 import org.alex73.osm.data.PbfDriver;
@@ -45,6 +48,15 @@ public class ExportObjects {
 
     public static void main(String[] args) throws Exception {
         Env.load();
+
+        JAXBContext CTX = JAXBContext.newInstance(Config.class);
+        Config config = (Config) CTX.createUnmarshaller().unmarshal(new File("monitor-config.xml"));
+
+        File outdir = new File("../../OsmBelarus-Monitoring/");
+        List<MonitorContext> monitors = new ArrayList<>();
+        for (Monitor m : config.getMonitor()) {
+            monitors.add(new MonitorContext(m, outdir));
+        }
 
         final CoordCache cache = new CoordCache();
 
@@ -69,34 +81,24 @@ public class ExportObjects {
         });
         formatter = new OutputFormatter(osm);
 
-//        for (RelationObject r : osm.relations) {
-//            if ("BY".equals(r.getTag("addr:country")) && "4".equals(r.getTag("admin_level"))) {
-//                System.out.println(formatter.objectName(r));
-//                System.out.println("  other names: " + formatter.otherNames(r));
-//                System.out.println("  other tags : " + formatter.otherTags(r));
-//                for (String g : formatter.getGeometry(r)) {
-//                    System.out.println("    geometry : " + g);
-//                }
-//            }
-//        }
+        for (NodeObject n : osm.nodes) {
+            for (int i = 0; i < monitors.size(); i++) {
+                monitors.get(i).process(n);
+            }
+        }
         for (WayObject w : osm.ways) {
-            if ("lake".equals(w.getTag("water"))) {
-                System.out.println(formatter.objectName(w));
-                System.out.println("  other names: " + formatter.otherNames(w));
-                System.out.println("  other tags : " + formatter.otherTags(w));
-                System.out.println("    geometry : " + formatter.getGeometry(w));
+            for (int i = 0; i < monitors.size(); i++) {
+                monitors.get(i).process(w);
             }
         }
         for (RelationObject r : osm.relations) {
-            if ("lake".equals(r.getTag("water"))) {
-              System.out.println(formatter.objectName(r));
-              System.out.println("  other names: " + formatter.otherNames(r));
-              System.out.println("  other tags : " + formatter.otherTags(r));
-              for (String g : formatter.getGeometry(r)) {
-                  System.out.println("    geometry : " + g);
-              }
-          }
-      }
-    }
+            for (int i = 0; i < monitors.size(); i++) {
+                monitors.get(i).process(r);
+            }
+        }
 
+        for (int i = 0; i < monitors.size(); i++) {
+            monitors.get(i).dump(osm);
+        }
+    }
 }

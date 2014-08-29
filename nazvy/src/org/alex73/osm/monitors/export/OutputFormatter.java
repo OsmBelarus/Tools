@@ -69,12 +69,18 @@ public class OutputFormatter {
         return out.substring(1);
     }
 
+    String getGeometry(NodeObject n) {
+        StringBuilder out = new StringBuilder(200);
+        addCoord(n, out);
+        return out.toString();
+    }
+
     String getGeometry(WayObject w) {
         StringBuilder out = new StringBuilder(200);
         for (long nid : w.nodeIds) {
+            out.append(' ');
             out.append(NodeObject.getCode(nid));
             addCoord(osm.getNodeById(nid), out);
-            out.append('/');
         }
         return out.toString();
     }
@@ -86,6 +92,7 @@ public class OutputFormatter {
             out.append('<');
             out.append(m.role);
             out.append('>');
+            out.append(' ');
 
             switch (m.type) {
             case NODE:
@@ -104,25 +111,24 @@ public class OutputFormatter {
                 out.append(':');
                 if (w != null) {
                     for (long nid : w.nodeIds) {
+                        out.append(' ');
                         out.append(NodeObject.getCode(nid));
                         addCoord(osm.getNodeById(nid), out);
-                        out.append('/');
                     }
                     out.append(" : ");
                     out.append(objectName(w));
                 } else {
-                    out.append("[???]");
+                    out.append(" [???]");
                 }
                 break;
             case RELATION:
                 RelationObject r2 = osm.getRelationById(m.id);
                 out.append(RelationObject.getCode(m.id));
                 if (r2 != null) {
-                    out.append(':');
-                    out.append('[');
+                    out.append(": [ ");
                     for (RelationObject.Member m2 : r2.members) {
                         out.append(m2.role);
-                        out.append('/');
+                        out.append(' ');
                         switch (m2.type) {
                         case NODE:
                             out.append(NodeObject.getCode(m2.id));
@@ -134,13 +140,12 @@ public class OutputFormatter {
                             out.append(RelationObject.getCode(m2.id));
                             break;
                         }
-                        out.append(',');
+                        out.append(", ");
                     }
-                    out.append(']');
-                    out.append(" : ");
+                    out.append("] : ");
                     out.append(objectName(r2));
                 } else {
-                    out.append("[???]");
+                    out.append(" [???]");
                 }
                 break;
             }

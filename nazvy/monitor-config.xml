@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+    <monitor output="kraina" sort="name:be">
+        <group>
+            <attr name="addr:country" value="BY" />
+            <attr name="admin_level" value="2" />
+        </group>
+    </monitor>
+    <monitor output="voblasci" sort="name:be">
+        <group>
+            <attr name="addr:country" value="BY" />
+            <attr name="admin_level" value="4" />
+        </group>
+    </monitor>
+    <monitor output="rajony" sort="name:be">
+        <group>
+            <attr name="addr:country" value="BY" />
+            <attr name="admin_level" value="6" />
+        </group>
+    </monitor>
+    <monitor output="aziory" sort="name">
+        <group>
+            <attr name="water" value="lake" />
+        </group>
+    </monitor>
+    <monitor output="reki" sort="name">
+        <group>
+            <attr name="water" value="river" />
+        </group>
+    </monitor>
+    <monitor output="darohi-motorway" sort="ref">
+        <group>
+            <attr name="highway" value="motorway" />
+        </group>
+    </monitor>
+    <monitor output="darohi-trunk" sort="ref">
+        <group>
+            <attr name="highway" value="trunk" />
+            <attr name="ref" />
+        </group>
+    </monitor>
+    <monitor output="darohi-primary" sort="ref">
+        <group>
+            <attr name="highway" value="primary" />
+            <attr name="ref" />
+        </group>
+    </monitor>
+</config>
