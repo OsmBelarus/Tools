@@ -22,6 +22,7 @@
 package org.alex73.osm.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -33,6 +34,9 @@ public class POReader extends HashMap<String, String> {
     static final Pattern RE_BE = Pattern.compile("msgstr \"(.*)\"");
 
     public POReader(String filename) throws Exception {
+        if (!new File(filename).exists()) {
+            return;
+        }
         BufferedReader rd = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
         String s;
         String ru = null;

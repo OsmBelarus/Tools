@@ -27,6 +27,9 @@
         <group>
             <attr name="water" value="river" />
         </group>
+        <group>
+            <attr name="water" value="riverbank" />
+        </group>
     </monitor>
     <monitor output="darohi-motorway" sort="ref">
         <group>
