@@ -6,4 +6,6 @@ public class PadzielOsmNas {
     public long relationID;
     public String osmNameVoblasc;
     public String osmNameRajon;
+    public String osmNameVoblascRu;
+    public String osmNameRajonRu;
 }

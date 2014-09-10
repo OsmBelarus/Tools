@@ -1,10 +1,29 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.harady;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,8 +37,8 @@ import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.vulicy2.OsmNamed;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -29,33 +48,6 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
  * Правярае супадзеньне назваў населеных пунктаў OSM назвам деведніка.
  */
 public class CheckCities2 {
-    static public class WrongTags implements Comparable<WrongTags> {
-        public String osmLink;
-        public String davName;
-        public String type, name, nameBe, nameRu, intName, other;
-        public boolean correct = true;
-
-        @Override
-        public int compareTo(WrongTags o) {
-            return davName.compareToIgnoreCase(o.davName);
-        }
-    }
-
-    static public class NoTags implements Comparable<NoTags> {
-        public String osmLink;
-        public String davName;
-        public boolean existCountry, existDistrict, existRegion, correctPopulation;
-
-        boolean isCorrect() {
-            return existCountry && existDistrict && existRegion && correctPopulation;
-        }
-
-        @Override
-        public int compareTo(NoTags o) {
-            return davName.compareToIgnoreCase(o.davName);
-        }
-    }
-
     static public class Result {
         // Неіснуючыя ў osm аб'екты ў выглядзе
         public List<String> nonExistInOsm = new ArrayList<>();
@@ -72,17 +64,10 @@ public class CheckCities2 {
         }
 
         // Несупадзеньне тэгаў з назвамі у даведніку й аб'екце
-        public List<WrongTags> incorrectTags = new ArrayList<>();
+        public ResultTable incorrectTags;
 
-        public List<WrongTags> getIncorrectTags() {
+        public ResultTable getIncorrectTags() {
             return incorrectTags;
-        }
-
-        // Нявызначаныя тэгі
-        public List<NoTags> requiredTags = new ArrayList<>();
-
-        public List<NoTags> getRequiredTags() {
-            return requiredTags;
         }
     }
 
@@ -92,6 +77,7 @@ public class CheckCities2 {
     static List<Miesta> daviednik;
     static Set<String> usedInDav = new HashSet<>();
     static Map<String,OsmPlace> dbPlaces;
+    static Map<String,String> adminLevelsBelToRus;
 
     public static void main(String[] args) throws Exception {
         Env.load();
@@ -105,17 +91,18 @@ public class CheckCities2 {
         initDB();
         
         System.out.println("Checking...");
+        loadAdminLevels();
         findNonExistInOsm();
         findUnusedInDav();
         findIncorrectTags();
-        findRequiredTags();
 
         System.out.println("Output to " + out + "...");
         Collections.sort(result.nonExistInOsm);
         Collections.sort(result.unusedInDav);
-        Collections.sort(result.incorrectTags);
+        result.incorrectTags.sort();
         new File(out).getParentFile().mkdirs();
-        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", out, "data", result);
+        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", out, "data", result, "OSM",
+                OSM.class);
         System.out.println("done");
     }
 
@@ -137,14 +124,28 @@ public class CheckCities2 {
             dbPlaces.put(place.getCode(), place);
         }
     }
-    
+
+    static void loadAdminLevels() {
+        adminLevelsBelToRus = new HashMap<>();
+        List<OsmNamed> list = db.selectList("osm.admin_levels");
+        for (OsmNamed place : list) {
+            if (place != null && place.name_be != null && place.name != null) {
+                if (place.name_be.endsWith(" раён") || place.name_be.endsWith(" вобласць")) {
+                    adminLevelsBelToRus.put(place.name_be, place.name);
+                }
+            }
+        }
+    }
+
     static void findNonExistInOsm() {
         for (Miesta m : daviednik) {
             if (m.osmID != null) {
                 if (!dbPlaces.containsKey("n"+m.osmID)) {
                     result.nonExistInOsm.add("Няма " + OSM.histText("n" + m.osmID) + " на мапе, але ёсць у " + m);
                 } else {
-                    usedInDav.add("n" + m.osmID);
+                    if (!usedInDav.add("n" + m.osmID)) {
+                        result.nonExistInOsm.add(OSM.histText("n" + m.osmID) + " выкарыстоўваецца двойчы ў даведніку: " + m);
+                    }
                 }
             }
             if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
@@ -153,7 +154,9 @@ public class CheckCities2 {
                         if (!dbPlaces.containsKey(id)) {
                             result.nonExistInOsm.add("Няма " + OSM.histText(id) + " на мапе, але ёсць у " + m);
                         } else {
-                            usedInDav.add(id);
+                            if (!usedInDav.add(id)) {
+                                result.nonExistInOsm.add(OSM.histText(id) + " выкарыстоўваецца двойчы ў даведніку: " + m);
+                            }
                         }
                     } catch (Exception ex) {
                         result.nonExistInOsm.add(ex.getMessage());
@@ -179,170 +182,73 @@ public class CheckCities2 {
         }
     }
 
-    /**
-     * Шукаем аб'екты што ня маюць нейкіх патрэбных тэгаў.
-     */
-    static void findRequiredTags() {
-        for (OsmPlace p : dbPlaces.values()) {
-            if ("island".equals(p.place) || "islet".equals(p.place)) {
-                continue;
-            }
-                NoTags w = new NoTags();
-                w.davName = p.name;
-                w.osmLink = OSM.histIcon(p.getCode());
-                w.existCountry = p.addr_country != null;
-                w.existRegion = p.addr_region != null;
-                w.existDistrict = p.addr_district != null;
-                switch (p.place) {
-                case "city":
-                case "town":
-                case "village":
-                    w.correctPopulation = p.population != null && p.population.matches("[0-9]+")
-                            && Integer.parseInt(p.population) < 2500000 && Integer.parseInt(p.population) > 1000
-                            && p.population_date != null && p.population_date.matches("[0-9]{4}")
-                            && Integer.parseInt(p.population_date) > Calendar.getInstance().get(Calendar.YEAR) - 40
-                            && Integer.parseInt(p.population_date) <= Calendar.getInstance().get(Calendar.YEAR);
-                    break;
-                default:
-                    w.correctPopulation = true;
-                    break;
-                }
-                if (!w.isCorrect()) {
-                    result.requiredTags.add(w);
-                }
-        }
-    }
-    
-
     static void findIncorrectTags() {
-        // ствараем праверкі для тэгаў
-        TagChecker tcName = new TagChecker("name") {
-            void onError(WrongTags w, String errText) {
-                w.name = errText;
-            }
-
-            void onOk(WrongTags w, String correct) {
-                w.name = correct;
-            }
-        };
-        TagChecker tcNameBe = new TagChecker("name:be") {
-            void onError(WrongTags w, String errText) {
-                w.nameBe = errText;
-            }
-
-            void onOk(WrongTags w, String correct) {
-                w.nameBe = correct;
-            }
-        };
-        TagChecker tcNameRu = new TagChecker("name:ru") {
-            void onError(WrongTags w, String errText) {
-                w.nameRu = errText;
-            }
-
-            void onOk(WrongTags w, String correct) {
-                w.nameRu = correct;
-            }
-        };
-        TagChecker tcIntName = new TagChecker("int_name") {
-            void onError(WrongTags w, String errText) {
-                w.intName = errText;
-            }
-
-            void onOk(WrongTags w, String correct) {
-                w.intName = correct;
-            }
-        };
-        TagChecker tcNameBeTarask = new TagChecker("name:be-tarask") {
-            void onError(WrongTags w, String errText) {
-                w.other = add(w.other, "name:be-tarask: " + errText);
-            }
-
-            void onOk(WrongTags w, String correct) {
-            }
-        };
-        TagChecker tcPlace = new TagChecker("place") {
-            void onError(WrongTags w, String errText) {
-                w.type = errText;
-            }
-
-            void onOk(WrongTags w, String correct) {
-                w.type = correct;
-            }
-        };
-        TagChecker tcAltNameBe = new TagChecker("alt_name:be") {
-            void onError(WrongTags w, String errText) {
-                w.other = add(w.other, "alt_name:be: " + errText);
-            }
-
-            void onOk(WrongTags w, String correct) {
-            }
-        };
-        TagChecker tcAltNameRu = new TagChecker("alt_name:ru") {
-            void onError(WrongTags w, String errText) {
-                w.other = add(w.other, "alt_name:ru: " + errText);
-            }
-
-            void onOk(WrongTags w, String correct) {
-            }
-        };
-        TagChecker tcAltNameEn = new TagChecker("alt_name:en") {
-            void onError(WrongTags w, String errText) {
-                w.other = add(w.other, "alt_name:en: " + errText);
-            }
-
-            void onOk(WrongTags w, String correct) {
-            }
-        };
-        TagChecker tcAltName = new TagChecker("alt_name") {
-            void onError(WrongTags w, String errText) {
-                w.other = add(w.other, "alt_name: " + errText);
-            }
-
-            void onOk(WrongTags w, String correct) {
-            }
-        };
+        List<String> attrs = new ArrayList<>();
+        addColumnIfAllowed("place", attrs);
+        addColumnIfAllowed("name", attrs);
+        addColumnIfAllowed("name:ru", attrs);
+        addColumnIfAllowed("name:be", attrs);
+        addColumnIfAllowed("int_name", attrs);
+        addColumnIfAllowed("alt_name:be", attrs);
+        addColumnIfAllowed("alt_name:ru", attrs);
+        addColumnIfAllowed("name:be-tarask", attrs);
+        addColumnIfAllowed("alt_name", attrs);
+        addColumnIfAllowed("addr:country", attrs);
+        addColumnIfAllowed("addr:region", attrs);
+        addColumnIfAllowed("addr:district", attrs);
+        result.incorrectTags = new ResultTable(attrs);
 
         for (Miesta m : daviednik) {
             for (final String code : getUsedCodes(m)) {
-                final WrongTags w = new WrongTags();
-                w.davName = m.sielsaviet + '|' + m.nazva;
+                // final WrongTags w = new WrongTags();
+                ResultTable.ResultTableRow w = result.incorrectTags.new ResultTableRow(code, m.rajon + '|'
+                        + m.sielsaviet + '|' + m.nazva);
                 try {
                     OsmPlace p = dbPlaces.get(code);
-                    w.osmLink = OSM.histIcon(p.getCode());
                     OsmPlace correctTags = CalcCorrectTags.calc(m, db);
                     if ("suburb".equals(p.place) && "hamlet".equals(correctTags.place)) {
                         // hamlet => suburb - ok
-                        correctTags.place=p.place;
+                        correctTags.place = p.place;
                     }
                     if ("neighbourhood".equals(p.place) && "hamlet".equals(correctTags.place)) {
                         // hamlet => neighbourhood - ok
-                        correctTags.place= p.place;
+                        correctTags.place = p.place;
                     }
                     // правяраем тэгі
-                    tcName.check(w, p, correctTags);
-                    tcNameBe.check(w, p, correctTags);
-                    if (!"skip".equals(Env.readProperty("nazvy_viosak.name_ru"))) {
-                        tcNameRu.check(w, p, correctTags);
+                    setAttrIfAllowed(w, "name", p.name, correctTags.name);
+                    setAttrIfAllowed(w, "name:be", p.name_be, correctTags.name_be);
+                    setAttrIfAllowed(w, "name:ru", p.name_ru, correctTags.name_ru);
+                    setAttrIfAllowed(w, "int_name", p.int_name, correctTags.int_name);
+                    setAttrIfAllowed(w, "name:be-tarask", p.name_be_tarask, correctTags.name_be_tarask);
+                    if (correctTags.place != null) {
+                        setAttrIfAllowed(w, "place", p.place, correctTags.place);
                     }
-                    if (!"skip".equals(Env.readProperty("nazvy_viosak.int_name"))) {
-                        tcIntName.check(w, p, correctTags);
-                    }
-                    tcNameBeTarask.check(w, p, correctTags);
-                    if (correctTags.place!=null) {
-                        tcPlace.check(w, p, correctTags);
-                    }
-                    tcAltNameBe.check(w, p, correctTags);
-                    tcAltNameRu.check(w, p, correctTags);
-                    tcAltNameEn.check(w, p, correctTags);
-                    tcAltName.check(w, p, correctTags);
+                    setAttrIfAllowed(w, "alt_name:be", p.alt_name_be, correctTags.alt_name_be);
+                    setAttrIfAllowed(w, "alt_name:ru", p.alt_name_ru, correctTags.alt_name_ru);
+                    setAttrIfAllowed(w, "alt_name", p.alt_name, null);
 
+                    setAttrIfAllowed(w, "addr:country", p.addr_country, "BY");
+                    setAttrIfAllowed(w, "addr:region", p.addr_region, adminLevelsBelToRus.get(m.voblasc + " вобласць"));
+                    setAttrIfAllowed(w, "addr:district", p.addr_district, adminLevelsBelToRus.get(m.rajon + " раён"));
                 } catch (Exception ex) {
-                    w.other = add(w.other, ex.getMessage());
+                    result.nonExistInOsm.add(ex.getClass().getName() + ": " + ex.getMessage());
                 }
-                if (!w.correct) {
-                    result.incorrectTags.add(w);
+                if (w.needChange()) {
+                    result.incorrectTags.rows.add(w);
                 }
             }
+        }
+    }
+
+    static void addColumnIfAllowed(String attrName, List<String> list) {
+        if (!"skip".equals(Env.readProperty("nazvy_viosak." + attrName.replace(':', '_')))) {
+            list.add(attrName);
+        }
+    }
+
+    static void setAttrIfAllowed(ResultTable.ResultTableRow w, String attrName, String oldValue, String newValue) {
+        if (!"skip".equals(Env.readProperty("nazvy_viosak." + attrName.replace(':', '_')))) {
+            w.setAttr(attrName, oldValue, newValue);
         }
     }
 
@@ -374,41 +280,5 @@ public class CheckCities2 {
             }
         }
         return c;
-    }
-
-    /**
-     * Helper for check some specific tag.
-     */
-    public static abstract class TagChecker {
-        final String tagName;
-
-        public TagChecker(String tagName) {
-            this.tagName = tagName;
-        }
-
-        abstract void onError(WrongTags w, String errText);
-
-        abstract void onOk(WrongTags w, String correct);
-
-        public void check(WrongTags w, OsmPlace p, OsmPlace correctTags) {
-            String exist = getTag(tagName,p);
-            String mustBe = getTag(tagName,correctTags);
-            if (!StringUtils.equals(exist, mustBe)) {
-                w.correct = false;
-                onError(w, "<span class='err'>" + exist + " => " + mustBe
-                        + " <input type='radio' onClick='send(\"load_object?objects=" + p.getCode() + "&addtags="
-                        + tagName + "=" + mustBe + "\")'></span>");
-            } else {
-                onOk(w, mustBe);
-            }
-        }
-        String getTag(String tagName, OsmPlace obj) {
-            try {
-            Field f=OsmPlace.class.getField(tagName.replace(':','_').replace('-', '_'));
-            return (String)f.get(obj);
-            } catch(Exception ex) {
-                throw new RuntimeException();
-            }
-        }
     }
 }

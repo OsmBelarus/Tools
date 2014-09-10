@@ -21,11 +21,14 @@
 
 package org.alex73.osm.daviednik;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.apache.ibatis.session.SqlSession;
@@ -41,7 +44,7 @@ public class CalcCorrectTags {
             if (m.osmID == null) {
                 throw new Exception("Node ID не вызначана для горада: " + m);
             }
-            OsmPlace n = db.selectOne("getPlaceById", m.osmID);
+            OsmPlace n = db.selectOne("getPlaceByNodeId", m.osmID);
             if (n == null) {
                 throw new Exception("Няма горада: " + m);
             }
@@ -72,7 +75,7 @@ public class CalcCorrectTags {
             typ = null;
             break;
         default:
-            throw new RuntimeException(m.typ + " for " + m.osmID);
+            throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
         }
 
         String name_be = m.nazvaNoStress;
@@ -109,7 +112,9 @@ public class CalcCorrectTags {
             return null;
         }
         StringBuilder out = new StringBuilder(200);
-        for (String v : variants) {
+        Set<String> set = new TreeSet<>(COMPARATOR);
+        set.addAll(variants);
+        for (String v : set) {
             out.append(';').append(v);
         }
         return out.substring(1).toString();
@@ -157,4 +162,14 @@ public class CalcCorrectTags {
             set.remove(del);
         }
     }
+
+    static Comparator<String> COMPARATOR = new Comparator<String>() {
+        Locale BE = new Locale("be");
+        Collator BEL = Collator.getInstance(BE);
+
+        @Override
+        public int compare(String o1, String o2) {
+            return BEL.compare(o1, o2);
+        }
+    };
 }

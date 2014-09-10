@@ -1,0 +1,36 @@
+<table>
+	<tr>
+	  <td>Назва</td>
+#foreach ($a in $table.attributes)
+	  <td>$a</td>
+#end
+	</tr>
+    #foreach ( $r in $table.rows )
+    <tr>
+      <td>${OSM.histIcon($r.id)} ${r.name}</td>
+#foreach ($v in $r.tags)
+  #if ( $v )
+    #if ( $v.oldValue )
+      #set ( $vo = $v.oldValue )
+    #else
+      #set ( $vo = "" )
+    #end
+    #if ( $v.newValue )
+      #set ( $vn = $v.newValue )
+    #else
+      #set ( $vn = "" )
+    #end
+    #if ( $vo == $vn )
+      <td>$vo</td>
+    #else
+	  <td class='err'>$vo => $vn
+	    <input type='radio' onClick="send('load_object?objects=${r.id}&addtags=${v.attrName}=${vn}');">
+	  </td>
+	#end
+  #else
+      <td></td>
+  #end
+#end
+    </tr>
+    #end
+</table>
