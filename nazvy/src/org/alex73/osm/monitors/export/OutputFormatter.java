@@ -3,40 +3,45 @@ package org.alex73.osm.monitors.export;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.alex73.osm.data.BaseObject;
-import org.alex73.osm.data.MemoryStorage;
 import org.alex73.osm.data.NodeObject;
 import org.alex73.osm.data.RelationObject;
 import org.alex73.osm.data.WayObject;
+import org.alex73.osmemory.BaseObject2;
+import org.alex73.osmemory.MemoryStorage2;
+import org.alex73.osmemory.NodeObject2;
+import org.alex73.osmemory.RelationObject2;
+import org.alex73.osmemory.WayObject2;
 
 public class OutputFormatter {
-    final MemoryStorage osm;
+    final MemoryStorage2 osm;
 
-    public OutputFormatter(MemoryStorage osm) {
+    public OutputFormatter(MemoryStorage2 osm) {
         this.osm = osm;
     }
 
-    String objectName(BaseObject o) {
+    String objectName(BaseObject2 o) {
         StringBuilder out = new StringBuilder(200);
         out.append(o.getCode());
         out.append("  ");
-        out.append(o.getTag("name:be"));
-        String tarask = o.getTag("name:be-tarask");
+        out.append(osm.getTag(o, "name:be"));
+        String tarask = osm.getTag(o, "name:be-tarask");
         if (tarask != null) {
             out.append('/');
             out.append(tarask);
         }
         out.append('/');
-        out.append(o.getTag("int_name"));
+        out.append(osm.getTag(o, "int_name"));
         out.append('/');
-        out.append(o.getTag("name"));
+        out.append(osm.getTag(o, "name"));
         return out.toString();
     }
 
-    String otherNames(BaseObject o) {
+    String otherNames(BaseObject2 o) {
         StringBuilder out = new StringBuilder(200);
-        for (String t : o.getTagNames()) {
+        Map<String, String> tags = osm.extractTags(o);
+        for (String t : tags.keySet()) {
             switch (t) {
             case "name":
             case "name:be":
@@ -47,7 +52,7 @@ public class OutputFormatter {
                     out.append(';');
                     out.append(t);
                     out.append('=');
-                    out.append(o.getTag(t));
+                    out.append(tags.get(t));
                 }
                 break;
             }
@@ -55,27 +60,28 @@ public class OutputFormatter {
         return out.length() > 0 ? out.substring(1) : "";
     }
 
-    String otherTags(BaseObject o) {
+    String otherTags(BaseObject2 o) {
         StringBuilder out = new StringBuilder(200);
-        for (String t : o.getTagNames()) {
+        Map<String, String> tags = osm.extractTags(o);
+        for (String t : tags.keySet()) {
             if (t.equals("name") || t.startsWith("name:") || t.startsWith("int_name")) {
                 continue;
             }
             out.append(';');
             out.append(t);
             out.append('=');
-            out.append(o.getTag(t));
+            out.append(tags.get(t));
         }
         return out.substring(1);
     }
 
-    String getGeometry(NodeObject n) {
+    String getGeometry(NodeObject2 n) {
         StringBuilder out = new StringBuilder(200);
         addCoord(n, out);
         return out.toString();
     }
 
-    String getGeometry(WayObject w) {
+    String getGeometry(WayObject2 w) {
         StringBuilder out = new StringBuilder(200);
         for (long nid : w.nodeIds) {
             out.append(' ');
@@ -85,29 +91,31 @@ public class OutputFormatter {
         return out.toString();
     }
 
-    List<String> getGeometry(RelationObject r) {
+    List<String> getGeometry(RelationObject2 r) {
         List<String> result = new ArrayList<String>();
-        for (RelationObject.Member m : r.members) {
+        for (int i = 0; i < r.getMembersCount(); i++) {
             StringBuilder out = new StringBuilder(200);
             out.append('<');
-            out.append(m.role);
+            out.append(r.getMemberRole(osm, i));
             out.append('>');
             out.append(' ');
 
-            switch (m.type) {
-            case NODE:
-                out.append(NodeObject.getCode(m.id));
-                NodeObject n = osm.getNodeById(m.id);
+            long mid = r.getMemberID(i);
+
+            switch (r.getMemberType(i)) {
+            case BaseObject2.TYPE_NODE:
+                out.append(NodeObject.getCode(mid));
+                NodeObject2 n = osm.getNodeById(mid);
                 addCoord(n, out);
                 if (n != null) {
                     out.append(" : ");
                     out.append(objectName(n));
                 }
                 break;
-            case WAY:
+            case BaseObject2.TYPE_WAY:
                 // outer way
-                WayObject w = osm.getWayById(m.id);
-                out.append(WayObject.getCode(m.id));
+                WayObject2 w = osm.getWayById(mid);
+                out.append(WayObject.getCode(mid));
                 out.append(':');
                 if (w != null) {
                     for (long nid : w.nodeIds) {
@@ -121,23 +129,23 @@ public class OutputFormatter {
                     out.append(" [???]");
                 }
                 break;
-            case RELATION:
-                RelationObject r2 = osm.getRelationById(m.id);
-                out.append(RelationObject.getCode(m.id));
+            case BaseObject2.TYPE_RELATION:
+                RelationObject2 r2 = osm.getRelationById(mid);
+                out.append(RelationObject.getCode(mid));
                 if (r2 != null) {
                     out.append(": [ ");
-                    for (RelationObject.Member m2 : r2.members) {
-                        out.append(m2.role);
+                    for (int j = 0; i < r2.getMembersCount(); j++) {
+                        out.append(r2.getMemberRole(osm, j));
                         out.append(' ');
-                        switch (m2.type) {
-                        case NODE:
-                            out.append(NodeObject.getCode(m2.id));
+                        switch (r2.getMemberType(i)) {
+                        case BaseObject2.TYPE_NODE:
+                            out.append(NodeObject2.getCode(r2.getMemberID(j)));
                             break;
-                        case WAY:
-                            out.append(WayObject.getCode(m2.id));
+                        case BaseObject2.TYPE_WAY:
+                            out.append(WayObject2.getCode(r2.getMemberID(j)));
                             break;
-                        case RELATION:
-                            out.append(RelationObject.getCode(m2.id));
+                        case BaseObject2.TYPE_RELATION:
+                            out.append(RelationObject2.getCode(r2.getMemberID(j)));
                             break;
                         }
                         out.append(", ");
@@ -157,7 +165,7 @@ public class OutputFormatter {
 
     static DecimalFormat COORD_FORMAT = new DecimalFormat("##0.00######");
 
-    void addCoord(NodeObject n, StringBuilder str) {
+    void addCoord(NodeObject2 n, StringBuilder str) {
         if (n != null) {
             str.append('[');
             str.append(COORD_FORMAT.format(n.lat));

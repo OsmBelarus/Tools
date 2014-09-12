@@ -1,5 +1,6 @@
 /**************************************************************************
- Some tools for OSM.
+ 
+Some tools for OSM.
 
  Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
@@ -30,20 +31,18 @@ import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.NodeObject;
-import org.alex73.osm.data.PbfDriver;
-import org.alex73.osm.data.RelationObject;
-import org.alex73.osm.data.WayObject;
 import org.alex73.osm.utils.Env;
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.alex73.osmemory.MemoryStorage2;
+import org.alex73.osmemory.PbfReader2;
+import org.alex73.osmemory.Polygon;
+import org.apache.commons.io.FileUtils;
 
 /**
- * This class exports some critical objects to text file for commit to git. It
- * allows to monitor changes of these objects.
+ * This class exports some critical objects to text file for commit to git. It allows to monitor changes of
+ * these objects.
  */
 public class ExportObjects {
-    static MemoryStorage osm;
+    static MemoryStorage2 osm;
     static OutputFormatter formatter;
 
     public static void main(String[] args) throws Exception {
@@ -53,52 +52,27 @@ public class ExportObjects {
         Config config = (Config) CTX.createUnmarshaller().unmarshal(new File("monitor-config.xml"));
 
         File outdir = new File("../../OsmBelarus-Monitoring/");
+
+        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
+                "UTF-8");
+        Polygon Belarus = Polygon.fromWKT(borderWKT);
+
+        osm = new PbfReader2(Belarus.getBoundEnvelope()).read(new File(Env.readProperty("data.file")));
+        osm.showStat();
+
         List<MonitorContext> monitors = new ArrayList<>();
         for (Monitor m : config.getMonitor()) {
-            monitors.add(new MonitorContext(m, outdir));
+            monitors.add(new MonitorContext(osm, m));
         }
 
-        final CoordCache cache = new CoordCache();
-
-        osm = PbfDriver.process(new File("tmp/belarus-latest.osm.pbf"), new PbfDriver.Filter() {
-            public boolean acceptNode(Node n) {
-                return cache.isInside(n.getLongitude(), n.getLatitude());
-            }
-
-            public boolean acceptWay(MemoryStorage storage, WayObject w) {
-                for (int i = 0; i < w.nodeIds.length; i++) {
-                    long nid = w.nodeIds[i];
-                    if (storage.getNodeById(nid) != null) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            public boolean acceptRelation(MemoryStorage storage, RelationObject r) {
-                return true;
-            }
-        });
         formatter = new OutputFormatter(osm);
 
-        for (NodeObject n : osm.nodes) {
-            for (int i = 0; i < monitors.size(); i++) {
-                monitors.get(i).process(n);
-            }
-        }
-        for (WayObject w : osm.ways) {
-            for (int i = 0; i < monitors.size(); i++) {
-                monitors.get(i).process(w);
-            }
-        }
-        for (RelationObject r : osm.relations) {
-            for (int i = 0; i < monitors.size(); i++) {
-                monitors.get(i).process(r);
-            }
+        for (MonitorContext m : monitors) {
+            osm.all().processAll(o -> m.process(o));
         }
 
         for (int i = 0; i < monitors.size(); i++) {
-            monitors.get(i).dump(osm);
+            monitors.get(i).dump(outdir);
         }
     }
 }

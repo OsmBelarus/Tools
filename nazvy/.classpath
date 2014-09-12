@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="src" path="src-OSMemory"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-annotations-2.2.3.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-core-2.2.3.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-databind-2.2.3.jar"/>
 	<classpathentry kind="lib" path="lib/velocity-1.6.3.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.6.jar"/>
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/mybatis/mybatis-3.2.3.jar" sourcepath="/tmp/mybatis-3-mybatis-3.2.3.zip"/>
@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="lib/commons-compress-1.5.jar"/>
 	<classpathentry kind="lib" path="lib/jts-1.13.jar" sourcepath="/tmp/src"/>
 	<classpathentry kind="lib" path="lib/o5m/reader-0.0.1-SNAPSHOT.jar" sourcepath="/home/alex/gits/o5m4j"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
