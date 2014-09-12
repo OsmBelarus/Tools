@@ -20,5 +20,5 @@ time psql --dbname=osm --username=osm --file=../osmosis/script/pgsnapshot_schema
 time ../osmosis/bin/osmosis --read-pbf file=tmp/belarus-latest.osm.pbf --write-pgsql host=localhost database=osm user=osm || exit 1
 time ../osmosis/bin/osmosis --read-xml-change file=tmp/day.osc.gz --write-pgsql-change host=localhost database=osm user=osm || exit 1
 
-time psql --dbname=osm --user osm --file=scripts/after_create.sql || exit 1
-time psql --dbname=osm --user osm --file=scripts/after_update.sql || exit 1
+time psql -a --dbname=osm --user osm --file=scripts/after_create.sql || exit 1
+time psql -a --dbname=osm --user osm --file=scripts/after_update.sql || exit 1

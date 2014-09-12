@@ -24,7 +24,7 @@
       <td>$vo</td>
     #else
 	  <td class='err'>$vo => $vn
-	    <input type='radio' onClick="send('load_object?objects=${r.id}&addtags=${v.attrName}=${vn}');">
+	    <input type='checkbox' value="load_object?objects=${r.id}&addtags=${v.attrName}=${vn}">
 	  </td>
 	#end
   #else

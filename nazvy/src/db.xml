@@ -142,6 +142,13 @@
      ORDER BY GREATEST(h.dx,h.dy) DESC
   </select>
 
+  <!-- Усе адміністрацыйныя часткі -->
+  <select id="admin_levels" resultMap="OsmNamed">
+    SELECT tags->'name' as name, tags->'name:be' as name_be
+      FROM relations
+     WHERE tags->'admin_level' in ('2','4','6') and tags->'type'='boundary'
+  </select>
+
 
   <!-- Чытае ўсе памылкі разбору -->
   <select id="getAllErrors" resultMap="Error">

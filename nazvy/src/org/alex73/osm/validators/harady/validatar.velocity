@@ -27,20 +27,25 @@
         return false;
     }
     function sendAll() {
-      var checkedValues = ${d}('input:checkbox:checked').map(function() {
-        return this.value;
-      }).get();
       ${d}.ajaxSetup({async: false});
-      checkedValues.forEach(function(cmd) {
-        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
-      });
       ${d}('input:checkbox:checked').map(function() {
-        this.checked = false;
-      }).get();
+        var cb = this;
+        ${d}.ajax("http://127.0.0.1:8111/"+cb.value)
+            .done(function( data ) {
+                cb.checked = false;
+            });
+      });
     }
 </script>
 
-<!--button onClick="javascript: sendAll();" style="position: fixed; right: 150px; top: 50px">Даслаць у JOSM</button-->
+<div style="position: fixed; right: 150px; top: 50px; color:red; background-color: white; border-style: solid; border-color: red">
+<b>Карыстайцеся JOSM 7521 ці пазьнейшым, бо стары JOSM псуе тэгі аб'ектаў !!!<br/>
+І абавязкова спачатку дашліце 1 аб'ект і пазначце "Allow All Tags",  <br/>
+бо калі дасылаеце больш за 1 аб'ект і паказваецца дыялог у JOSM,<br/>
+ён псуе тэгі.
+</b>
+<button onClick="javascript: sendAll();">Даслаць у JOSM</button>
+</div>
 
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
@@ -60,13 +65,6 @@
 </ul>
 
 <h1 id="p2">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()}):</h1>
-
-<div style="color:red; border-style: solid; border-color: red">
-Націсьніце на радыё-кнопку(<input type='radio'>) каб даслаць зьмены ў JOSM.<br/>
-<b>JOSM мае непрыемны баг - калі дасылаеце зьмены, але папярэднія яшчэ не запісаліся ў Command Stack, новыя зьмены будуць зробленыя на папярэднім аб'екце !!!<br/>
-Таму трэба дачакацца пакуль спрацуе папярэдняя каманда, і толькі потым націскаць наступную рады-кнопку !</b>
-</div>
-<br/>
 
 #set ( $table = $data.incorrectTags )
 #parse ("org/alex73/osm/validators/harady/result_table.velocity")

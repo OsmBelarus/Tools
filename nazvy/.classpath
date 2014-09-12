@@ -18,5 +18,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/postgres/postgresql-jdbc3-9.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-compress-1.5.jar"/>
 	<classpathentry kind="lib" path="lib/jts-1.13.jar" sourcepath="/tmp/src"/>
+	<classpathentry kind="lib" path="lib/o5m/reader-0.0.1-SNAPSHOT.jar" sourcepath="/home/alex/gits/o5m4j"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
