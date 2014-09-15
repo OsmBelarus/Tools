@@ -26,6 +26,8 @@ import java.io.FileInputStream;
 import java.util.List;
 import java.util.Map;
 
+import com.vividsolutions.jts.geom.Envelope;
+
 import ru.dkiselev.osm.o5mreader.O5MHandler;
 import ru.dkiselev.osm.o5mreader.O5MReader;
 import ru.dkiselev.osm.o5mreader.datasets.Node;
@@ -37,16 +39,22 @@ import ru.dkiselev.osm.o5mreader.datasets.Way;
  * Reader for o5m files using o5m4j library. Should be changed to own o5m parsing since o5m4j is too slow and
  * contains some bugs in number calculation.
  */
-public class o5mReader {
+public class o5mReader extends BaseReader2 {
+    public o5mReader(Envelope cropBox) {
+        super(cropBox);
+    }
 
-    public static MemoryStorage2 process(File file) throws Exception {
+    public MemoryStorage2 read(File file) throws Exception {
         final MemoryStorage2 storage = new MemoryStorage2();
 
         O5MReader rd = new O5MReader(new FileInputStream(file));
         rd.read(new O5MHandler() {
             @Override
             public void handleNode(Node ds) {
-                storage.nodes.add(createNode(storage, ds));
+                NodeObject2 n = createNode(storage, ds);
+                if (n != null) {
+                    storage.nodes.add(n);
+                }
             }
 
             @Override
@@ -64,7 +72,7 @@ public class o5mReader {
         return storage;
     }
 
-    static void applyTags(MemoryStorage2 storage, Map<String, String> tags, BaseObject2 obj) {
+    void applyTags(MemoryStorage2 storage, Map<String, String> tags, BaseObject2 obj) {
         if (tags.isEmpty()) {
             return;
         }
@@ -77,7 +85,7 @@ public class o5mReader {
         }
     }
 
-    static NodeObject2 createNode(MemoryStorage2 storage, Node in) {
+    NodeObject2 createNode(MemoryStorage2 storage, Node in) {
         long lat = Math.round(in.getLat() / NodeObject2.DIVIDER);
         if (lat >= Integer.MAX_VALUE || lat <= Integer.MIN_VALUE) {
             throw new RuntimeException("Wrong value for latitude: " + lat);
@@ -87,12 +95,18 @@ public class o5mReader {
             throw new RuntimeException("Wrong value for longitude: " + lon);
         }
 
-        NodeObject2 result = new NodeObject2(in.getId(), in.getTags().size(), (int) lat, (int) lon);
+        int intLon = (int) lon;
+        int intLat = (int) lat;
+        if (!isInsideCropBox(intLat, intLon)) {
+            return null;
+        }
+
+        NodeObject2 result = new NodeObject2(in.getId(), in.getTags().size(), intLat, intLon);
         applyTags(storage, in.getTags(), result);
         return result;
     }
 
-    static WayObject2 createWay(MemoryStorage2 storage, Way in) {
+    WayObject2 createWay(MemoryStorage2 storage, Way in) {
         List<Long> wayNodes = in.getNodes();
         long[] nodes = new long[in.getNodes().size()];
         for (int i = 0; i < wayNodes.size(); i++) {
@@ -103,7 +117,7 @@ public class o5mReader {
         return result;
     }
 
-    static RelationObject2 createRelation(MemoryStorage2 storage, Relation in) {
+    RelationObject2 createRelation(MemoryStorage2 storage, Relation in) {
         List<RelationReference> inMembers = in.getReferences();
         RelationObject2 result = new RelationObject2(in.getId(), in.getTags().size(), inMembers.size());
         applyTags(storage, in.getTags(), result);

@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.alex73.osmemory.BaseObject2;
+import org.alex73.osmemory.FastPolygon;
 import org.alex73.osmemory.MemoryStorage2;
 import org.alex73.osmemory.NodeObject2;
 import org.alex73.osmemory.RelationObject2;
@@ -21,18 +22,22 @@ import org.alex73.osmemory.WayObject2;
 public class MonitorContext {
     private final MemoryStorage2 osm;
     private final Monitor monitor;
+    private final FastPolygon Belarus;
     private final List<BaseObject2> collected = new ArrayList<>();
 
-    public MonitorContext(MemoryStorage2 osm, Monitor m) throws Exception {
+    public MonitorContext(MemoryStorage2 osm, Monitor m, FastPolygon Belarus) throws Exception {
         this.osm = osm;
         this.monitor = m;
+        this.Belarus = Belarus;
     }
 
     public void process(BaseObject2 o) {
         boolean dump = false;
         for (Group g : monitor.getGroup()) {
             if (isCorespondsGroup(o, g)) {
-                dump = true;
+                if (Belarus.contains(o)) {
+                    dump = true;
+                }
                 break;
             }
         }

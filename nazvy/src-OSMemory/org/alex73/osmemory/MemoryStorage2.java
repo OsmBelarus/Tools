@@ -141,6 +141,8 @@ public class MemoryStorage2 {
         System.out.println("Nodes count     : " + new DecimalFormat(",##0").format(nodes.size()));
         System.out.println("Ways count      : " + new DecimalFormat(",##0").format(ways.size()));
         System.out.println("Relations count : " + new DecimalFormat(",##0").format(relations.size()));
+        System.out.println("Tags count      : " + new DecimalFormat(",##0").format(tagsPack.tagCodes.size()));
+        System.out.println("RelRoles count  : " + new DecimalFormat(",##0").format(relationRolesPack.tagCodes.size()));
     }
 
     public String getTag(BaseObject2 obj, String tagName) {

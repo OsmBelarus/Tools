@@ -28,13 +28,16 @@ import gen.alex73.osm.monitor.Monitor;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Env;
+import org.alex73.osmemory.FastPolygon;
 import org.alex73.osmemory.MemoryStorage2;
 import org.alex73.osmemory.PbfReader2;
 import org.alex73.osmemory.Polygon;
+import org.alex73.osmemory.o5mReader;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -46,6 +49,7 @@ public class ExportObjects {
     static OutputFormatter formatter;
 
     public static void main(String[] args) throws Exception {
+        Locale.setDefault(Locale.ENGLISH);
         Env.load();
 
         JAXBContext CTX = JAXBContext.newInstance(Config.class);
@@ -62,7 +66,7 @@ public class ExportObjects {
 
         List<MonitorContext> monitors = new ArrayList<>();
         for (Monitor m : config.getMonitor()) {
-            monitors.add(new MonitorContext(osm, m));
+            monitors.add(new MonitorContext(osm, m, new FastPolygon(Belarus, osm)));
         }
 
         formatter = new OutputFormatter(osm);

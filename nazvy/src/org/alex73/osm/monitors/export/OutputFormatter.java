@@ -168,9 +168,9 @@ public class OutputFormatter {
     void addCoord(NodeObject2 n, StringBuilder str) {
         if (n != null) {
             str.append('[');
-            str.append(COORD_FORMAT.format(n.lat));
+            str.append(COORD_FORMAT.format(n.getLatitude()));
             str.append(',');
-            str.append(COORD_FORMAT.format(n.lon));
+            str.append(COORD_FORMAT.format(n.getLongitude()));
             str.append(']');
         } else {
             str.append("[???]");
