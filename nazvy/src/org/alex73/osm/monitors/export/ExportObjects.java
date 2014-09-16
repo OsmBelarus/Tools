@@ -35,6 +35,7 @@ import javax.xml.bind.JAXBContext;
 import org.alex73.osm.utils.Env;
 import org.alex73.osmemory.FastPolygon;
 import org.alex73.osmemory.MemoryStorage2;
+import org.alex73.osmemory.O5MReaderMy;
 import org.alex73.osmemory.PbfReader2;
 import org.alex73.osmemory.Polygon;
 import org.alex73.osmemory.o5mReader;
@@ -61,7 +62,7 @@ public class ExportObjects {
                 "UTF-8");
         Polygon Belarus = Polygon.fromWKT(borderWKT);
 
-        osm = new PbfReader2(Belarus.getBoundEnvelope()).read(new File(Env.readProperty("data.file")));
+        osm = new O5MReaderMy(Belarus.getBoundEnvelope()).read(new File(Env.readProperty("data.file")));
         osm.showStat();
 
         List<MonitorContext> monitors = new ArrayList<>();

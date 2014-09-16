@@ -43,6 +43,13 @@ import com.vividsolutions.jts.geom.Envelope;
  * Reader for pbf files using osmosis library.
  */
 public class PbfReader2 extends BaseReader2 {
+    public static void main(String[] aa) throws Exception {
+        long b = System.currentTimeMillis();
+        new PbfReader2(null).read(new File("tmp/belarus-updated.osm.pbf"));
+        long a = System.currentTimeMillis();
+        System.out.println(a - b);//128s
+    }
+    
     public PbfReader2(Envelope cropBox) {
         super(cropBox);
     }

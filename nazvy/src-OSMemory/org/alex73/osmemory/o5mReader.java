@@ -40,6 +40,13 @@ import ru.dkiselev.osm.o5mreader.datasets.Way;
  * contains some bugs in number calculation.
  */
 public class o5mReader extends BaseReader2 {
+    public static void main(String[] aa) throws Exception {
+        long b = System.currentTimeMillis();
+        new o5mReader(null).read(new File("tmp/belarus-updated.o5m"));
+        long a = System.currentTimeMillis();
+        System.out.println(a - b);// 65 seconds
+    }
+    
     public o5mReader(Envelope cropBox) {
         super(cropBox);
     }
@@ -88,11 +95,11 @@ public class o5mReader extends BaseReader2 {
     NodeObject2 createNode(MemoryStorage2 storage, Node in) {
         long lat = Math.round(in.getLat() / NodeObject2.DIVIDER);
         if (lat >= Integer.MAX_VALUE || lat <= Integer.MIN_VALUE) {
-            throw new RuntimeException("Wrong value for latitude: " + lat);
+          //  throw new RuntimeException("Wrong value for latitude: " + lat);
         }
         long lon = Math.round(in.getLon() / NodeObject2.DIVIDER);
         if (lon >= Integer.MAX_VALUE || lon <= Integer.MIN_VALUE) {
-            throw new RuntimeException("Wrong value for longitude: " + lon);
+          //  throw new RuntimeException("Wrong value for longitude: " + lon);
         }
 
         int intLon = (int) lon;

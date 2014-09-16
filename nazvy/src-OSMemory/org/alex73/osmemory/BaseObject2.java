@@ -53,7 +53,7 @@ public abstract class BaseObject2 {
             tagValues = new String[tagsCount];
         }
     }
-    
+
     public long getId() {
         return id;
     }
