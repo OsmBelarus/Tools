@@ -31,11 +31,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.alex73.osm.data.BaseObject;
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.NodeObject;
-import org.alex73.osm.data.RelationObject;
-import org.alex73.osm.data.WayObject;
+import org.alex73.osmemory.IOsmNode;
+import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmRelation;
+import org.alex73.osmemory.IOsmWay;
+import org.alex73.osmemory.MemoryStorage;
 
 public class Geo {
     static final DecimalFormat N2 = new DecimalFormat("00");
@@ -61,11 +61,11 @@ public class Geo {
     }
 
     public static Point2D node2point(MemoryStorage storage, long nodeId) {
-        NodeObject node = storage.getNodeById(nodeId);
+        IOsmNode node = storage.getNodeById(nodeId);
         if (node == null) {
             throw new IndexOutOfBoundsException("There is no node #" + nodeId);
         }
-        return new Point2D.Double(node.lon, node.lat);
+        return new Point2D.Double(node.getLongitude(), node.getLatitude());
     }
 
     public static Area box2area(double min_lon, double min_lat, double max_lon, double max_lat) {
@@ -73,21 +73,21 @@ public class Geo {
     }
 
     public static Path2D way2path(MemoryStorage storage, long wayId) {
-        WayObject way = storage.getWayById(wayId);
+        IOsmWay way = storage.getWayById(wayId);
         if (way == null) {
             throw new IndexOutOfBoundsException("There is no way #" + wayId);
         }
-        Path2D.Double result = new Path2D.Double(Path2D.WIND_NON_ZERO, way.nodeIds.length);
-        for (int i = 0; i < way.nodeIds.length; i++) {
-            long nodeId = way.nodeIds[i];
-            NodeObject node = storage.getNodeById(nodeId);
+        Path2D.Double result = new Path2D.Double(Path2D.WIND_NON_ZERO, way.getNodeIds().length);
+        for (int i = 0; i < way.getNodeIds().length; i++) {
+            long nodeId = way.getNodeIds()[i];
+            IOsmNode node = storage.getNodeById(nodeId);
             if (node == null) {
                 throw new IndexOutOfBoundsException("There is no node #" + nodeId);
             }
             if (i == 0) {
-                result.moveTo(node.lon, node.lat);
+                result.moveTo(node.getLongitude(), node.getLatitude());
             } else {
-                result.lineTo(node.lon, node.lat);
+                result.lineTo(node.getLongitude(), node.getLatitude());
             }
         }
         return result;
@@ -98,7 +98,7 @@ public class Geo {
     }
 
     public static Area rel2area(MemoryStorage storage, long relId) {
-        RelationObject rel = storage.getRelationById(relId);
+        IOsmRelation rel = storage.getRelationById(relId);
         if (rel == null) {
             throw new IndexOutOfBoundsException("There is no relation #" + relId);
         }
@@ -107,34 +107,34 @@ public class Geo {
         List<Path2D> innerWays = new ArrayList<>();
         Point2D center = null;
         Area borderArea = null;
-        for (int i = 0; i < rel.members.length; i++) {
-            RelationObject.Member m = rel.members[i];
-            String role = m.role;
+        for (int i = 0; i < rel.getMembersCount(); i++) {
+            IOsmObject m = rel.getMemberObject(storage, i);
+            String role = rel.getMemberRole(storage, i);
             switch (role) {
             case "outer":
             case "":// TODO: remove
-                if (m.type == BaseObject.TYPE.WAY) {
+                if (rel.getMemberType(i) == IOsmObject.TYPE_WAY) {
                     try {
-                        outerWays.add(way2path(storage, m.id));
+                        outerWays.add(way2path(storage, m.getId()));
                     } catch (IndexOutOfBoundsException ex) {
                     }
                 }
                 break;
             case "inner":
                 // TODO
-                if (m.type != BaseObject.TYPE.WAY) {
+                if (rel.getMemberType(i) != IOsmObject.TYPE_WAY) {
                     throw new RuntimeException();
                 }
                 try {
-                    innerWays.add(way2path(storage, m.id));
+                    innerWays.add(way2path(storage, m.getId()));
                 } catch (IndexOutOfBoundsException ex) {
                 }
                 break;
             case "label":
             case "admin_centre":
-                if (m.type == BaseObject.TYPE.NODE) {
+                if (rel.getMemberType(i) == IOsmObject.TYPE_NODE) {
                     try {
-                        center = node2point(storage, m.id);
+                        center = node2point(storage, m.getId());
                     } catch (IndexOutOfBoundsException ex) {
                     }
                 }
@@ -143,15 +143,15 @@ public class Geo {
             case "subarea":
                 break;
             case "border":
-                if (m.type == BaseObject.TYPE.WAY) {
+                if (rel.getMemberType(i) == IOsmObject.TYPE_WAY) {
                     // TODO change: should be outer
-                    outerWays.add(way2path(storage, m.id));
-                } else if (m.type == BaseObject.TYPE.RELATION) {
+                    outerWays.add(way2path(storage, m.getId()));
+                } else if (rel.getMemberType(i) == IOsmObject.TYPE_RELATION) {
                     if (borderArea != null) {
                         throw new RuntimeException("Second border for rel#" + relId);
                     }
                     try {
-                        borderArea = rel2area(storage, m.id);
+                        borderArea = rel2area(storage, m.getId());
                     } catch (IndexOutOfBoundsException ex) {
                     }
                 } else {

@@ -12,26 +12,27 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.alex73.osmemory.BaseObject2;
-import org.alex73.osmemory.FastPolygon;
-import org.alex73.osmemory.MemoryStorage2;
-import org.alex73.osmemory.NodeObject2;
-import org.alex73.osmemory.RelationObject2;
-import org.alex73.osmemory.WayObject2;
+import org.alex73.osmemory.OsmBase;
+import org.alex73.osmemory.FastArea;
+import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.OsmNode;
+import org.alex73.osmemory.OsmRelation;
+import org.alex73.osmemory.OsmWay;
 
 public class MonitorContext {
-    private final MemoryStorage2 osm;
+    private final MemoryStorage osm;
     private final Monitor monitor;
-    private final FastPolygon Belarus;
-    private final List<BaseObject2> collected = new ArrayList<>();
+    private final FastArea Belarus;
+    private final List<IOsmObject> collected = new ArrayList<>();
 
-    public MonitorContext(MemoryStorage2 osm, Monitor m, FastPolygon Belarus) throws Exception {
+    public MonitorContext(MemoryStorage osm, Monitor m, FastArea Belarus) throws Exception {
         this.osm = osm;
         this.monitor = m;
         this.Belarus = Belarus;
     }
 
-    public void process(BaseObject2 o) {
+    public void process(IOsmObject o) {
         boolean dump = false;
         for (Group g : monitor.getGroup()) {
             if (isCorespondsGroup(o, g)) {
@@ -48,13 +49,14 @@ public class MonitorContext {
 
     public void dump(File outputDirectory) throws Exception {
         File outFile = new File(outputDirectory, monitor.getOutput() + ".txt");
+        short sortTag = osm.getTagsPack().getTagCode(monitor.getSort());
         // sort
         if (monitor.getSort() != null) {
-            Collections.sort(collected, new Comparator<BaseObject2>() {
+            Collections.sort(collected, new Comparator<IOsmObject>() {
                 @Override
-                public int compare(BaseObject2 o1, BaseObject2 o2) {
-                    String v1 = osm.getTag(o1, monitor.getSort());
-                    String v2 = osm.getTag(o2, monitor.getSort());
+                public int compare(IOsmObject o1, IOsmObject o2) {
+                    String v1 = o1.getTag(sortTag);
+                    String v2 = o2.getTag(sortTag);
                     if (v1 == null) {
                         v1 = "\uFFFF";
                     }
@@ -98,46 +100,60 @@ public class MonitorContext {
             }
             wr.println();
 
-            for (BaseObject2 o : collected) {
-                if (o instanceof NodeObject2) {
-                    NodeObject2 n = (NodeObject2) o;
+            for (IOsmObject o : collected) {
+                switch (o.getType()) {
+                case OsmBase.TYPE_NODE:
+                    OsmNode n = (OsmNode) o;
                     wr.println(formatter.objectName(n));
                     wr.println("  other names: " + formatter.otherNames(n));
                     wr.println("  other tags : " + formatter.otherTags(n));
                     wr.println("    geometry : " + formatter.getGeometry(n));
-                } else if (o instanceof WayObject2) {
-                    WayObject2 w = (WayObject2) o;
+                    break;
+                case OsmBase.TYPE_WAY:
+                    OsmWay w = (OsmWay) o;
                     wr.println(formatter.objectName(w));
                     wr.println("  other names: " + formatter.otherNames(w));
                     wr.println("  other tags : " + formatter.otherTags(w));
                     wr.println("    geometry :" + formatter.getGeometry(w));
-                } else if (o instanceof RelationObject2) {
-                    RelationObject2 r = (RelationObject2) o;
+                    break;
+                case OsmBase.TYPE_RELATION:
+                    OsmRelation r = (OsmRelation) o;
                     wr.println(formatter.objectName(r));
                     wr.println("  other names: " + formatter.otherNames(r));
                     wr.println("  other tags : " + formatter.otherTags(r));
                     for (String g : formatter.getGeometry(r)) {
                         wr.println("    geometry : " + g);
                     }
-                } else {
+                    break;
+                default:
                     throw new RuntimeException();
                 }
             }
         }
     }
 
-    boolean isCorespondsGroup(BaseObject2 o, Group g) {
-        if (o instanceof NodeObject2 && !g.isInNodes()) {
-            return false;
-        }
-        if (o instanceof WayObject2 && !g.isInWays()) {
-            return false;
-        }
-        if (o instanceof RelationObject2 && !g.isInRelations()) {
-            return false;
+    boolean isCorespondsGroup(IOsmObject o, Group g) {
+        switch (o.getType()) {
+        case OsmBase.TYPE_NODE:
+            if (!g.isInNodes()) {
+                return false;
+            }
+            break;
+        case OsmBase.TYPE_WAY:
+            if (!g.isInWays()) {
+                return false;
+            }
+            break;
+        case OsmBase.TYPE_RELATION:
+            if (!g.isInRelations()) {
+                return false;
+            }
+            break;
+        default:
+            throw new RuntimeException();
         }
         for (Attr a : g.getAttr()) {
-            String v = osm.getTag(o, a.getName());
+            String v = o.getTag(a.getName(), osm);
             if (v == null) {
                 return false;
             }
@@ -148,15 +164,7 @@ public class MonitorContext {
         return true;
     }
 
-    int getObjectTypePriority(BaseObject2 o) {
-        if (o instanceof NodeObject2) {
-            return 1;
-        } else if (o instanceof WayObject2) {
-            return 2;
-        } else if (o instanceof RelationObject2) {
-            return 3;
-        } else {
-            throw new RuntimeException();
-        }
+    int getObjectTypePriority(IOsmObject o) {
+        return o.getType();
     }
 }

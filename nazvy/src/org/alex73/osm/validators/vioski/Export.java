@@ -27,12 +27,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.NodeObject;
-import org.alex73.osm.data.PbfDriver;
 import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.TSV;
+import org.alex73.osmemory.Area;
+import org.alex73.osmemory.FastArea;
+import org.alex73.osmemory.IOsmNode;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.O5MReader;
 import org.apache.commons.io.FileUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,14 +45,28 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
  * Стварае html+js для прагляду вёсак на мапе (http://latlon.org/~alex73/vioski/vioski.html).
  */
 public class Export {
+    static MemoryStorage osm;
+    static short placeTag;
+    static FastArea Belarus;
+    static Map<String, List<Mosm>> map = new TreeMap<>();
 
     public static void main(String[] args) throws Exception {
         Env.load();
-        MemoryStorage osm = PbfDriver.process(new File("tmp/belarus-latest.osm.pbf"));
+
+        List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
+                "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+
+        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
+                "UTF-8");
+        Area BelarusBorder = Area.fromWKT(borderWKT);
+
+        osm = new O5MReader(BelarusBorder.getBoundingBox()).read(new File(Env.readProperty("data.file")));
+        osm.showStat();
+
+        Belarus = new FastArea(BelarusBorder, osm);
 
         String dav = Env.readProperty("dav");
-        List<Miesta> daviednik = new TSV('\t').readCSV(
-                dav, Miesta.class);
+        List<Miesta> daviednik = new TSV('\t').readCSV(dav, Miesta.class);
 
         Map<String, List<Mdav>> rajony = new TreeMap<>();
         for (Miesta m : daviednik) {
@@ -70,40 +86,19 @@ public class Export {
             list.add(mm);
         }
 
-        Map<String, List<Mosm>> map = new TreeMap<>();
-        for (NodeObject n : osm.nodes) {
-            String place = n.getTag("place");
-            if (place == null || "island".equals(place) || "islet".equals(place)) {
-                continue;
-            }
-            String rajon = n.getTag("addr:district");
+        placeTag = osm.getTagsPack().getTagCode("place");
 
-            if (rajon != null && osm.isInsideBelarus(n)) {
-                // List<M> list = rajony.get(n.rajon);
-                List<Mosm> list = map.get(rajon);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    map.put(rajon, list);
-                }
-                Mosm mm = new Mosm();
-                mm.osmID = n.id;
-                mm.lat = n.lat;
-                mm.lon = n.lon;
-                mm.nameBe = n.getTag("name:be");
-                mm.name = n.getTag("name");
-                list.add(mm);
-            }
-        }
+        osm.byTag("place", o -> o.isNode() && !o.getTag(placeTag).equals("island")
+                && !o.getTag(placeTag).equals("islet"), o -> processNode((IOsmNode) o));
 
         String outDir = Env.readProperty("out.dir");
-        File foutDir = new File(outDir+"/vioski");
+        File foutDir = new File(outDir + "/vioski");
         foutDir.mkdirs();
 
-        List<PadzielOsmNas> padziel = new TSV('\t').readCSV("vioski/padziel.csv", PadzielOsmNas.class);
         Map<String, String> padzielo = new TreeMap<>();
-        for(PadzielOsmNas p:padziel) {
-            if (p.nasNameRajon!=null) {
-                padzielo.put(p.nasNameRajon, osm.getRelationById(p.relationID).getTag("name"));
+        for (PadzielOsmNas p : padziel) {
+            if (p.nasNameRajon != null) {
+                padzielo.put(p.nasNameRajon, osm.getRelationById(p.relationID).getTag("name", osm));
             }
         }
 
@@ -112,9 +107,29 @@ public class Export {
         o += "data.dav=" + om.writeValueAsString(rajony) + "\n";
         o += "data.map=" + om.writeValueAsString(map) + "\n";
         o += "data.padziel=" + om.writeValueAsString(padzielo) + "\n";
-        FileUtils.writeStringToFile(new File(outDir+"/vioski/data.js"), o);
-		FileUtils.copyFileToDirectory(new File("vioski/control.js"), foutDir);
-		FileUtils.copyFileToDirectory(new File("vioski/vioski.html"), foutDir);
+        FileUtils.writeStringToFile(new File(outDir + "/vioski/data.js"), o);
+        FileUtils.copyFileToDirectory(new File("vioski/control.js"), foutDir);
+        FileUtils.copyFileToDirectory(new File("vioski/vioski.html"), foutDir);
+    }
+
+    static void processNode(IOsmNode node) {
+        String rajon = node.getTag("addr:district", osm);
+
+        if (rajon != null && Belarus.contains(node)) {
+            // List<M> list = rajony.get(n.rajon);
+            List<Mosm> list = map.get(rajon);
+            if (list == null) {
+                list = new ArrayList<>();
+                map.put(rajon, list);
+            }
+            Mosm mm = new Mosm();
+            mm.osmID = node.getId();
+            mm.lat = node.getLatitude();
+            mm.lon = node.getLongitude();
+            mm.nameBe = node.getTag("name:be", osm);
+            mm.name = node.getTag("name", osm);
+            list.add(mm);
+        }
     }
 
     @JsonSerialize(include = Inclusion.NON_NULL)

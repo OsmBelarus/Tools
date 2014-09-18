@@ -5,42 +5,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.alex73.osm.data.NodeObject;
-import org.alex73.osm.data.RelationObject;
-import org.alex73.osm.data.WayObject;
-import org.alex73.osmemory.BaseObject2;
-import org.alex73.osmemory.MemoryStorage2;
-import org.alex73.osmemory.NodeObject2;
-import org.alex73.osmemory.RelationObject2;
-import org.alex73.osmemory.WayObject2;
+import org.alex73.osmemory.IOsmNode;
+import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmRelation;
+import org.alex73.osmemory.IOsmWay;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.OsmBase;
+import org.alex73.osmemory.OsmNode;
+import org.alex73.osmemory.OsmRelation;
+import org.alex73.osmemory.OsmWay;
 
 public class OutputFormatter {
-    final MemoryStorage2 osm;
+    final MemoryStorage osm;
 
-    public OutputFormatter(MemoryStorage2 osm) {
+    public OutputFormatter(MemoryStorage osm) {
         this.osm = osm;
     }
 
-    String objectName(BaseObject2 o) {
+    String objectName(IOsmObject o) {
         StringBuilder out = new StringBuilder(200);
-        out.append(o.getCode());
+        out.append(o.getObjectCode());
         out.append("  ");
-        out.append(osm.getTag(o, "name:be"));
-        String tarask = osm.getTag(o, "name:be-tarask");
+        out.append(o.getTag("name:be", osm));
+        String tarask = o.getTag("name:be-tarask", osm);
         if (tarask != null) {
-            out.append('/');
+            out.append(" / ");
             out.append(tarask);
         }
-        out.append('/');
-        out.append(osm.getTag(o, "int_name"));
-        out.append('/');
-        out.append(osm.getTag(o, "name"));
+        out.append(" / ");
+        out.append(o.getTag("int_name", osm));
+        out.append(" / ");
+        out.append(o.getTag("name", osm));
         return out.toString();
     }
 
-    String otherNames(BaseObject2 o) {
+    String otherNames(IOsmObject o) {
         StringBuilder out = new StringBuilder(200);
-        Map<String, String> tags = osm.extractTags(o);
+        Map<String, String> tags = o.extractTags(osm);
         for (String t : tags.keySet()) {
             switch (t) {
             case "name":
@@ -49,7 +50,7 @@ public class OutputFormatter {
                 break;
             default:
                 if (t.startsWith("name:")) {
-                    out.append(';');
+                    out.append(" | ");
                     out.append(t);
                     out.append('=');
                     out.append(tags.get(t));
@@ -57,41 +58,41 @@ public class OutputFormatter {
                 break;
             }
         }
-        return out.length() > 0 ? out.substring(1) : "";
+        return out.length() > 0 ? out.substring(3) : "";
     }
 
-    String otherTags(BaseObject2 o) {
+    String otherTags(IOsmObject o) {
         StringBuilder out = new StringBuilder(200);
-        Map<String, String> tags = osm.extractTags(o);
+        Map<String, String> tags = o.extractTags(osm);
         for (String t : tags.keySet()) {
             if (t.equals("name") || t.startsWith("name:") || t.startsWith("int_name")) {
                 continue;
             }
-            out.append(';');
+            out.append(" | ");
             out.append(t);
             out.append('=');
             out.append(tags.get(t));
         }
-        return out.substring(1);
+        return out.length() > 0 ? out.substring(3) : "";
     }
 
-    String getGeometry(NodeObject2 n) {
+    String getGeometry(OsmNode n) {
         StringBuilder out = new StringBuilder(200);
         addCoord(n, out);
         return out.toString();
     }
 
-    String getGeometry(WayObject2 w) {
+    String getGeometry(OsmWay w) {
         StringBuilder out = new StringBuilder(200);
-        for (long nid : w.nodeIds) {
+        for (long nid : w.getNodeIds()) {
             out.append(' ');
-            out.append(NodeObject.getCode(nid));
+            out.append(IOsmObject.getNodeCode(nid));
             addCoord(osm.getNodeById(nid), out);
         }
         return out.toString();
     }
 
-    List<String> getGeometry(RelationObject2 r) {
+    List<String> getGeometry(OsmRelation r) {
         List<String> result = new ArrayList<String>();
         for (int i = 0; i < r.getMembersCount(); i++) {
             StringBuilder out = new StringBuilder(200);
@@ -103,24 +104,24 @@ public class OutputFormatter {
             long mid = r.getMemberID(i);
 
             switch (r.getMemberType(i)) {
-            case BaseObject2.TYPE_NODE:
-                out.append(NodeObject.getCode(mid));
-                NodeObject2 n = osm.getNodeById(mid);
+            case OsmBase.TYPE_NODE:
+                out.append(IOsmObject.getNodeCode(mid));
+                IOsmNode n = osm.getNodeById(mid);
                 addCoord(n, out);
                 if (n != null) {
                     out.append(" : ");
                     out.append(objectName(n));
                 }
                 break;
-            case BaseObject2.TYPE_WAY:
+            case OsmBase.TYPE_WAY:
                 // outer way
-                WayObject2 w = osm.getWayById(mid);
-                out.append(WayObject.getCode(mid));
+                IOsmWay w = osm.getWayById(mid);
+                out.append(IOsmObject.getWayCode(mid));
                 out.append(':');
                 if (w != null) {
-                    for (long nid : w.nodeIds) {
+                    for (long nid : w.getNodeIds()) {
                         out.append(' ');
-                        out.append(NodeObject.getCode(nid));
+                        out.append(IOsmObject.getNodeCode(nid));
                         addCoord(osm.getNodeById(nid), out);
                     }
                     out.append(" : ");
@@ -129,23 +130,23 @@ public class OutputFormatter {
                     out.append(" [???]");
                 }
                 break;
-            case BaseObject2.TYPE_RELATION:
-                RelationObject2 r2 = osm.getRelationById(mid);
-                out.append(RelationObject.getCode(mid));
+            case OsmBase.TYPE_RELATION:
+                IOsmRelation r2 = osm.getRelationById(mid);
+                out.append(IOsmObject.getRelationCode(mid));
                 if (r2 != null) {
                     out.append(": [ ");
                     for (int j = 0; i < r2.getMembersCount(); j++) {
                         out.append(r2.getMemberRole(osm, j));
                         out.append(' ');
                         switch (r2.getMemberType(i)) {
-                        case BaseObject2.TYPE_NODE:
-                            out.append(NodeObject2.getCode(r2.getMemberID(j)));
+                        case OsmBase.TYPE_NODE:
+                            out.append(IOsmObject.getNodeCode(r2.getMemberID(j)));
                             break;
-                        case BaseObject2.TYPE_WAY:
-                            out.append(WayObject2.getCode(r2.getMemberID(j)));
+                        case OsmBase.TYPE_WAY:
+                            out.append(IOsmObject.getWayCode(r2.getMemberID(j)));
                             break;
-                        case BaseObject2.TYPE_RELATION:
-                            out.append(RelationObject2.getCode(r2.getMemberID(j)));
+                        case OsmBase.TYPE_RELATION:
+                            out.append(IOsmObject.getRelationCode(r2.getMemberID(j)));
                             break;
                         }
                         out.append(", ");
@@ -165,7 +166,7 @@ public class OutputFormatter {
 
     static DecimalFormat COORD_FORMAT = new DecimalFormat("##0.00######");
 
-    void addCoord(NodeObject2 n, StringBuilder str) {
+    void addCoord(IOsmNode n, StringBuilder str) {
         if (n != null) {
             str.append('[');
             str.append(COORD_FORMAT.format(n.getLatitude()));

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src-OSMemory"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-annotations-2.2.3.jar"/>
@@ -17,8 +16,8 @@
 	<classpathentry exported="true" kind="lib" path="lib/postgres/postgis.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/postgres/postgresql-jdbc3-9.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-compress-1.5.jar"/>
-	<classpathentry kind="lib" path="lib/jts-1.13.jar" sourcepath="/tmp/src"/>
-	<classpathentry kind="lib" path="lib/o5m/reader-0.0.1-SNAPSHOT.jar" sourcepath="/home/alex/gits/o5m4j"/>
+	<classpathentry kind="lib" path="lib/jts-1.13.jar" sourcepath="/tmp/jts"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="lib/osmemory-1.0.jar" sourcepath="/OSMemory"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

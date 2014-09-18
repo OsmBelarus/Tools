@@ -34,6 +34,7 @@ import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.vulicy2.OsmNamed;
+import org.alex73.osmemory.IOsmObject;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -41,7 +42,7 @@ import org.apache.commons.lang.StringUtils;
  * 
  * -DdisableIntName - не правяраць int_name
  */
-public class CheckStreets2 extends StreetsParse2 {
+public class CheckStreets3 extends StreetsParse3 {
     static final Pattern RE_ALLOWED_CHARS = Pattern
             .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]+");
     static String outDir;
@@ -54,7 +55,7 @@ public class CheckStreets2 extends StreetsParse2 {
         poInputDir = Env.readProperty("po.target.dir");
         outDir = Env.readProperty("out.dir");
 
-        CheckStreets2 s = new CheckStreets2();
+        CheckStreets3 s = new CheckStreets3();
         s.run();
     }
 
@@ -102,22 +103,22 @@ public class CheckStreets2 extends StreetsParse2 {
                     return o1.getKey().compareTo(o2.getKey());
                 }
             });
-            for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
-                hg.xmin = Double.MAX_VALUE;
-                hg.xmax = Double.MIN_VALUE;
-                hg.ymin = Double.MAX_VALUE;
-                hg.ymax = Double.MIN_VALUE;
-                for (HouseError he : hg.objects) {
-                    hg.xmin = Math.min(hg.xmin, he.object.xmin);
-                    hg.xmax = Math.max(hg.xmax, he.object.xmax);
-                    hg.ymin = Math.min(hg.ymin, he.object.ymin);
-                    hg.ymax = Math.max(hg.ymax, he.object.ymax);
-                }
-                hg.xmin -= 0.002;
-                hg.xmax += 0.002;
-                hg.ymin -= 0.002;
-                hg.ymax += 0.002;
-            }
+//            for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
+//                hg.xmin = Double.MAX_VALUE;
+//                hg.xmax = Double.MIN_VALUE;
+//                hg.ymin = Double.MAX_VALUE;
+//                hg.ymax = Double.MIN_VALUE;
+//                for (HouseError he : hg.objects) {
+//                    hg.xmin = Math.min(hg.xmin, he.object.xmin);
+//                    hg.xmax = Math.max(hg.xmax, he.object.xmax);
+//                    hg.ymin = Math.min(hg.ymin, he.object.ymin);
+//                    hg.ymax = Math.max(hg.ymax, he.object.ymax);
+//                }
+//                hg.xmin -= 0.002;
+//                hg.xmax += 0.002;
+//                hg.ymin -= 0.002;
+//                hg.ymax += 0.002;
+//            }
         }
 
         for (Result r : result.values()) {
@@ -160,7 +161,7 @@ public class CheckStreets2 extends StreetsParse2 {
     }
 
     @Override
-    void postProcess(City c, OsmNamed obj, StreetNames streetNames, StreetName street, String name, String name_ru,
+    void postProcess(City c, IOsmObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
             String name_be) throws Exception {
         String trans = c.po.get(street.name);
         if ("".equals(trans)) {
@@ -379,7 +380,7 @@ public class CheckStreets2 extends StreetsParse2 {
         public String getCommaObjectIds() {
             StringBuilder o = new StringBuilder(200);
             for (HouseError h : objects) {
-                o.append(",way").append(Long.toString(h.object.hid));
+                o.append(",").append(h.object.getObjectCode());
             }
             return o.substring(1);
         }

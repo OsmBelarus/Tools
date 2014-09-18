@@ -16,12 +16,12 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
-import org.alex73.osmemory.BaseObject2;
-import org.alex73.osmemory.FastPolygon;
-import org.alex73.osmemory.MemoryStorage2;
-import org.alex73.osmemory.NodeObject2;
-import org.alex73.osmemory.PbfReader2;
-import org.alex73.osmemory.Polygon;
+import org.alex73.osmemory.Area;
+import org.alex73.osmemory.FastArea;
+import org.alex73.osmemory.IOsmNode;
+import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.O5MReader;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -53,12 +53,12 @@ public class CheckCities3 {
 
     static Result result = new Result();
 
-    static MemoryStorage2 storage;
-    static FastPolygon border;
+    static MemoryStorage storage;
+    static FastArea border;
 
     static List<Miesta> daviednik;
     static Set<String> usedInDav = new HashSet<>();
-    static Map<String, BaseObject2> dbPlaces;
+    static Map<String, IOsmObject> dbPlaces;
     static Map<String, String> adminLevelsBelToRus;
 
     public static void main(String[] args) throws Exception {
@@ -83,35 +83,36 @@ public class CheckCities3 {
         Collections.sort(result.unusedInDav);
         result.incorrectTags.sort();
         new File(out).getParentFile().mkdirs();
-        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", out, "data", result, "OSM",
-                OSM.class);
+        VelocityOutput.output("org/alex73/osm/validators/harady/validatar.velocity", out, "data", result,
+                "OSM", OSM.class);
         System.out.println("done");
     }
 
     static void loadData() throws Exception {
-        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")), "UTF-8");
-        Polygon Belarus = Polygon.fromWKT(borderWKT);
+        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
+                "UTF-8");
+        Area Belarus = Area.fromWKT(borderWKT);
 
         System.out.println("Load data...");
-        storage = new PbfReader2(Belarus.getBoundEnvelope()).read(new File(Env.readProperty("data.file")));
+        storage = new O5MReader(Belarus.getBoundingBox()).read(new File(Env.readProperty("data.file")));
         storage.showStat();
 
-        border = new FastPolygon(Belarus, storage);
+        border = new FastArea(Belarus, storage);
 
         System.out.println("Find places...");
         // шукаем цэнтры гарадоў
         dbPlaces = new HashMap<>();
-        storage.allHasTag("place").process(o -> border.contains(o), o -> dbPlaces.put(o.getCode(), o));
+        storage.byTag("place", o -> border.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
     }
 
     static void loadAdminLevels() {
         adminLevelsBelToRus = new HashMap<>();
 
-        storage.allHasTag("admin_level").process(o -> isAdminPartOfBelarus(o), o -> storeAdminPart(o));
+        storage.byTag("admin_level", o -> isAdminPartOfBelarus(o), o -> storeAdminPart(o));
     }
 
-    static boolean isAdminPartOfBelarus(BaseObject2 obj) {
-        String admin_level = storage.getTag(obj, "admin_level");
+    static boolean isAdminPartOfBelarus(IOsmObject obj) {
+        String admin_level = obj.getTag("admin_level", storage);
         switch (admin_level) {
         case "2":
         case "4":
@@ -120,15 +121,15 @@ public class CheckCities3 {
         default:
             return false;
         }
-        if (!"boundary".equals(storage.getTag(obj, "type"))) {
+        if (!"boundary".equals(obj.getTag("type", storage))) {
             return false;
         }
         return true;
     }
 
-    static void storeAdminPart(BaseObject2 obj) {
-        String name = storage.getTag(obj, "name");
-        String name_be = storage.getTag(obj, "name:be");
+    static void storeAdminPart(IOsmObject obj) {
+        String name = obj.getTag("name", storage);
+        String name_be = obj.getTag("name:be", storage);
         if (name_be != null && name != null) {
             if (name_be.endsWith(" раён") || name_be.endsWith(" вобласць")) {
                 adminLevelsBelToRus.put(name_be, name);
@@ -144,12 +145,13 @@ public class CheckCities3 {
                         result.nonExistInOsm.add("Ёсьць " + OSM.histText("n" + m.osmID)
                                 + " на мапе, але не населены пункт " + m);
                     } else {
-                        result.nonExistInOsm.add("Няма " + OSM.histText("n" + m.osmID) + " на мапе, але ёсць у " + m);
+                        result.nonExistInOsm.add("Няма " + OSM.histText("n" + m.osmID)
+                                + " на мапе, але ёсць у " + m);
                     }
                 } else {
                     if (!usedInDav.add("n" + m.osmID)) {
-                        result.nonExistInOsm.add(OSM.histText("n" + m.osmID) + " выкарыстоўваецца двойчы ў даведніку: "
-                                + m);
+                        result.nonExistInOsm.add(OSM.histText("n" + m.osmID)
+                                + " выкарыстоўваецца двойчы ў даведніку: " + m);
                     }
                 }
             }
@@ -161,12 +163,13 @@ public class CheckCities3 {
                                 result.nonExistInOsm.add("Ёсьць " + OSM.histText(id)
                                         + " на мапе, але не населены пункт " + m);
                             } else {
-                                result.nonExistInOsm.add("Няма " + OSM.histText(id) + " на мапе, але ёсць у " + m);
+                                result.nonExistInOsm.add("Няма " + OSM.histText(id) + " на мапе, але ёсць у "
+                                        + m);
                             }
                         } else {
                             if (!usedInDav.add(id)) {
-                                result.nonExistInOsm.add(OSM.histText(id) + " выкарыстоўваецца двойчы ў даведніку: "
-                                        + m);
+                                result.nonExistInOsm.add(OSM.histText(id)
+                                        + " выкарыстоўваецца двойчы ў даведніку: " + m);
                             }
                         }
                     } catch (Exception ex) {
@@ -178,18 +181,18 @@ public class CheckCities3 {
     }
 
     /**
-     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі
-     * выдаленыя.
+     * Шукаем аб'екты што ёсьць ў даведніку але няма ў osm. Магчыма, былі выдаленыя.
      */
     static void findUnusedInDav() {
-        for (BaseObject2 p : dbPlaces.values()) {
-            String place = storage.getTag(p, "place");
+        for (IOsmObject p : dbPlaces.values()) {
+            String place = p.getTag("place", storage);
             if ("island".equals(place) || "islet".equals(place)) {
                 continue;
             }
-            if (!usedInDav.contains(p.getCode())) {
-                result.unusedInDav.add(storage.getTag(p, "addr:region") + "|" + storage.getTag(p, "addr:district")
-                        + "|" + storage.getTag(p, "name") + "/" + OSM.browse(p.getCode()));
+            if (!usedInDav.contains(p.getObjectCode())) {
+                result.unusedInDav.add(p.getTag("addr:region", storage) + "|"
+                        + p.getTag("addr:district", storage) + "|" + p.getTag("name", storage) + "/"
+                        + OSM.browse(p.getObjectCode()));
             }
         }
     }
@@ -216,9 +219,9 @@ public class CheckCities3 {
                 ResultTable.ResultTableRow w = result.incorrectTags.new ResultTableRow(code, m.rajon + '|'
                         + m.sielsaviet + '|' + m.nazva);
                 try {
-                    BaseObject2 p = dbPlaces.get(code);
-                    Map<String, String> tags = storage.extractTags(p);
-                    NodeObject2 centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
+                    IOsmObject p = dbPlaces.get(code);
+                    Map<String, String> tags = p.extractTags(storage);
+                    IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
                     OsmPlace correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
                     if ("suburb".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
                         // hamlet => suburb - ok
@@ -233,7 +236,8 @@ public class CheckCities3 {
                     setAttrIfAllowed(w, "name:be", tags.get("name:be"), correctTags.name_be);
                     setAttrIfAllowed(w, "name:ru", tags.get("name:ru"), correctTags.name_ru);
                     setAttrIfAllowed(w, "int_name", tags.get("int_name"), correctTags.int_name);
-                    setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"), correctTags.name_be_tarask);
+                    setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"),
+                            correctTags.name_be_tarask);
                     if (correctTags.place != null) {
                         setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
                     }
@@ -263,7 +267,8 @@ public class CheckCities3 {
         }
     }
 
-    static void setAttrIfAllowed(ResultTable.ResultTableRow w, String attrName, String oldValue, String newValue) {
+    static void setAttrIfAllowed(ResultTable.ResultTableRow w, String attrName, String oldValue,
+            String newValue) {
         if (!"skip".equals(Env.readProperty("nazvy_viosak." + attrName.replace(':', '_')))) {
             w.setAttr(attrName, oldValue, newValue);
         }
@@ -283,16 +288,16 @@ public class CheckCities3 {
     static List<String> getUsedCodes(Miesta m) {
         List<String> c = new ArrayList<>();
         if (m.osmID != null) {
-            BaseObject2 n = dbPlaces.get("n" + m.osmID);
+            IOsmObject n = dbPlaces.get("n" + m.osmID);
             if (n != null) {
-                c.add(n.getCode());
+                c.add(n.getObjectCode());
             }
         }
         if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
             for (String id : m.osmIDother.split(";")) {
-                BaseObject2 o = dbPlaces.get(id);
+                IOsmObject o = dbPlaces.get(id);
                 if (o != null) {
-                    c.add(o.getCode());
+                    c.add(o.getObjectCode());
                 }
             }
         }

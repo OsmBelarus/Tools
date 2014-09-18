@@ -2,14 +2,10 @@ package org.alex73.osm.utils;
 
 import java.io.File;
 
-import org.alex73.osm.data.MemoryStorage;
-import org.alex73.osm.data.PbfDriver;
+import org.alex73.osmemory.Area;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.O5MReader;
 import org.apache.commons.io.FileUtils;
-
-import com.vividsolutions.jts.awt.ShapeReader;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.PrecisionModel;
 
 /**
  * Стварае WKT для Беларусі (relation 79842)
@@ -17,9 +13,11 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 public class CreateBelarusWKT {
 
     public static void main(String[] args) throws Exception {
-        GeometryFactory GEOM = new GeometryFactory(new PrecisionModel(1000000000));
-        MemoryStorage osm = PbfDriver.process(new File("tmp/belarus-latest.osm.pbf"));
-        Geometry g = new ShapeReader(GEOM).read(osm.Belarus.getPathIterator(null));
-        FileUtils.writeStringToFile(new File("Belarus-79842.wkt"), g.toText());
+        MemoryStorage osm = new O5MReader().read(new File(Env.readProperty("data.file")));
+        osm.showStat();
+
+        Area a = Area.fromOSM(osm, osm.getRelationById(79842));
+
+        FileUtils.writeStringToFile(new File("Belarus-79842.wkt"), a.getGeometry().toText());
     }
 }

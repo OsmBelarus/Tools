@@ -33,12 +33,10 @@ import java.util.Locale;
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Env;
-import org.alex73.osmemory.FastPolygon;
-import org.alex73.osmemory.MemoryStorage2;
-import org.alex73.osmemory.O5MReaderMy;
-import org.alex73.osmemory.PbfReader2;
-import org.alex73.osmemory.Polygon;
-import org.alex73.osmemory.o5mReader;
+import org.alex73.osmemory.FastArea;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.O5MReader;
+import org.alex73.osmemory.Area;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -46,7 +44,7 @@ import org.apache.commons.io.FileUtils;
  * these objects.
  */
 public class ExportObjects {
-    static MemoryStorage2 osm;
+    static MemoryStorage osm;
     static OutputFormatter formatter;
 
     public static void main(String[] args) throws Exception {
@@ -60,20 +58,20 @@ public class ExportObjects {
 
         String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
                 "UTF-8");
-        Polygon Belarus = Polygon.fromWKT(borderWKT);
+        Area Belarus = Area.fromWKT(borderWKT);
 
-        osm = new O5MReaderMy(Belarus.getBoundEnvelope()).read(new File(Env.readProperty("data.file")));
+        osm = new O5MReader(Belarus.getBoundingBox()).read(new File(Env.readProperty("data.file")));
         osm.showStat();
 
         List<MonitorContext> monitors = new ArrayList<>();
         for (Monitor m : config.getMonitor()) {
-            monitors.add(new MonitorContext(osm, m, new FastPolygon(Belarus, osm)));
+            monitors.add(new MonitorContext(osm, m, new FastArea(Belarus, osm)));
         }
 
         formatter = new OutputFormatter(osm);
 
         for (MonitorContext m : monitors) {
-            osm.all().processAll(o -> m.process(o));
+            osm.all(o -> m.process(o));
         }
 
         for (int i = 0; i < monitors.size(); i++) {

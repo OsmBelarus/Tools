@@ -10,18 +10,19 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.alex73.osm.validators.vulicy2.OsmPlace;
-import org.alex73.osmemory.MemoryStorage2;
-import org.alex73.osmemory.NodeObject2;
+import org.alex73.osmemory.IOsmNode;
+import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.OsmNode;
 
 public class CalcCorrectTags2 {
-    static public OsmPlace calc(Miesta m,MemoryStorage2 storage, NodeObject2 node) throws Exception {
+    static public OsmPlace calc(Miesta m, MemoryStorage storage, IOsmNode node) throws Exception {
         String typ;
         switch (m.typ) {
         case "г.":
             if (node == null) {
                 throw new Exception("Няма горада: " + m);
             }
-            String population =storage.getTag(node, "population");
+            String population = node.getTag("population", storage);
             if (population != null && Integer.parseInt(population) >= 50000) {
                 typ = "city";
             } else {
@@ -65,17 +66,17 @@ public class CalcCorrectTags2 {
         String variants_ru = variantsToString(vru);
 
         OsmPlace result = new OsmPlace();
-        result.name= name_ru;
-        result.name_ru= name_ru;
-        result.name_be= name_be;
-        result.int_name=int_name;
-        result.name_be_tarask= name_be_tarask;
+        result.name = name_ru;
+        result.name_ru = name_ru;
+        result.name_be = name_be;
+        result.int_name = int_name;
+        result.name_be_tarask = name_be_tarask;
         if (typ != null) {
-            result.place= typ;
+            result.place = typ;
         }
-        result.alt_name_ru= variants_ru;
-        result.alt_name_be= variants_be;
-        result.alt_name= null;
+        result.alt_name_ru = variants_ru;
+        result.alt_name_be = variants_be;
+        result.alt_name = null;
 
         return result;
     }
