@@ -12,7 +12,7 @@ git pull || exit 1
 rm *.txt
 popd
 
-time $JAVA_EXEC org.alex73.osm.monitors.export.ExportObjects || exit 1
+time nice $JAVA_EXEC org.alex73.osm.monitors.export.ExportObjects || exit 1
 
 pushd ../../OsmBelarus-Monitoring/ || exit 1
 git add *.txt

@@ -40,6 +40,10 @@ public enum StreetTerm {
 
     мост("мост", StreetTermRod.MUZ, "мост", StreetTermRod.MUZ),
 
+    спуск("спуск", StreetTermRod.MUZ, "спуск", StreetTermRod.MUZ),
+
+    уезд("въезд", StreetTermRod.MUZ, "уезд", StreetTermRod.MUZ),
+
     вуліца("улица", StreetTermRod.ZAN, "вуліца", StreetTermRod.ZAN),
 
     алея("аллея", StreetTermRod.ZAN, "алея", StreetTermRod.ZAN),

@@ -24,18 +24,11 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.validators.vulicy2.OsmHouseStreet;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 
 
@@ -133,23 +126,23 @@ public class Convert {
     }
 
     static void loadStreetNamesForHouses() throws Exception {
-        Env.load("../nazvy/env.properties");
-        SqlSession db;
-        String resource = "osm.xml";
-        SqlSessionFactory sqlSessionFactory;
-        InputStream inputStream = Resources.getResourceAsStream(resource);
-        try {
-            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
-        } finally {
-            inputStream.close();
-        }
-        db = sqlSessionFactory.openSession();
-        List<OsmHouseStreet> list = db.selectList("getStreetNameBeForAllHouses");
-        for (OsmHouseStreet h : list) {
-            if (h.name_be != null) {
-                houseStreetBe.put(h.hid, h.name_be);
-            }
-        }
+//        Env.load("../nazvy/env.properties");
+//        SqlSession db;
+//        String resource = "osm.xml";
+//        SqlSessionFactory sqlSessionFactory;
+//        InputStream inputStream = Resources.getResourceAsStream(resource);
+//        try {
+//            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
+//        } finally {
+//            inputStream.close();
+//        }
+//        db = sqlSessionFactory.openSession();
+//        List<OsmHouseStreet> list = db.selectList("getStreetNameBeForAllHouses");
+//        for (OsmHouseStreet h : list) {
+//            if (h.name_be != null) {
+//                houseStreetBe.put(h.hid, h.name_be);
+//            }
+//        }
     }
 
     static void fixInt(List<Tag> tags) {

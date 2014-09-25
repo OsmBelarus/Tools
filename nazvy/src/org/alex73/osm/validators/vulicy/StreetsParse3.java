@@ -45,11 +45,13 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.TSV;
-import org.alex73.osmemory.Area;
-import org.alex73.osmemory.FastArea;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
+import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.FastArea;
+import org.alex73.osmemory.geometry.Line;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -90,7 +92,7 @@ public class StreetsParse3 {
         init();
 
         processStreets();
-        processHouses();
+        // processHouses();
 
         end();
     }
@@ -187,10 +189,24 @@ public class StreetsParse3 {
     }
 
     public void processStreets() {
+        List<IOsmObject> highways = new ArrayList<>();
+        List<Line> lines = new ArrayList<>();
+        storage.byTag("highway",
+                o -> o.isWay() && !o.hasTag("int_ref", storage) && !o.hasTag("ref", storage),
+                o -> highways.add(o));
+        for (IOsmObject o : highways) {
+            lines.add(new Line((IOsmWay) o, storage));
+        }
         for (City c : cities) {
             System.out.println("Check street in " + c.nazva);
-            storage.byTag("highway", o -> !o.hasTag("int_ref", storage) && !o.hasTag("ref", storage)
-                    && c.geom.contains(o), o -> addStreet(c, o));
+            for (Line li : lines) {
+                if (!c.geom.interceptBox(li.getBoundingBox())) {
+                    continue;
+                }
+                if (c.geom.contains(li.getWay())) {
+                    addStreet(c, li.getWay());
+                }
+            }
         }
     }
 

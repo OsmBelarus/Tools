@@ -13,12 +13,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.alex73.osmemory.OsmBase;
-import org.alex73.osmemory.FastArea;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.OsmNode;
 import org.alex73.osmemory.OsmRelation;
 import org.alex73.osmemory.OsmWay;
+import org.alex73.osmemory.geometry.FastArea;
 
 public class MonitorContext {
     private final MemoryStorage osm;

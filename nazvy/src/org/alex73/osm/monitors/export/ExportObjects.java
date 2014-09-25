@@ -33,10 +33,10 @@ import java.util.Locale;
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Env;
-import org.alex73.osmemory.FastArea;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
-import org.alex73.osmemory.Area;
+import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.FastArea;
 import org.apache.commons.io.FileUtils;
 
 /**

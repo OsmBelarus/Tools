@@ -2,9 +2,9 @@ package org.alex73.osm.utils;
 
 import java.io.File;
 
-import org.alex73.osmemory.Area;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
+import org.alex73.osmemory.geometry.Area;
 import org.apache.commons.io.FileUtils;
 
 /**

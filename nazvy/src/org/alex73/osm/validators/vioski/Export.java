@@ -30,11 +30,11 @@ import java.util.TreeMap;
 import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.TSV;
-import org.alex73.osmemory.Area;
-import org.alex73.osmemory.FastArea;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
+import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.FastArea;
 import org.apache.commons.io.FileUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

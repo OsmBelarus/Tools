@@ -16,9 +16,7 @@ function Dav($scope) {
 				c++;
 			}
 		}
-		if (c>0) {
-			$scope.rajony[p]=p+" ("+c+")";
-		}
+		$scope.rajony[p]=p+" ("+c+")";
 	}
 	
 

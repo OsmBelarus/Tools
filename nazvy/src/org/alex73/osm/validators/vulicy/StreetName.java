@@ -53,7 +53,7 @@ public class StreetName {
             }
         }
 
-        if (!nameOrig.contains("Линия")) {
+        if (!nameOrig.contains("Линия") && !nameOrig.contains("Тупик")) {
             // для "Ліній" індэксы толькі ў назве, акрамя "Другая Шостая Линия" :)
             for (int i = 0; i < words.size(); i++) {
                 Matcher m = RE_INDEX.matcher(words.get(i));
@@ -86,18 +86,18 @@ public class StreetName {
                 o.append(getIndexText()).append(' ');
             }
             o.append(name).append(' ');
-            o.append(getRodavyTermin());
+            o.append(getRodavyTermin(o.toString()));
         } else {
             if (index != null) {
                 o.append(getIndexText()).append(' ');
             }
-            o.append(getRodavyTermin()).append(' ');
+            o.append(getRodavyTermin(o.toString())).append(' ');
             o.append(name);
         }
         return o.toString().trim();
     }
 
-    protected String getRodavyTermin() {
+    protected String getRodavyTermin(String prevText) {
         return term.getNameRu();
     }
 
@@ -173,6 +173,12 @@ public class StreetName {
         case "пуцепровад":
         case "пуцеправод":
             return StreetTerm.пуцеправод;
+        case "спуск":
+            return StreetTerm.спуск;
+        case "въезд":
+        case "уезд":
+        case "ўезд":
+            return StreetTerm.уезд;
         default:
             return null;
         }

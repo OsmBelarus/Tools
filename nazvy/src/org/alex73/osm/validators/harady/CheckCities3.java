@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.alex73.osm.daviednik.CalcCorrectTags2;
 import org.alex73.osm.daviednik.Miesta;
@@ -16,12 +16,12 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
-import org.alex73.osmemory.Area;
-import org.alex73.osmemory.FastArea;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
+import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.FastArea;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -57,7 +57,7 @@ public class CheckCities3 {
     static FastArea border;
 
     static List<Miesta> daviednik;
-    static Set<String> usedInDav = new HashSet<>();
+    static Map<String,Set<String>> usedInDav = new HashMap<>();
     static Map<String, IOsmObject> dbPlaces;
     static Map<String, String> adminLevelsBelToRus;
 
@@ -149,10 +149,7 @@ public class CheckCities3 {
                                 + " на мапе, але ёсць у " + m);
                     }
                 } else {
-                    if (!usedInDav.add("n" + m.osmID)) {
-                        result.nonExistInOsm.add(OSM.histText("n" + m.osmID)
-                                + " выкарыстоўваецца двойчы ў даведніку: " + m);
-                    }
+                    addUsed("n" + m.osmID, m.toString());
                 }
             }
             if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
@@ -167,10 +164,7 @@ public class CheckCities3 {
                                         + m);
                             }
                         } else {
-                            if (!usedInDav.add(id)) {
-                                result.nonExistInOsm.add(OSM.histText(id)
-                                        + " выкарыстоўваецца двойчы ў даведніку: " + m);
-                            }
+                            addUsed(id, m.toString());
                         }
                     } catch (Exception ex) {
                         result.nonExistInOsm.add(ex.getMessage());
@@ -178,6 +172,21 @@ public class CheckCities3 {
                 }
             }
         }
+        for (Map.Entry<String, Set<String>> en : usedInDav.entrySet()) {
+            if (en.getValue().size() > 1) {
+                result.nonExistInOsm.add(OSM.histText(en.getKey()) + " выкарыстоўваецца двойчы ў даведніку: "
+                        + en.getValue());
+            }
+        }
+    }
+
+    static void addUsed(String code, String where) {
+        Set<String> w = usedInDav.get(code);
+        if (w == null) {
+            w = new TreeSet<>();
+            usedInDav.put(code, w);
+        }
+        w.add(where);
     }
 
     /**
@@ -189,7 +198,7 @@ public class CheckCities3 {
             if ("island".equals(place) || "islet".equals(place)) {
                 continue;
             }
-            if (!usedInDav.contains(p.getObjectCode())) {
+            if (!usedInDav.containsKey(p.getObjectCode())) {
                 result.unusedInDav.add(p.getTag("addr:region", storage) + "|"
                         + p.getTag("addr:district", storage) + "|" + p.getTag("name", storage) + "/"
                         + OSM.browse(p.getObjectCode()));

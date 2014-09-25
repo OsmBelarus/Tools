@@ -33,7 +33,6 @@ import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
-import org.alex73.osm.validators.vulicy2.OsmNamed;
 import org.alex73.osmemory.IOsmObject;
 import org.apache.commons.lang.StringUtils;
 
@@ -87,7 +86,7 @@ public class CheckStreets3 extends StreetsParse3 {
         for (HouseError n : resultHouses) {
             result.get(n.c).pamylkiDamou.add(n);
         }
-        for(Result r:result.values()) {
+        for (Result r : result.values()) {
             r.pamylkiDamouG = groupBy(r.pamylkiDamou, new Group.Keyer<HouseError>() {
                 public String getKey(HouseError data) {
                     return data.error;
@@ -103,22 +102,22 @@ public class CheckStreets3 extends StreetsParse3 {
                     return o1.getKey().compareTo(o2.getKey());
                 }
             });
-//            for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
-//                hg.xmin = Double.MAX_VALUE;
-//                hg.xmax = Double.MIN_VALUE;
-//                hg.ymin = Double.MAX_VALUE;
-//                hg.ymax = Double.MIN_VALUE;
-//                for (HouseError he : hg.objects) {
-//                    hg.xmin = Math.min(hg.xmin, he.object.xmin);
-//                    hg.xmax = Math.max(hg.xmax, he.object.xmax);
-//                    hg.ymin = Math.min(hg.ymin, he.object.ymin);
-//                    hg.ymax = Math.max(hg.ymax, he.object.ymax);
-//                }
-//                hg.xmin -= 0.002;
-//                hg.xmax += 0.002;
-//                hg.ymin -= 0.002;
-//                hg.ymax += 0.002;
-//            }
+            // for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
+            // hg.xmin = Double.MAX_VALUE;
+            // hg.xmax = Double.MIN_VALUE;
+            // hg.ymin = Double.MAX_VALUE;
+            // hg.ymax = Double.MIN_VALUE;
+            // for (HouseError he : hg.objects) {
+            // hg.xmin = Math.min(hg.xmin, he.object.xmin);
+            // hg.xmax = Math.max(hg.xmax, he.object.xmax);
+            // hg.ymin = Math.min(hg.ymin, he.object.ymin);
+            // hg.ymax = Math.max(hg.ymax, he.object.ymax);
+            // }
+            // hg.xmin -= 0.002;
+            // hg.xmax += 0.002;
+            // hg.ymin -= 0.002;
+            // hg.ymax += 0.002;
+            // }
         }
 
         for (Result r : result.values()) {
@@ -149,20 +148,20 @@ public class CheckStreets3 extends StreetsParse3 {
         });
 
         System.out.println("Output to " + outDir + "/vulicy.html...");
-        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity", outDir + "/vulicy.html",
-                "harady", sortedList, "data", result, "errors", errors);
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity",
+                outDir + "/vulicy.html", "harady", sortedList, "data", result, "errors", errors);
         for (City c : cities) {
             System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-" + c.fn
-                    + ".html", "horad", c.nazva, "data", result.get(c));
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-" + c.fn
-                    + ".html", "horad", c.nazva, "data", result.get(c));
+            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
+                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
+            VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
+                    + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
         }
     }
 
     @Override
-    void postProcess(City c, IOsmObject obj, StreetNames streetNames, StreetName street, String name, String name_ru,
-            String name_be) throws Exception {
+    void postProcess(City c, IOsmObject obj, StreetNames streetNames, StreetName street, String name,
+            String name_ru, String name_be) throws Exception {
         String trans = c.po.get(street.name);
         if ("".equals(trans)) {
             trans = null;
@@ -171,7 +170,8 @@ public class CheckStreets3 extends StreetsParse3 {
             throw new Exception("Не перакладзена '" + street.name + "'");
         }
         // выдаляем лацінскія нумары
-        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "").replaceAll(" [XVI]+ ", " ");
+        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "")
+                .replaceAll("\\-[XVI]+$", "").replaceAll(" [XVI]+ ", " ");
         if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
             throw new Exception("Невядомыя літары ў '" + trans + "'");
         }
@@ -186,6 +186,10 @@ public class CheckStreets3 extends StreetsParse3 {
         }
         String mode = trans.substring(0, pm);
         trans = trans.substring(pm + 1);
+
+        if (!trans.equals(trans.trim().replaceAll("\\s{2,}", " "))) {
+            throw new Exception("Няправільныя прагалы ў перакладзе: " + street.name + " => " + trans);
+        }
 
         StreetNameBe be = new StreetNameBe();
         be.term = street.term;
@@ -231,7 +235,8 @@ public class CheckStreets3 extends StreetsParse3 {
         streetNames.required.name = streetNames.tags.name == null ? null : street.getRightName();
         streetNames.required.name_ru = streetNames.tags.name_ru == null ? null : streetNames.required.name;
         streetNames.required.name_be = streetNames.tags.name_be == null ? null : be.getRightName();
-        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(), false);
+        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(),
+                false);
 
         switch (Env.readProperty("nazvy_vulic.name")) {
         case "skip":
@@ -310,6 +315,7 @@ public class CheckStreets3 extends StreetsParse3 {
         public int getErrCount() {
             return vulicy.size() + pamylkiVulic.size() + damy.size();
         }
+
         public int getHouseErrCount() {
             return pamylkiDamou.size();
         }
@@ -317,8 +323,8 @@ public class CheckStreets3 extends StreetsParse3 {
         public List<StreetNames> vulicy = new ArrayList<>();
 
         public Map<String, List<StreetNames>> pamylkiVulic = new TreeMap<>();
-        
-        public List<HouseError> pamylkiDamou = new ArrayList<>(); 
+
+        public List<HouseError> pamylkiDamou = new ArrayList<>();
         public List<Group<HouseError>> pamylkiDamouG = new ArrayList<>();
 
         public Map<StreetNames, List<StreetNames>> damy = new TreeMap<>(new Comparator<StreetNames>() {

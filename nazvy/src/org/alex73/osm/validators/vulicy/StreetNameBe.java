@@ -23,8 +23,27 @@ package org.alex73.osm.validators.vulicy;
 public class StreetNameBe extends StreetName {
 
     @Override
-    protected String getRodavyTermin() {
-        return term.getNameBe();
+    protected String getRodavyTermin(String prevText) {
+        String t = term.getNameBe();
+
+        if (t.startsWith("у")) {// ў?
+            prevText = prevText.trim();
+            if (prevText.length() > 0) {
+                switch (prevText.charAt(prevText.length() - 1)) {
+                case 'у':
+                case 'е':
+                case 'ы':
+                case 'а':
+                case 'о':
+                case 'э':
+                case 'я':
+                case 'і':
+                case 'ю':
+                    t = "ў" + t.substring(1);
+                }
+            }
+        }
+        return t;
     }
 
     @Override

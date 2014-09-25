@@ -25,8 +25,9 @@ import java.text.ParseException;
 public class StreetNameParser {
     public static StreetName parse(String name) throws ParseException {
         StreetName orig;
-        if (name.equals("Набережная улица") || name.equals("ул. Набережная") || name.equals("улица Набережная")
-                || name.equals("Набярэжная вул.") || name.equals("Набережная ул.") || name.equals("Набережная Улица")
+        if (name.equals("Набережная улица") || name.equals("ул. Набережная")
+                || name.equals("улица Набережная") || name.equals("Набярэжная вул.")
+                || name.equals("Набережная ул.") || name.equals("Набережная Улица")
                 || name.equals("Набережная")) {
             orig = new StreetName();
             orig.name = "Набережная";
@@ -45,6 +46,11 @@ public class StreetNameParser {
             orig.name = "Набережная";
             orig.index = 2;
             orig.term = StreetTerm.вуліца;
+        } else if (name.equals("3-я Набережная улица")) {
+            orig = new StreetName();
+            orig.name = "Набережная";
+            orig.index = 3;
+            orig.term = StreetTerm.вуліца;
         } else if (name.equals("Верхняя Набережная улица")) {
             orig = new StreetName();
             orig.name = "Верхняя Набережная";
@@ -53,7 +59,7 @@ public class StreetNameParser {
             orig = new StreetName();
             orig.name = "Нижняя Набережная";
             orig.term = StreetTerm.вуліца;
-        } else if (name.equals("20-й дивизии")) {
+        } else if (name.equals("улица 20-й дивизии")) {
             orig = new StreetName();
             orig.name = "20-й дивизии";
             orig.term = StreetTerm.вуліца;
@@ -64,6 +70,10 @@ public class StreetNameParser {
         } else if (name.equals("МКАД")) {
             orig = new StreetName();
             orig.name = "МКАД";
+            orig.term = StreetTerm.няма;
+        } else if (name.equals("Восточный обход")) {
+            orig = new StreetName();
+            orig.name = "Восточный обход";
             orig.term = StreetTerm.няма;
         } else if (name.equals("улица 5-й Форт")) {
             orig = new StreetName();
@@ -76,6 +86,10 @@ public class StreetNameParser {
         } else if (name.equals("улица Тупик")) {
             orig = new StreetName();
             orig.name = "Тупик";
+            orig.term = StreetTerm.вуліца;
+        } else if (name.equals("улица 10-й съезд Советов")) {
+            orig = new StreetName();
+            orig.name = "10-й съезд Советов";
             orig.term = StreetTerm.вуліца;
         } else {
             orig = new StreetName();
