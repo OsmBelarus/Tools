@@ -48,6 +48,7 @@ public class ExtractObjectsForTranslation {
         out("shop", "supermarket");
         out("place", "suburb");
         out("place", "neighbourhood");
+        out("amenity", "place_of_worship");
     }
 
     static void out(String tag, String value) throws Exception {

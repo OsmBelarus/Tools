@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+    <!-- type id="Дарога" osmTypes="way" wayType="LINE" additions="name"> <tag name="highway" /> <additional_tag name="name" 
+        /> <additional_tag name="name:ru" /> </type -->
+    <type id="Дом" osmTypes="way" wayType="CLOSED" main="true" additions="Крыніца">
+        <filter name="building" value="house" />
+        <possible name="building:levels" />
+        <possible name="height" />
+        <possible name="addr:country" />
+        <possible name="addr:postcode" />
+        <possible name="addr:city" />
+        <possible name="addr:street" />
+        <possible name="addr:housenumber" />
+    </type>
+    <type id="Электрычны слуп" osmTypes="node" main="true" additions="Крыніца,Лямпа на слупе,Гняздо на слупе">
+        <filter name="power" value="pole" />
+        <possible name="material" />
+        <possible name="ref" />
+    </type>
+
+    <type id="Лямпа на слупе" osmTypes="node">
+        <filter name="highway" value="street_lamp" />
+    </type>
+    <type id="Гняздо на слупе" osmTypes="node">
+        <filter name="natural" value="birds_nest" />
+        <required name="birds_nest" />
+        <required name="nest_mount" value="pole" />
+        <possible name="image" />
+    </type>
+    <!-- type id="Гняздо на даху" osmTypes="node">
+    http://wiki.openstreetmap.org/wiki/Uk:Лелеки_2014
+        <filter name="natural" value="birds_nest" />
+        <required name="birds_nest" />
+        <required name="nest_mount" value="roof" />
+        <possible name="image" />
+        <possible name="nest_platform" />
+    </type-->
+    <type id="Назва" osmTypes="node,way,relation">
+        <possible name="name" required="true" />
+        <possible name="name:be" />
+        <possible name="name:en" />
+        <possible name="name:ru" />
+        <possible name="int_name" />
+    </type>
+    <type id="Крыніца" osmTypes="node,way,relation">
+        <filter name="source" />
+    </type>
+
+    <trap message="Птушынае гняздо невядомага тыпу">
+        <filter name="nest_mount" />
+    </trap>
+</object_types>

@@ -11,9 +11,6 @@ import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.OsmBase;
-import org.alex73.osmemory.OsmNode;
-import org.alex73.osmemory.OsmRelation;
-import org.alex73.osmemory.OsmWay;
 
 public class OutputFormatter {
     final MemoryStorage osm;
@@ -76,13 +73,13 @@ public class OutputFormatter {
         return out.length() > 0 ? out.substring(3) : "";
     }
 
-    String getGeometry(OsmNode n) {
+    String getGeometry(IOsmNode n) {
         StringBuilder out = new StringBuilder(200);
         addCoord(n, out);
         return out.toString();
     }
 
-    String getGeometry(OsmWay w) {
+    String getGeometry(IOsmWay w) {
         StringBuilder out = new StringBuilder(200);
         for (long nid : w.getNodeIds()) {
             out.append(' ');
@@ -92,7 +89,7 @@ public class OutputFormatter {
         return out.toString();
     }
 
-    List<String> getGeometry(OsmRelation r) {
+    List<String> getGeometry(IOsmRelation r) {
         List<String> result = new ArrayList<String>();
         for (int i = 0; i < r.getMembersCount(); i++) {
             StringBuilder out = new StringBuilder(200);
@@ -104,7 +101,7 @@ public class OutputFormatter {
             long mid = r.getMemberID(i);
 
             switch (r.getMemberType(i)) {
-            case OsmBase.TYPE_NODE:
+            case IOsmObject.TYPE_NODE:
                 out.append(IOsmObject.getNodeCode(mid));
                 IOsmNode n = osm.getNodeById(mid);
                 addCoord(n, out);
@@ -113,7 +110,7 @@ public class OutputFormatter {
                     out.append(objectName(n));
                 }
                 break;
-            case OsmBase.TYPE_WAY:
+            case IOsmObject.TYPE_WAY:
                 // outer way
                 IOsmWay w = osm.getWayById(mid);
                 out.append(IOsmObject.getWayCode(mid));
@@ -130,7 +127,7 @@ public class OutputFormatter {
                     out.append(" [???]");
                 }
                 break;
-            case OsmBase.TYPE_RELATION:
+            case IOsmObject.TYPE_RELATION:
                 IOsmRelation r2 = osm.getRelationById(mid);
                 out.append(IOsmObject.getRelationCode(mid));
                 if (r2 != null) {

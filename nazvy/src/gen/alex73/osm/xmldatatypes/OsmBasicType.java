@@ -36,8 +36,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "osmBasicType")
 @XmlSeeAlso({
-    Way.class,
     Relation.class,
+    Way.class,
     Node.class
 })
 public class OsmBasicType {

@@ -51,7 +51,7 @@ import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
-import org.alex73.osmemory.geometry.Line;
+import org.alex73.osmemory.geometry.Way;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -122,7 +122,7 @@ public class StreetsParse3 {
                         IOsmObject city = storage.getObject(id);
                         if (city != null) {
                             try {
-                                border = new FastArea(Area.fromOSM(storage, city), storage);
+                                border = new FastArea(Area.fromOSM(storage, city).getGeometry(), storage);
                             } catch (Exception ex) {
                                 errors.add("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
                             }
@@ -190,16 +190,16 @@ public class StreetsParse3 {
 
     public void processStreets() {
         List<IOsmObject> highways = new ArrayList<>();
-        List<Line> lines = new ArrayList<>();
+        List<Way> lines = new ArrayList<>();
         storage.byTag("highway",
                 o -> o.isWay() && !o.hasTag("int_ref", storage) && !o.hasTag("ref", storage),
                 o -> highways.add(o));
         for (IOsmObject o : highways) {
-            lines.add(new Line((IOsmWay) o, storage));
+            lines.add(new Way((IOsmWay) o, storage));
         }
         for (City c : cities) {
             System.out.println("Check street in " + c.nazva);
-            for (Line li : lines) {
+            for (Way li : lines) {
                 if (!c.geom.interceptBox(li.getBoundingBox())) {
                     continue;
                 }

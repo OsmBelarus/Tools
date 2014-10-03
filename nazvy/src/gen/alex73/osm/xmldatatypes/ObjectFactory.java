@@ -30,38 +30,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Member }
-     * 
-     */
-    public Member createMember() {
-        return new Member();
-    }
-
-    /**
-     * Create an instance of {@link Bounds }
-     * 
-     */
-    public Bounds createBounds() {
-        return new Bounds();
-    }
-
-    /**
-     * Create an instance of {@link OsmChange }
-     * 
-     */
-    public OsmChange createOsmChange() {
-        return new OsmChange();
-    }
-
-    /**
-     * Create an instance of {@link OsmBasicChange }
-     * 
-     */
-    public OsmBasicChange createOsmBasicChange() {
-        return new OsmBasicChange();
-    }
-
-    /**
      * Create an instance of {@link Node }
      * 
      */
@@ -94,11 +62,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Relation }
+     * Create an instance of {@link Osm }
      * 
      */
-    public Relation createRelation() {
-        return new Relation();
+    public Osm createOsm() {
+        return new Osm();
+    }
+
+    /**
+     * Create an instance of {@link Bounds }
+     * 
+     */
+    public Bounds createBounds() {
+        return new Bounds();
     }
 
     /**
@@ -110,11 +86,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Osm }
+     * Create an instance of {@link Relation }
      * 
      */
-    public Osm createOsm() {
-        return new Osm();
+    public Relation createRelation() {
+        return new Relation();
+    }
+
+    /**
+     * Create an instance of {@link Member }
+     * 
+     */
+    public Member createMember() {
+        return new Member();
     }
 
     /**
@@ -123,6 +107,22 @@ public class ObjectFactory {
      */
     public Changeset createChangeset() {
         return new Changeset();
+    }
+
+    /**
+     * Create an instance of {@link OsmChange }
+     * 
+     */
+    public OsmChange createOsmChange() {
+        return new OsmChange();
+    }
+
+    /**
+     * Create an instance of {@link OsmBasicChange }
+     * 
+     */
+    public OsmBasicChange createOsmBasicChange() {
+        return new OsmBasicChange();
     }
 
 }

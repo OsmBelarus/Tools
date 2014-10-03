@@ -63,7 +63,7 @@ public class Export {
         osm = new O5MReader(BelarusBorder.getBoundingBox()).read(new File(Env.readProperty("data.file")));
         osm.showStat();
 
-        Belarus = new FastArea(BelarusBorder, osm);
+        Belarus = new FastArea(BelarusBorder.getGeometry(), osm);
 
         String dav = Env.readProperty("dav");
         List<Miesta> daviednik = new TSV('\t').readCSV(dav, Miesta.class);

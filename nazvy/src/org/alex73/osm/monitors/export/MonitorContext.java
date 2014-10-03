@@ -12,12 +12,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.alex73.osmemory.OsmBase;
+import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmRelation;
+import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.OsmNode;
-import org.alex73.osmemory.OsmRelation;
-import org.alex73.osmemory.OsmWay;
 import org.alex73.osmemory.geometry.FastArea;
 
 public class MonitorContext {
@@ -102,22 +101,22 @@ public class MonitorContext {
 
             for (IOsmObject o : collected) {
                 switch (o.getType()) {
-                case OsmBase.TYPE_NODE:
-                    OsmNode n = (OsmNode) o;
+                case IOsmObject.TYPE_NODE:
+                    IOsmNode n = (IOsmNode) o;
                     wr.println(formatter.objectName(n));
                     wr.println("  other names: " + formatter.otherNames(n));
                     wr.println("  other tags : " + formatter.otherTags(n));
                     wr.println("    geometry : " + formatter.getGeometry(n));
                     break;
-                case OsmBase.TYPE_WAY:
-                    OsmWay w = (OsmWay) o;
+                case IOsmObject.TYPE_WAY:
+                    IOsmWay w = (IOsmWay) o;
                     wr.println(formatter.objectName(w));
                     wr.println("  other names: " + formatter.otherNames(w));
                     wr.println("  other tags : " + formatter.otherTags(w));
                     wr.println("    geometry :" + formatter.getGeometry(w));
                     break;
-                case OsmBase.TYPE_RELATION:
-                    OsmRelation r = (OsmRelation) o;
+                case IOsmObject.TYPE_RELATION:
+                    IOsmRelation r = (IOsmRelation) o;
                     wr.println(formatter.objectName(r));
                     wr.println("  other names: " + formatter.otherNames(r));
                     wr.println("  other tags : " + formatter.otherTags(r));
@@ -134,17 +133,17 @@ public class MonitorContext {
 
     boolean isCorespondsGroup(IOsmObject o, Group g) {
         switch (o.getType()) {
-        case OsmBase.TYPE_NODE:
+        case IOsmObject.TYPE_NODE:
             if (!g.isInNodes()) {
                 return false;
             }
             break;
-        case OsmBase.TYPE_WAY:
+        case IOsmObject.TYPE_WAY:
             if (!g.isInWays()) {
                 return false;
             }
             break;
-        case OsmBase.TYPE_RELATION:
+        case IOsmObject.TYPE_RELATION:
             if (!g.isInRelations()) {
                 return false;
             }

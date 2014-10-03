@@ -57,7 +57,7 @@ public class CheckCities3 {
     static FastArea border;
 
     static List<Miesta> daviednik;
-    static Map<String,Set<String>> usedInDav = new HashMap<>();
+    static Map<String, Set<String>> usedInDav = new HashMap<>();
     static Map<String, IOsmObject> dbPlaces;
     static Map<String, String> adminLevelsBelToRus;
 
@@ -69,6 +69,11 @@ public class CheckCities3 {
 
         System.out.println("Parsing csv from " + dav);
         daviednik = new TSV('\t').readCSV(dav, Miesta.class);
+        for (Miesta m : daviednik) {
+            if (m.osmID != null && m.osmID == 0) {
+                m.osmID = null;
+            }
+        }
 
         loadData();
 
@@ -97,7 +102,7 @@ public class CheckCities3 {
         storage = new O5MReader(Belarus.getBoundingBox()).read(new File(Env.readProperty("data.file")));
         storage.showStat();
 
-        border = new FastArea(Belarus, storage);
+        border = new FastArea(Belarus.getGeometry(), storage);
 
         System.out.println("Find places...");
         // шукаем цэнтры гарадоў
