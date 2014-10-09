@@ -1,54 +1,84 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2013-2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.objects;
 
-import gen.alex73.osm.validators.objects.Tag;
 import gen.alex73.osm.validators.objects.Trap;
 
-import java.util.List;
-
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.Way;
 
-public class CheckTrap {
-    private final MemoryStorage osm;
+/**
+ * Сюды трапляюць аб'екты нявызначанага тыпу. Толькі каб паказаць іх як памылку, альбо спраўдзіць геамэтрыю.
+ */
+public class CheckTrap extends BaseCheck {
     private final Trap trap;
 
-    private short[] filterTags;
-
     public CheckTrap(MemoryStorage osm, Trap trap) {
-        this.osm = osm;
+        super(osm, trap.getFilter());
         this.trap = trap;
-
-        filterTags = tagCodes(trap.getFilter());
-    }
-
-    short[] tagCodes(List<Tag> tags) {
-        short[] result = new short[tags.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = osm.getTagsPack().getTagCode(tags.get(i).getName());
-        }
-        return result;
     }
 
     public Trap getTrap() {
         return trap;
     }
 
-
-    public boolean matches(IOsmObject obj) {
-        for (int i = 0; i < filterTags.length; i++) {
-            if (!obj.hasTag(filterTags[i])) {
-                return false;
-            }
-        }
-        for (int i = 0; i < filterTags.length; i++) {
-            String value = trap.getFilter().get(i).getValue();
-            if (value != null) {
-                if (!value.equals(obj.getTag(filterTags[i]))) {
-                    return false;
+    public void getErrors(IOsmObject obj) {
+        if (trap.getRequired() == null) {
+            CheckObjects.addError(obj, trap.getMessage());
+        } else {
+            switch (trap.getRequired().getGeometryType()) {
+            case LINE:
+                if (!obj.isWay()) {
+                    CheckObjects.addError(obj, "Чакаецца way");
+                } else {
+                    try {
+                        new Way((IOsmWay) obj, osm).getLineGeometry();
+                    } catch (Exception ex) {
+                        CheckObjects.addError(obj, trap.getMessage());
+                    }
                 }
+                break;
+            case AREA:
+                if (obj.isNode()) {
+                    CheckObjects.addError(obj, "Чакаецца way альбо relation");
+                } else {
+                    try {
+                        new Area(osm, obj).getGeometry();
+                    } catch (Exception ex) {
+                        CheckObjects.addError(obj, trap.getMessage());
+                    }
+                }
+                break;
+            case POINT:
+                if (!obj.isNode()) {
+                    CheckObjects.addError(obj, "Чакаецца node");
+                }
+                break;
+            default:
+                throw new RuntimeException();
             }
         }
-
-        return true;
     }
 }

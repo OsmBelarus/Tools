@@ -39,6 +39,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.alex73.osm.daviednik.Miesta;
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
@@ -47,12 +48,9 @@ import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
-import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.O5MReader;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
 import org.alex73.osmemory.geometry.Way;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -67,7 +65,7 @@ public class StreetsParse3 {
     static String tmxOutputDir;
     static String davFile;
 
-    MemoryStorage storage;
+    Belarus storage;
     List<Miesta> daviednik;
     List<String> errors = new ArrayList<>();
     List<City> cities = new ArrayList<>();
@@ -98,13 +96,7 @@ public class StreetsParse3 {
     }
 
     public void init() throws Exception {
-        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
-                "UTF-8");
-        Area Belarus = Area.fromWKT(borderWKT);
-
-        System.out.println("Load data...");
-        storage = new O5MReader(Belarus.getBoundingBox()).read(new File(Env.readProperty("data.file")));
-        storage.showStat();
+        storage = new Belarus();
 
         for (Miesta m : daviednik) {
             switch (m.typ) {
@@ -122,7 +114,7 @@ public class StreetsParse3 {
                         IOsmObject city = storage.getObject(id);
                         if (city != null) {
                             try {
-                                border = new FastArea(Area.fromOSM(storage, city).getGeometry(), storage);
+                                border = new FastArea(new Area(storage, city).getGeometry(), storage);
                             } catch (Exception ex) {
                                 errors.add("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
                             }
@@ -203,7 +195,7 @@ public class StreetsParse3 {
                 if (!c.geom.interceptBox(li.getBoundingBox())) {
                     continue;
                 }
-                if (c.geom.contains(li.getWay())) {
+                if (c.geom.covers(li.getWay())) {
                     addStreet(c, li.getWay());
                 }
             }
@@ -235,7 +227,7 @@ public class StreetsParse3 {
         namebeTag = storage.getTagsPack().getTagCode("name:be");
         for (City c : cities) {
             System.out.println("Check houses in " + c.nazva);
-            storage.byTag("addr:housenumber", h -> c.geom.contains(h), h -> processHouse(c, h));
+            storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
         }
     }
 

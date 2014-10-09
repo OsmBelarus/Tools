@@ -37,6 +37,12 @@ import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
 
+/**
+ * Некаторыя геаграфічныя мэтады.
+ * 
+ * @deprecated
+ */
+@Deprecated
 public class Geo {
     static final DecimalFormat N2 = new DecimalFormat("00");
     static final StringBuilder o = new StringBuilder();

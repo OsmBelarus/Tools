@@ -1,3 +1,25 @@
+/**************************************************************************
+ 
+Some tools for OSM.
+
+ Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.monitors.export;
 
 import gen.alex73.osm.monitor.Attr;
@@ -19,23 +41,26 @@ import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.geometry.FastArea;
 
+/**
+ * Экспартуе зьвесткі для вызначанага тыпу аб'ектаў. 
+ */
 public class MonitorContext {
     private final MemoryStorage osm;
     private final Monitor monitor;
-    private final FastArea Belarus;
+    private final FastArea area;
     private final List<IOsmObject> collected = new ArrayList<>();
 
-    public MonitorContext(MemoryStorage osm, Monitor m, FastArea Belarus) throws Exception {
+    public MonitorContext(MemoryStorage osm, Monitor m, FastArea area) throws Exception {
         this.osm = osm;
         this.monitor = m;
-        this.Belarus = Belarus;
+        this.area = area;
     }
 
     public void process(IOsmObject o) {
         boolean dump = false;
         for (Group g : monitor.getGroup()) {
             if (isCorespondsGroup(o, g)) {
-                if (Belarus.contains(o)) {
+                if (area.covers(o)) {
                     dump = true;
                 }
                 break;

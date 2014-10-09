@@ -16,6 +16,7 @@
     Author: Aleś Bułojčyk <alex73mail@gmail.com>
     Homepage: http://sourceforge.net/projects/korpus/
  */
+
 package org.alex73.osm.utils;
 
 import java.util.HashMap;
@@ -26,8 +27,7 @@ public class Lat {
      * Лацінізаваць кірылічны тэкст.
      * 
      * @param latTrad
-     *            true : традыцыйная лацінка, false : афіцыйная лацінка (згодна
-     *            https
+     *            true : традыцыйная лацінка, false : афіцыйная лацінка (згодна https
      *            ://be-x-old.wikipedia.org/wiki/Інструкцыя_па_трансьлітарацыі)
      */
     public static String lat(String text, boolean latTrad) {

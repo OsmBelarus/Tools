@@ -1,4 +1,3 @@
-
 package gen.alex73.osm.xmldatatypes;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -9,11 +8,12 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-
 /**
- * <p>Java class for osmBasicType complex type.
+ * <p>
+ * Java class for osmBasicType complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="osmBasicType">
@@ -35,11 +35,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "osmBasicType")
-@XmlSeeAlso({
-    Relation.class,
-    Way.class,
-    Node.class
-})
+@XmlSeeAlso({ Relation.class, Way.class, Node.class })
 public class OsmBasicType {
 
     @XmlAttribute(name = "id", required = true)
@@ -77,10 +73,8 @@ public class OsmBasicType {
     /**
      * Gets the value of the uid property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Long }
-     *     
+     * @return possible object is {@link Long }
+     * 
      */
     public Long getUid() {
         return uid;
@@ -90,9 +84,8 @@ public class OsmBasicType {
      * Sets the value of the uid property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Long }
-     *     
+     *            allowed object is {@link Long }
+     * 
      */
     public void setUid(Long value) {
         this.uid = value;
@@ -101,10 +94,8 @@ public class OsmBasicType {
     /**
      * Gets the value of the user property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     * @return possible object is {@link String }
+     * 
      */
     public String getUser() {
         return user;
@@ -114,9 +105,8 @@ public class OsmBasicType {
      * Sets the value of the user property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *            allowed object is {@link String }
+     * 
      */
     public void setUser(String value) {
         this.user = value;
@@ -125,10 +115,8 @@ public class OsmBasicType {
     /**
      * Gets the value of the timestamp property.
      * 
-     * @return
-     *     possible object is
-     *     {@link XMLGregorianCalendar }
-     *     
+     * @return possible object is {@link XMLGregorianCalendar }
+     * 
      */
     public XMLGregorianCalendar getTimestamp() {
         return timestamp;
@@ -138,9 +126,8 @@ public class OsmBasicType {
      * Sets the value of the timestamp property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link XMLGregorianCalendar }
-     *     
+     *            allowed object is {@link XMLGregorianCalendar }
+     * 
      */
     public void setTimestamp(XMLGregorianCalendar value) {
         this.timestamp = value;
@@ -149,10 +136,8 @@ public class OsmBasicType {
     /**
      * Gets the value of the changeset property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Long }
-     *     
+     * @return possible object is {@link Long }
+     * 
      */
     public Long getChangeset() {
         return changeset;
@@ -162,9 +147,8 @@ public class OsmBasicType {
      * Sets the value of the changeset property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Long }
-     *     
+     *            allowed object is {@link Long }
+     * 
      */
     public void setChangeset(Long value) {
         this.changeset = value;
@@ -189,10 +173,8 @@ public class OsmBasicType {
     /**
      * Gets the value of the visible property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     * @return possible object is {@link Boolean }
+     * 
      */
     public Boolean isVisible() {
         return visible;
@@ -202,9 +184,8 @@ public class OsmBasicType {
      * Sets the value of the visible property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *            allowed object is {@link Boolean }
+     * 
      */
     public void setVisible(Boolean value) {
         this.visible = value;

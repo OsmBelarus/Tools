@@ -41,6 +41,9 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
+/**
+ * Запісвае зьвесткі па шаблёну velocity.
+ */
 public class VelocityOutput {
     public static void output(String template, String file, Object... args) throws Exception {
         VelocityContext context = new VelocityContext();

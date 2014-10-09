@@ -1,8 +1,8 @@
-
 package gen.alex73.osm.monitor;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -10,11 +10,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for anonymous complex type.
+ * <p>
+ * Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -34,9 +35,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-    "attr"
-})
+@XmlType(name = "", propOrder = { "attr" })
 @XmlRootElement(name = "group")
 public class Group {
 
@@ -53,21 +52,20 @@ public class Group {
      * Gets the value of the attr property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the attr property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the attr property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getAttr().add(newItem);
+     * getAttr().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Attr }
+     * Objects of the following type(s) are allowed in the list {@link Attr }
      * 
      * 
      */
@@ -81,10 +79,8 @@ public class Group {
     /**
      * Gets the value of the inNodes property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     * @return possible object is {@link Boolean }
+     * 
      */
     public boolean isInNodes() {
         if (inNodes == null) {
@@ -98,9 +94,8 @@ public class Group {
      * Sets the value of the inNodes property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *            allowed object is {@link Boolean }
+     * 
      */
     public void setInNodes(Boolean value) {
         this.inNodes = value;
@@ -109,10 +104,8 @@ public class Group {
     /**
      * Gets the value of the inWays property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     * @return possible object is {@link Boolean }
+     * 
      */
     public boolean isInWays() {
         if (inWays == null) {
@@ -126,9 +119,8 @@ public class Group {
      * Sets the value of the inWays property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *            allowed object is {@link Boolean }
+     * 
      */
     public void setInWays(Boolean value) {
         this.inWays = value;
@@ -137,10 +129,8 @@ public class Group {
     /**
      * Gets the value of the inRelations property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     * @return possible object is {@link Boolean }
+     * 
      */
     public boolean isInRelations() {
         if (inRelations == null) {
@@ -154,9 +144,8 @@ public class Group {
      * Sets the value of the inRelations property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *            allowed object is {@link Boolean }
+     * 
      */
     public void setInRelations(Boolean value) {
         this.inRelations = value;

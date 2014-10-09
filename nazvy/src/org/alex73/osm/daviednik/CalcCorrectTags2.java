@@ -1,3 +1,25 @@
+/**************************************************************************
+ 
+Some tools for OSM.
+
+ Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.daviednik;
 
 import java.text.Collator;
@@ -12,44 +34,52 @@ import java.util.TreeSet;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.OsmNode;
 
+/**
+ * Вызначае правільную назву населенага пункту.
+ */
 public class CalcCorrectTags2 {
     static public OsmPlace calc(Miesta m, MemoryStorage storage, IOsmNode node) throws Exception {
         String typ;
-        switch (m.typ) {
-        case "г.":
-            if (node == null) {
-                throw new Exception("Няма горада: " + m);
+        if (m.osmForceTyp != null) {
+            typ = m.osmForceTyp;
+        } else {
+            switch (m.typ) {
+            case "г.":
+                if (node == null) {
+                    throw new Exception("Няма горада: " + m);
+                }
+                String population = node.getTag("population", storage);
+                if (population != null && Integer.parseInt(population) >= 50000) {
+                    typ = "city";
+                } else {
+                    typ = "town";
+                }
+                break;
+            case "г.п.":
+            case "г. п.":
+            case "к. п.":
+                typ = "village";
+                break;
+            case "в.":
+            case "п.":
+            case "р.п.":
+            case "р. п.":
+            case "аг.":
+                typ = "hamlet";
+                break;
+            case "х.":
+                typ = "isolated_dwelling";
+                break;
+            case "ст.":
+            case "с.":
+            case "раз’езд":
+            case "рзд":
+                typ = null;
+                break;
+            default:
+                throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
             }
-            String population = node.getTag("population", storage);
-            if (population != null && Integer.parseInt(population) >= 50000) {
-                typ = "city";
-            } else {
-                typ = "town";
-            }
-            break;
-        case "г.п.":
-        case "г. п.":
-            typ = "village";
-            break;
-        case "в.":
-        case "п.":
-        case "р.п.":
-        case "р. п.":
-        case "аг.":
-            typ = "hamlet";
-            break;
-        case "х.":
-            typ = "isolated_dwelling";
-            break;
-        case "ст.":
-        case "с.":
-        case "раз’езд":
-            typ = null;
-            break;
-        default:
-            throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
         }
 
         String name_be = m.nazvaNoStress;

@@ -1,3 +1,24 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2013-2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.objects;
 
 import gen.alex73.osm.validators.objects.ObjectTypes;
@@ -16,45 +37,45 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.O5MReader;
-import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.FastArea;
-import org.apache.commons.io.FileUtils;
 
+/**
+ * Правярае ўсе аб'екты Беларусі па object-types.xml.
+ */
 public class CheckObjects {
 
-    static FastArea Belarus;
+    // static FastArea Belarus;
     static List<CheckType> knownTypes;
     static List<CheckTrap> traps;
-    static MemoryStorage osm;
+
+    static Belarus osm;
     static Map<String, Set<String>> errors = new HashMap<>();
     static Map<String, Map<String, Set<String>>> errorsByUser = new HashMap<>();
     static Map<String, Integer> objectsCount = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-        Env.load();
-        String out = Env.readProperty("out.dir") + "/pamylki2.html";
+        String out = Env.readProperty("out.dir") + "/pamylki.html";
 
-        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
-                "UTF-8");
-        Area BelarusBorder = Area.fromWKT(borderWKT);
-
-        osm = new O5MReader(BelarusBorder.getBoundingBox()).read(new File(Env.readProperty("data.file")));
-        osm.showStat();
-
-        Belarus = new FastArea(BelarusBorder.getGeometry(), osm);
+        osm = new Belarus();
 
         readConfig();
 
         osm.all(o -> check(o));
+        for (CheckType ct : knownTypes) {
+            ct.finish();
+        }
 
         File[] oldFiles = new File(out).getParentFile().listFiles();
         if (oldFiles != null) {
@@ -91,14 +112,17 @@ public class CheckObjects {
                 otypes.add(ct);
             }
         }
-        if (!Belarus.contains(obj)) {
+        if (!osm.contains(obj)) {
             return;
         }
 
         if (!matches) {
             for (CheckTrap ct : traps) {
                 if (ct.matches(obj)) {
-                    CheckObjects.addError(obj, ct.getTrap().getMessage());
+                    if (osm.contains(obj)) {
+                        ct.getErrors(obj);
+                    }
+                    break;
                 }
             }
             return;
@@ -141,8 +165,12 @@ public class CheckObjects {
     }
 
     static void readConfig() throws Exception {
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(new StreamSource(new File("src/object_types.xsd")));
         JAXBContext CTX = JAXBContext.newInstance(ObjectTypes.class);
-        ObjectTypes types = (ObjectTypes) CTX.createUnmarshaller().unmarshal(new File("object-types.xml"));
+        Unmarshaller unm = CTX.createUnmarshaller();
+        unm.setSchema(schema);
+        ObjectTypes types = (ObjectTypes) unm.unmarshal(new File("object-types.xml"));
         knownTypes = new ArrayList<>();
         for (Type t : types.getType()) {
             knownTypes.add(new CheckType(osm, t));
@@ -158,6 +186,10 @@ public class CheckObjects {
 
         String user = obj.getUser(osm);
         getSet(getMap(errorsByUser, user), errorText).add(obj.getObjectCode());
+    }
+
+    static void addError(String objectCode, String errorText) {
+        getSet(errors, errorText).add(objectCode);
     }
 
     static <T> Set<T> getSet(Map<String, Set<T>> map, String key) {

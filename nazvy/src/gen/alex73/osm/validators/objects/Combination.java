@@ -1,8 +1,8 @@
-
 package gen.alex73.osm.validators.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -10,11 +10,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for anonymous complex type.
+ * <p>
+ * Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -39,9 +40,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-    "type"
-})
+@XmlType(name = "", propOrder = { "type" })
 @XmlRootElement(name = "combination")
 public class Combination {
 
@@ -52,21 +51,20 @@ public class Combination {
      * Gets the value of the type property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the type property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the type property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getType().add(newItem);
+     * getType().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Combination.Type }
+     * Objects of the following type(s) are allowed in the list {@link Combination.Type }
      * 
      * 
      */
@@ -77,11 +75,12 @@ public class Combination {
         return this.type;
     }
 
-
     /**
-     * <p>Java class for anonymous complex type.
+     * <p>
+     * Java class for anonymous complex type.
      * 
-     * <p>The following schema fragment specifies the expected content contained within this class.
+     * <p>
+     * The following schema fragment specifies the expected content contained within this class.
      * 
      * <pre>
      * &lt;complexType>
@@ -105,10 +104,8 @@ public class Combination {
         /**
          * Gets the value of the id property.
          * 
-         * @return
-         *     possible object is
-         *     {@link String }
-         *     
+         * @return possible object is {@link String }
+         * 
          */
         public String getId() {
             return id;
@@ -118,9 +115,8 @@ public class Combination {
          * Sets the value of the id property.
          * 
          * @param value
-         *     allowed object is
-         *     {@link String }
-         *     
+         *            allowed object is {@link String }
+         * 
          */
         public void setId(String value) {
             this.id = value;

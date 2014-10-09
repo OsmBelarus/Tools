@@ -52,6 +52,8 @@ public class Miesta {
     public String rasUsedAsOld;
     @XmlAttribute(name = "Заўвагі да даведніка")
     public String comments;
+    @XmlAttribute(name = "osm:Тып")
+    public String osmForceTyp;
     @XmlAttribute(name = "osm:Назва па-расейску")
     public String osmForceNameRu;
     @XmlAttribute(name = "osm:Хто вызначыў назву па-расейску і чаму")

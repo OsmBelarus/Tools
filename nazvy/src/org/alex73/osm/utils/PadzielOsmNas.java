@@ -1,8 +1,7 @@
 /**************************************************************************
- 
-Some tools for OSM.
+ Some tools for OSM.
 
- Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+ Copyright (C) 2013-2014 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
                Support center: http://groups.yahoo.com/group/OmegaT/
 
@@ -22,37 +21,25 @@ Some tools for OSM.
 
 package org.alex73.osm.utils;
 
-import java.io.FileInputStream;
-import java.util.Properties;
-
 /**
- * Чытае налады для валідатараў.
+ * Зьвесткі з файла rehijony.csv.
  */
-public class Env {
-    public static Properties env;
+public class PadzielOsmNas {
+    public String iso_3166_2;
+    public long relationID;
+    public String voblasc;
+    public String rajon;
+    public String osmName;
+    public String osmNameRu;
 
-    public static void load() {
-        load("env.properties");
-    }
-
-    public static void load(String file) {
-        env = new Properties();
-        try (FileInputStream e = new FileInputStream(file)) {
-            env.load(e);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+    @Override
+    public String toString() {
+        if (rajon != null) {
+            return voblasc + "/" + rajon;
+        } else if (voblasc != null) {
+            return voblasc;
+        } else {
+            return "Беларусь";
         }
-    }
-
-    public static String readProperty(String name) {
-        if (env == null) {
-            load();
-        }
-        String v = env.getProperty(name);
-        if (v == null) {
-            System.err.println("Property '" + name + "' not defined");
-            System.exit(1);
-        }
-        return v.replace("$HOME", System.getProperty("user.home"));
     }
 }

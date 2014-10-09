@@ -33,6 +33,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Запісвае .tmx файл.
+ */
 @SuppressWarnings("serial")
 public class TMX extends HashMap<String, String> {
     public static Locale BE = new Locale("be");

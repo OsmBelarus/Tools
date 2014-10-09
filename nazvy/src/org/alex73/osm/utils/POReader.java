@@ -29,6 +29,9 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Чытае .po файл.
+ */
 public class POReader extends HashMap<String, String> {
     static final Pattern RE_RU = Pattern.compile("msgid \"(.*)\"");
     static final Pattern RE_BE = Pattern.compile("msgstr \"(.*)\"");

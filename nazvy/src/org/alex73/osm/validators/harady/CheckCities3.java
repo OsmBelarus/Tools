@@ -1,3 +1,24 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2013-2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.harady;
 
 import java.io.File;
@@ -11,18 +32,16 @@ import java.util.TreeSet;
 
 import org.alex73.osm.daviednik.CalcCorrectTags2;
 import org.alex73.osm.daviednik.Miesta;
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
+import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
+import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.O5MReader;
-import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.FastArea;
-import org.apache.commons.io.FileUtils;
 
 /**
  * Правярае супадзеньне назваў населеных пунктаў OSM назвам деведніка.
@@ -45,6 +64,7 @@ public class CheckCities3 {
 
         // Несупадзеньне тэгаў з назвамі у даведніку й аб'екце
         public ResultTable incorrectTags;
+        public ResultTable incorrectTagsRehijony;
 
         public ResultTable getIncorrectTags() {
             return incorrectTags;
@@ -53,8 +73,7 @@ public class CheckCities3 {
 
     static Result result = new Result();
 
-    static MemoryStorage storage;
-    static FastArea border;
+    static Belarus storage;
 
     static List<Miesta> daviednik;
     static Map<String, Set<String>> usedInDav = new HashMap<>();
@@ -82,6 +101,7 @@ public class CheckCities3 {
         findNonExistInOsm();
         findUnusedInDav();
         findIncorrectTags();
+        findRehijony();
 
         System.out.println("Output to " + out + "...");
         Collections.sort(result.nonExistInOsm);
@@ -94,20 +114,12 @@ public class CheckCities3 {
     }
 
     static void loadData() throws Exception {
-        String borderWKT = FileUtils.readFileToString(new File(Env.readProperty("coutry.border.wkt")),
-                "UTF-8");
-        Area Belarus = Area.fromWKT(borderWKT);
-
-        System.out.println("Load data...");
-        storage = new O5MReader(Belarus.getBoundingBox()).read(new File(Env.readProperty("data.file")));
-        storage.showStat();
-
-        border = new FastArea(Belarus.getGeometry(), storage);
+        storage = new Belarus();
 
         System.out.println("Find places...");
         // шукаем цэнтры гарадоў
         dbPlaces = new HashMap<>();
-        storage.byTag("place", o -> border.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
+        storage.byTag("place", o -> storage.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
     }
 
     static void loadAdminLevels() {
@@ -211,7 +223,57 @@ public class CheckCities3 {
         }
     }
 
-    static void findIncorrectTags() {
+    static void findRehijony() throws Exception {
+        result.incorrectTagsRehijony = new ResultTable("name", "name:be", "name:ru", "int_name",
+                "addr:country", "addr:region", "iso3166-2");
+        short nameTag = storage.getTagsPack().getTagCode("name");
+        short nameBeTag = storage.getTagsPack().getTagCode("name:be");
+        short nameRuTag = storage.getTagsPack().getTagCode("name:ru");
+        short intNameTag = storage.getTagsPack().getTagCode("int_name");
+        short addrCountryTag = storage.getTagsPack().getTagCode("addr:country");
+        short addrRegionTag = storage.getTagsPack().getTagCode("addr:region");
+        short isoTag = storage.getTagsPack().getTagCode("iso3166-2");
+
+        List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
+                "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+        Map<String, String> codes = new HashMap<>();
+        Map<String, String> voblasciBelToRus = new HashMap<>();
+        for (PadzielOsmNas p : padziel) {
+            IOsmObject o = storage.getRelationById(p.relationID);
+            ResultTable.ResultTableRow w = result.incorrectTagsRehijony.new ResultTableRow(o.getObjectCode(),
+                    p.toString());
+            String name, nameru, reg = null;
+            if (p.voblasc != null && p.rajon == null) {
+                codes.put(p.voblasc, p.iso_3166_2);
+                voblasciBelToRus.put(p.voblasc, p.osmNameRu);
+            }
+            if (p.rajon != null) {
+                name = (p.osmName != null ? p.osmName : p.rajon) + " раён";
+                nameru = p.osmNameRu + " район";
+                reg = voblasciBelToRus.get(p.voblasc) + " область";
+            } else if (p.voblasc != null) {
+                name = (p.osmName != null ? p.osmName : p.voblasc) + " вобласць";
+                nameru = p.osmNameRu + " область";
+            } else {
+                name = "Беларусь";
+                nameru = "Беларусь";
+            }
+
+            w.setAttr("name", o.getTag(nameTag), nameru);
+            w.setAttr("name:be", o.getTag(nameBeTag), name);
+            w.setAttr("name:ru", o.getTag(nameRuTag), nameru);
+            w.setAttr("int_name", o.getTag(intNameTag), Lat.lat(name, false));
+            w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
+            w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
+            w.setAttr("iso3166-2", o.getTag(isoTag),
+                    p.iso_3166_2 != null ? p.iso_3166_2 : codes.get(p.voblasc));
+            if (w.needChange()) {
+                result.incorrectTagsRehijony.rows.add(w);
+            }
+        }
+    }
+
+    static void findIncorrectTags() throws Exception {
         List<String> attrs = new ArrayList<>();
         addColumnIfAllowed("place", attrs);
         addColumnIfAllowed("name", attrs);
@@ -232,42 +294,36 @@ public class CheckCities3 {
                 // final WrongTags w = new WrongTags();
                 ResultTable.ResultTableRow w = result.incorrectTags.new ResultTableRow(code, m.rajon + '|'
                         + m.sielsaviet + '|' + m.nazva);
-                try {
-                    IOsmObject p = dbPlaces.get(code);
-                    Map<String, String> tags = p.extractTags(storage);
-                    IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
-                    OsmPlace correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
-                    if ("suburb".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
-                        // hamlet => suburb - ok
-                        correctTags.place = tags.get("place");
-                    }
-                    if ("neighbourhood".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
-                        // hamlet => neighbourhood - ok
-                        correctTags.place = tags.get("place");
-                    }
-                    // правяраем тэгі
-                    setAttrIfAllowed(w, "name", tags.get("name"), correctTags.name);
-                    setAttrIfAllowed(w, "name:be", tags.get("name:be"), correctTags.name_be);
-                    setAttrIfAllowed(w, "name:ru", tags.get("name:ru"), correctTags.name_ru);
-                    setAttrIfAllowed(w, "int_name", tags.get("int_name"), correctTags.int_name);
-                    setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"),
-                            correctTags.name_be_tarask);
-                    if (correctTags.place != null) {
-                        setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
-                    }
-                    setAttrIfAllowed(w, "alt_name:be", tags.get("alt_name:be"), correctTags.alt_name_be);
-                    setAttrIfAllowed(w, "alt_name:ru", tags.get("alt_name:ru"), correctTags.alt_name_ru);
-                    setAttrIfAllowed(w, "alt_name", tags.get("alt_name"), null);
-
-                    setAttrIfAllowed(w, "addr:country", tags.get("addr:country"), "BY");
-                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"),
-                            adminLevelsBelToRus.get(m.voblasc + " вобласць"));
-                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"),
-                            adminLevelsBelToRus.get(m.rajon + " раён"));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    result.nonExistInOsm.add(ex.getClass().getName() + ": " + ex.getMessage());
+                IOsmObject p = dbPlaces.get(code);
+                Map<String, String> tags = p.extractTags(storage);
+                IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
+                OsmPlace correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
+                if ("suburb".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
+                    // hamlet => suburb - ok
+                    correctTags.place = tags.get("place");
                 }
+                if ("neighbourhood".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
+                    // hamlet => neighbourhood - ok
+                    correctTags.place = tags.get("place");
+                }
+                // правяраем тэгі
+                setAttrIfAllowed(w, "name", tags.get("name"), correctTags.name);
+                setAttrIfAllowed(w, "name:be", tags.get("name:be"), correctTags.name_be);
+                setAttrIfAllowed(w, "name:ru", tags.get("name:ru"), correctTags.name_ru);
+                setAttrIfAllowed(w, "int_name", tags.get("int_name"), correctTags.int_name);
+                setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"), correctTags.name_be_tarask);
+                if (correctTags.place != null) {
+                    setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
+                }
+                setAttrIfAllowed(w, "alt_name:be", tags.get("alt_name:be"), correctTags.alt_name_be);
+                setAttrIfAllowed(w, "alt_name:ru", tags.get("alt_name:ru"), correctTags.alt_name_ru);
+                setAttrIfAllowed(w, "alt_name", tags.get("alt_name"), null);
+
+                setAttrIfAllowed(w, "addr:country", tags.get("addr:country"), "BY");
+                setAttrIfAllowed(w, "addr:region", tags.get("addr:region"),
+                        adminLevelsBelToRus.get(m.voblasc + " вобласць"));
+                setAttrIfAllowed(w, "addr:district", tags.get("addr:district"),
+                        adminLevelsBelToRus.get(m.rajon + " раён"));
                 if (w.needChange()) {
                     result.incorrectTags.rows.add(w);
                 }

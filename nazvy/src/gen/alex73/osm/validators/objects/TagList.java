@@ -1,31 +1,28 @@
-package gen.alex73.osm.xmldatatypes;
+package gen.alex73.osm.validators.objects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
 /**
  * <p>
- * Java class for anonymous complex type.
+ * Java class for TagList complex type.
  * 
  * <p>
  * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType>
+ * &lt;complexType name="TagList">
  *   &lt;complexContent>
- *     &lt;extension base="{}osmBasicType">
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{}tag" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="tag" type="{}Tag" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
- *       &lt;attribute name="lat" use="required" type="{}Lat" />
- *       &lt;attribute name="lon" use="required" type="{}Lon" />
- *     &lt;/extension>
+ *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
@@ -33,15 +30,11 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = { "tag" })
-@XmlRootElement(name = "node")
-public class Node extends OsmBasicType {
+@XmlType(name = "TagList", propOrder = { "tag" })
+@XmlSeeAlso({ Filter.class, Required.class, Allow.class })
+public class TagList {
 
     protected List<Tag> tag;
-    @XmlAttribute(name = "lat", required = true)
-    protected double lat;
-    @XmlAttribute(name = "lon", required = true)
-    protected double lon;
 
     /**
      * Gets the value of the tag property.
@@ -69,38 +62,6 @@ public class Node extends OsmBasicType {
             tag = new ArrayList<Tag>();
         }
         return this.tag;
-    }
-
-    /**
-     * Gets the value of the lat property.
-     * 
-     */
-    public double getLat() {
-        return lat;
-    }
-
-    /**
-     * Sets the value of the lat property.
-     * 
-     */
-    public void setLat(double value) {
-        this.lat = value;
-    }
-
-    /**
-     * Gets the value of the lon property.
-     * 
-     */
-    public double getLon() {
-        return lon;
-    }
-
-    /**
-     * Sets the value of the lon property.
-     * 
-     */
-    public void setLon(double value) {
-        this.lon = value;
     }
 
 }

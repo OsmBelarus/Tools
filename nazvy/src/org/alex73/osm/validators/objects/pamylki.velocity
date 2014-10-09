@@ -57,7 +57,7 @@
 
 #set ( $i = 1)
 #foreach ( $err in $errorsList )
-  <p id="$err"><b>$err (${errors.get($err).size()})</b> :
+  <p id="$err">${OSM.josmIcon($errors.get($err))} <b>$err (${errors.get($err).size()})</b> : 
     #foreach ( $obj in ${errors.get($err)}) 
       <nobr>${OSM.histIcon($obj)} ${OSM.josmIcon($obj)}</nobr> &nbsp;&nbsp;
     #end

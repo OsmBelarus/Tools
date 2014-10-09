@@ -1,32 +1,169 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <object_types>
-    <!-- type id="Дарога" osmTypes="way" wayType="LINE" additions="name"> <tag name="highway" /> <additional_tag name="name" 
-        /> <additional_tag name="name:ru" /> </type -->
-    <type id="Дом" osmTypes="way" wayType="CLOSED" main="true" additions="Крыніца">
-        <filter name="building" value="house" />
-        <possible name="building:levels" />
-        <possible name="height" />
-        <possible name="addr:country" />
-        <possible name="addr:postcode" />
-        <possible name="addr:city" />
-        <possible name="addr:street" />
-        <possible name="addr:housenumber" />
+
+    <type id="Краіна" main="true" additions="Шматмоўная назва,Афіцыфная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="2" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkKraina">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population_date" />
+            <tag name="ISO3166-1" value="BY" />
+            <tag name="ISO3166-1:alpha2" value="BY" />
+            <tag name="ISO3166-1:alpha3" value="BLR" />
+            <tag name="ISO3166-1:numeric" value="112" />
+            <tag name="addr:country" />
+            <tag name="flag" />
+            <tag name="int_ref" />
+            <tag name="timezone" />
+            <tag name="wikidata" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:*" />
+            <tag name="capital" value="yes" />
+            <tag name="place" value="city" />
+        </allow>
     </type>
-    <type id="Электрычны слуп" osmTypes="node" main="true" additions="Крыніца,Лямпа на слупе,Гняздо на слупе">
-        <filter name="power" value="pole" />
-        <possible name="material" />
-        <possible name="ref" />
+    <type id="Вобласьць" main="true" additions="Шматмоўная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="4" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkVoblasc">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population_date" />
+            <tag name="iso3166-2" />
+            <tag name="addr:country" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:de" />
+            <tag name="wikipedia:ru" />
+            <tag name="capital" value="yes" />
+            <tag name="place" value="city" />
+        </allow>
+    </type>
+    <type id="Раён" main="true" additions="Шматмоўная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="6" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkRajon">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population_date" />
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:*" />
+        </allow>
+    </type>
+    <type id="Дом" main="true" additions="Крыніца" customClass="org.alex73.osm.validators.objects.CustomCheckHouse">
+        <filter osmTypes="way,relation">
+            <tag name="building" value="house" />
+        </filter>
+        <required geometryType="AREA" osmTypes="way" customMethod="checkSize" />
+        <allow>
+            <tag name="building:levels" />
+            <tag name="height" />
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+    <type id="Дадатковы адрас дома" main="true" additions="Крыніца">
+        <filter osmTypes="node">
+            <tag name="building" value="house" />
+        </filter>
+        <required geometryType="POINT" />
+        <allow>
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+    <type id="Электрычны слуп" main="true" additions="Крыніца,Лямпа на слупе,Гняздо на слупе">
+        <filter>
+            <tag name="power" value="pole" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
     </type>
 
-    <type id="Лямпа на слупе" osmTypes="node">
-        <filter name="highway" value="street_lamp" />
+    <type id="Дарога(motorway)" main="true" additions="Крыніца">
+        <filter>
+            <tag name="highway" value="motorway" />
+        </filter>
+        <required osmTypes="way" geometryType="LINE">
+            <tag name="ref" />
+            <tag name="lanes" />
+            <tag name="maxspeed" />
+        </required>
+        <allow>
+            <tag name="oneway" value="yes" />
+            <tag name="bridge" value="yes" />
+            <tag name="toll" value="yes" />
+            <tag name="maxspeed:hgv" />
+            <tag name="int_ref" />
+            <tag name="surface" />
+            <tag name="layer" />
+        </allow>
     </type>
-    <type id="Гняздо на слупе" osmTypes="node">
-        <filter name="natural" value="birds_nest" />
-        <required name="birds_nest" />
-        <required name="nest_mount" value="pole" />
-        <possible name="image" />
+    <!--type id="Дарога" requiredOsmTypes="way" wayType="LINE" additions="name" main="true">
+        <tag name="highway" value="trunk|primary|secondary|tertiary|unclassified|residential"/>
+        <possible name="addr:street" />
     </type>
+    <type id="Дарога(service)" requiredOsmTypes="way" wayType="LINE" main="true">
+        <tag name="highway" value="service"/>
+    </type-->
+
+    <type id="Лямпа на слупе">
+        <filter>
+            <tag name="highway" value="street_lamp" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+    </type>
+    <type id="Гняздо на слупе">
+        <filter>
+            <tag name="natural" value="birds_nest" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT">
+            <tag name="birds_nest" />
+            <tag name="nest_mount" value="pole" />
+        </required>
+        <allow>
+            <tag name="image" />
+        </allow>
+    </type>
+
     <!-- type id="Гняздо на даху" osmTypes="node">
     http://wiki.openstreetmap.org/wiki/Uk:Лелеки_2014
         <filter name="natural" value="birds_nest" />
@@ -35,18 +172,70 @@
         <possible name="image" />
         <possible name="nest_platform" />
     </type-->
-    <type id="Назва" osmTypes="node,way,relation">
-        <possible name="name" required="true" />
-        <possible name="name:be" />
-        <possible name="name:en" />
-        <possible name="name:ru" />
-        <possible name="int_name" />
+    <type id="Назва">
+        <allow>
+            <tag name="name" />
+            <tag name="name:be" />
+            <tag name="name:be-tarask" />
+            <tag name="int_name" />
+            <tag name="name:ru" />
+        </allow>
     </type>
-    <type id="Крыніца" osmTypes="node,way,relation">
-        <filter name="source" />
+    <type id="Шматмоўная назва">
+        <allow>
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
+        </allow>
+    </type>
+    <type id="Афіцыфная назва">
+        <allow>
+            <tag name="official_name" />
+            <tag name="official_name:*" />
+        </allow>
+    </type>
+    <type id="Крыніца">
+        <filter osmTypes="node,way,relation">
+            <tag name="source" />
+        </filter>
     </type>
 
+    <!-- deprecated -->
+    <trap message="highway=platform трэба зьмяніць на public_transport=platform">
+        <filter>
+            <tag name="highway" value="platform" />
+        </filter>
+    </trap>
+    <trap message="Старая сыстэма адрасоў з type=address">
+        <filter>
+            <tag name="type" value="address" />
+        </filter>
+    </trap>
+    <trap message="Старая сыстэма адрасоў з address:type">
+        <filter>
+            <tag name="address:type" />
+        </filter>
+    </trap>
+
     <trap message="Птушынае гняздо невядомага тыпу">
-        <filter name="nest_mount" />
+        <filter>
+            <tag name="nest_mount" />
+        </filter>
+    </trap>
+
+    <trap message="building(way) маюць няправильную геамэтрыю">
+        <filter osmTypes="way">
+            <tag name="building" />
+        </filter>
+        <required geometryType="AREA" />
+    </trap>
+    <trap message="building(relation) маюць няправильную геамэтрыю">
+        <filter osmTypes="relation">
+            <tag name="building" />
+        </filter>
+        <required geometryType="AREA" />
     </trap>
 </object_types>

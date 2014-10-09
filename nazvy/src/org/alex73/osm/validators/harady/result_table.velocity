@@ -7,7 +7,7 @@
 	</tr>
     #foreach ( $r in $table.rows )
     <tr>
-      <td>${OSM.histIcon($r.id)} <a href="#" onClick="javascript:send('load_object?objects=${r.id}')">${r.name}</a></td>
+      <td>${OSM.histIcon($r.id)} ${OSM.josmIcon($r.id)} ${r.name}</td>
 #foreach ($v in $r.tags)
   #if ( $v )
     #if ( $v.oldValue )

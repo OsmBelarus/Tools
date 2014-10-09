@@ -1,66 +1,98 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2013-2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.objects;
 
-import gen.alex73.osm.validators.objects.Tag;
 import gen.alex73.osm.validators.objects.Type;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
+import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.Way;
 
-public class CheckType {
+/**
+ * Правярае аб'екты й тэгі для вызначанага тыпу.
+ */
+public class CheckType extends BaseCheck {
     public static final String OK = "OK";
 
-    private final MemoryStorage osm;
     private final Type type;
 
-    private boolean allowNode, allowWay, allowRelation;
-    private short[] filterTags, requiredTags, possibleTags;
+    private boolean requiredNode, requiredWay, requiredRelation;
+    private TagCodeValues requiredTags, possibleTags;
     private Set<String> additions;
+    private ICustomCheck customCheck;
 
-    public CheckType(MemoryStorage osm, Type type) {
-        this.osm = osm;
+    public CheckType(MemoryStorage osm, Type type) throws Exception {
+        super(osm, type.getFilter());
         this.type = type;
 
-        for (String ot : type.getOsmTypes().split(",")) {
-            switch (ot) {
-            case "node":
-                allowNode = true;
-                break;
-            case "way":
-                allowWay = true;
-                break;
-            case "relation":
-                allowRelation = true;
-                break;
-            default:
-                throw new RuntimeException("Невядомы osmTypes: " + ot);
+        if (type.getRequired() == null || type.getRequired().getOsmTypes() == null) {
+            requiredNode = true;
+            requiredWay = true;
+            requiredRelation = true;
+        } else {
+            for (String ot : type.getRequired().getOsmTypes().split(",")) {
+                switch (ot) {
+                case "node":
+                    requiredNode = true;
+                    break;
+                case "way":
+                    requiredWay = true;
+                    break;
+                case "relation":
+                    requiredRelation = true;
+                    break;
+                default:
+                    throw new RuntimeException("Невядомы osmTypes: " + ot);
+                }
             }
         }
 
-        filterTags = tagCodes(type.getFilter());
-        requiredTags = tagCodes(type.getRequired());
-        possibleTags = tagCodes(type.getPossible());
+        requiredTags = tagsCompile(type.getRequired());
+        possibleTags = tagsCompile(type.getAllow());
 
         if (type.getAdditions() != null) {
             additions = new HashSet<>(Arrays.asList(type.getAdditions().split(",")));
         } else {
             additions = Collections.emptySet();
         }
+
+        if (type.getCustomClass() != null) {
+            customCheck = (ICustomCheck) Class.forName(type.getCustomClass()).newInstance();
+            customCheck.init();
+        }
     }
 
-    short[] tagCodes(List<Tag> tags) {
-        short[] result = new short[tags.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = osm.getTagsPack().getTagCode(tags.get(i).getName());
+    public void finish() throws Exception {
+        if (customCheck != null) {
+            customCheck.finish();
         }
-        return result;
     }
 
     public String getId() {
@@ -75,89 +107,100 @@ public class CheckType {
         return additions;
     }
 
+    @Override
     public boolean matches(IOsmObject obj) {
-        for (int i = 0; i < filterTags.length; i++) {
-            if (!obj.hasTag(filterTags[i])) {
+        if (!super.matches(obj)) {
+            return false;
+        }
+
+        if (filter != null && filter.getCustomMethod() != null) {
+            boolean r = (boolean) callCustom(filter.getCustomMethod(), obj);
+            if (!r) {
                 return false;
             }
         }
-        for (int i = 0; i < filterTags.length; i++) {
-            String value = type.getFilter().get(i).getValue();
-            if (value != null) {
-                if (!value.equals(obj.getTag(filterTags[i]))) {
-                    return false;
-                }
-            }
-        }
-
         return true;
     }
 
     public void getErrors(IOsmObject obj) {
-        if (type.getOsmTypes() != null) {
-            switch (obj.getType()) {
-            case IOsmObject.TYPE_NODE:
-                if (!allowNode) {
-                    CheckObjects.addError(obj, "'" + type.getId() + "' можа быць " + type.getOsmTypes()
-                            + ", але не node");
-                }
-                break;
-            case IOsmObject.TYPE_WAY:
-                if (!allowWay) {
-                    CheckObjects.addError(obj, "'" + type.getId() + "' можа быць " + type.getOsmTypes()
-                            + ", але не way");
-                } else {
-                    checkGeo(obj);
-                }
-                break;
-            case IOsmObject.TYPE_RELATION:
-                if (!allowRelation) {
-                    CheckObjects.addError(obj, "'" + type.getId() + "' можа быць " + type.getOsmTypes()
-                            + ", але не relation");
-                }
-                break;
+        switch (obj.getType()) {
+        case IOsmObject.TYPE_NODE:
+            if (!requiredNode) {
+                CheckObjects.addError(obj, "'" + type.getId() + "' можа быць "
+                        + type.getRequired().getOsmTypes() + ", але не node");
+            } else {
+                checkGeo(obj);
             }
+            break;
+        case IOsmObject.TYPE_WAY:
+            if (!requiredWay) {
+                CheckObjects.addError(obj, "'" + type.getId() + "' можа быць "
+                        + type.getRequired().getOsmTypes() + ", але не way");
+            } else {
+                checkGeo(obj);
+            }
+            break;
+        case IOsmObject.TYPE_RELATION:
+            if (!requiredRelation) {
+                CheckObjects.addError(obj, "'" + type.getId() + "' можа быць "
+                        + type.getRequired().getOsmTypes() + ", але не relation");
+            } else {
+                checkGeo(obj);
+            }
+            break;
         }
 
         // абавязковыя тэгі
-        for (int i = 0; i < requiredTags.length; i++) {
-            String expected = type.getRequired().get(i).getValue();
-            if (!obj.hasTag(requiredTags[i])) {
+        for (int i = 0; i < requiredTags.length(); i++) {
+            if (!obj.hasTag(requiredTags.codes[i])
+                    || !tagValueAllowed(requiredTags.codes[i], requiredTags.values[i], obj)) {
+                String expected = type.getRequired().getTag().get(i).getValue();
                 if (expected != null) {
                     CheckObjects.addError(obj, "'" + type.getId() + "' павінен утрымліваць тэг '"
-                            + type.getRequired().get(i).getName() + "'='" + expected + "'");
+                            + type.getRequired().getTag().get(i).getName() + "'='" + expected + "'");
                 } else {
                     CheckObjects.addError(obj, "'" + type.getId() + "' павінен утрымліваць тэг '"
-                            + type.getRequired().get(i).getName() + "'");
+                            + type.getRequired().getTag().get(i).getName() + "'");
                 }
             }
+        }
+
+        if (type.getRequired() != null && type.getRequired().getCustomMethod() != null) {
+            callCustom(type.getRequired().getCustomMethod(), obj);
+        }
+    }
+
+    protected Object callCustom(String method, IOsmObject obj) {
+        try {
+            Method m = customCheck.getClass().getMethod(method, IOsmObject.class);
+            return m.invoke(customCheck, obj);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error in custom method: " + method + ": " + ex.getMessage(), ex);
         }
     }
 
     public String matchTag(IOsmObject obj, short tagCode) {
-        int p = indexOf(filterTags, tagCode);
+        int p = indexOf(filterTags.codes, tagCode);
         if (p >= 0) {
             return OK;
         }
 
-        String value = obj.getTag(tagCode);
-
-        p = indexOf(requiredTags, tagCode);
+        p = indexOf(requiredTags.codes, tagCode);
         if (p >= 0) {
-            String expected = type.getRequired().get(p).getValue();
-            if (expected != null && !expected.equals(value)) {
+            if (!tagValueAllowed(requiredTags.codes[p], requiredTags.values[p], obj)) {
                 return "'" + type.getId() + "' павінен утрымліваць тэг '"
-                        + osm.getTagsPack().getTagName(tagCode) + "'='" + expected + "'";
+                        + osm.getTagsPack().getTagName(tagCode) + "'='"
+                        + type.getRequired().getTag().get(p).getValue() + "'";
             }
             return OK;
         }
 
-        p = indexOf(possibleTags, tagCode);
+        p = indexOf(possibleTags.codes, tagCode);
         if (p >= 0) {
-            String expected = type.getPossible().get(p).getValue();
-            if (expected != null && !expected.equals(value)) {
+            if (!tagValueAllowed(possibleTags.codes[p], possibleTags.values[p], obj)) {
                 return "'" + type.getId() + "' павінен утрымліваць тэг '"
-                        + osm.getTagsPack().getTagName(tagCode) + "'='" + expected + "'";
+                        + osm.getTagsPack().getTagName(tagCode) + "'='"
+                        + type.getAllow().getTag().get(p).getValue() + "'";
             }
             return OK;
         }
@@ -166,18 +209,32 @@ public class CheckType {
     }
 
     void checkGeo(IOsmObject obj) {
-        if (!obj.isWay() || type.getWayType() == null) {
+        if (type.getRequired() == null || type.getRequired().getGeometryType() == null) {
             return;
         }
-        Way way = new Way((IOsmWay) obj, osm);
-        switch (type.getWayType()) {
-        case CLOSED:
-            if (!way.isClosed()) {
+
+        switch (type.getRequired().getGeometryType()) {
+        case AREA:
+            try {
+                new Area(osm, obj).getGeometry();
+            } catch (Exception ex) {
                 CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
             }
             break;
         case LINE:
-            if (!way.isLine()) {
+            if (obj.isWay()) {
+                Way way = new Way((IOsmWay) obj, osm);
+                // try {
+                // way.getLineGeometry();
+                // } catch (Exception ex) {
+                // CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
+                // }
+            } else {
+                CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
+            }
+            break;
+        case POINT:
+            if (!obj.isNode()) {
                 CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
             }
             break;

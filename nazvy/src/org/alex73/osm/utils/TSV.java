@@ -34,6 +34,9 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
+/**
+ * Чытае і запісвае tab-separated файл.
+ */
 public class TSV {
     char SEPARATOR;
 

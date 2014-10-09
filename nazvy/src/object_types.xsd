@@ -6,7 +6,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="type" minOccurs="0" maxOccurs="unbounded" />
-                 <xs:element ref="trap" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element ref="trap" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -14,26 +14,62 @@
     <xs:element name="type">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="filter" type="Tag" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="required" type="Tag" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="possible" type="Tag" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="filter" type="filter" minOccurs="0" />
+                <xs:element name="required" type="required" minOccurs="0" />
+                <xs:element name="allow" type="allow" minOccurs="0" />
             </xs:sequence>
             <xs:attribute name="id" type="xs:string" use="required" />
-            <xs:attribute name="osmTypes" type="xs:string" use="optional" />
-            <xs:attribute name="wayType" type="GeometryType" use="optional" />
             <xs:attribute name="main" type="xs:boolean" default="false" />
             <xs:attribute name="additions" type="xs:string" use="optional" />
+            <xs:attribute name="customClass" type="xs:string" use="optional" />
         </xs:complexType>
     </xs:element>
-    
-     <xs:element name="trap">
+
+    <xs:complexType name="filter">
+        <xs:complexContent>
+            <xs:extension base="TagList">
+                <xs:attribute name="osmTypes" type="xs:string" use="optional" />
+                <xs:attribute name="customMethod" type="xs:string" use="optional" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="required">
+        <xs:complexContent>
+            <xs:extension base="TagList">
+                <xs:attribute name="osmTypes" type="xs:string" use="optional" />
+                <xs:attribute name="geometryType" type="GeometryType" use="optional" />
+                <xs:attribute name="customMethod" type="xs:string" use="optional" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="allow">
+        <xs:complexContent>
+            <xs:extension base="TagList">
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="trap">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="filter" type="Tag" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="filter" type="filter" minOccurs="0" />
+                <xs:element name="required" minOccurs="0">
+                    <xs:complexType>
+                        <xs:attribute name="geometryType" type="GeometryType" use="optional" />
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
             <xs:attribute name="message" type="xs:string" use="required" />
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="TagList">
+        <xs:sequence>
+            <xs:element name="tag" type="Tag" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
 
     <xs:complexType name="Tag">
         <xs:attribute name="name" type="xs:string" use="required" />
@@ -43,7 +79,8 @@
     <xs:simpleType name="GeometryType">
         <xs:restriction base="xs:string">
             <xs:enumeration value="LINE" />
-            <xs:enumeration value="CLOSED" />
+            <xs:enumeration value="AREA" />
+            <xs:enumeration value="POINT" />
         </xs:restriction>
     </xs:simpleType>
 

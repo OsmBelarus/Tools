@@ -50,7 +50,8 @@
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
 <a href="#p1">Памылкі (${data.nonExistInOsm.size()})</a><br/>
-<a href="#p2">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()})</a><br/>
+<a href="#p2">Няправільныя назвы рэгіёнаў (${data.incorrectTagsRehijony.rows.size()})</a><br/>
+<a href="#p3">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()})</a><br/>
 <a href="#p4">Няма ў даведніку (${data.unusedInDav.size()})</a><br/>
 
 <br/>
@@ -64,10 +65,15 @@
     #end
 </ul>
 
-<h1 id="p2">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()}):</h1>
-
-#set ( $table = $data.incorrectTags )
+<h1 id="p2">Няправільныя назвы рэгіёнаў (${data.incorrectTagsRehijony.rows.size()}):</h1>
+Часова выключана да выпраўленьня памылак
+#set ( $table = $data.incorrectTagsRehijony )
 #parse ("org/alex73/osm/validators/harady/result_table.velocity")
+
+<h1 id="p3">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()}):</h1>
+Часова выключана да выпраўленьня памылак
+#set ( $table = $data.incorrectTags )
+<!--#parse ("org/alex73/osm/validators/harady/result_table.velocity")-->
 
 <h1 id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</h1> аб'екты мапы на якіх няма спасылак у даведніку
 <ul>

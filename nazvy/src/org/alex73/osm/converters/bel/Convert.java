@@ -1,3 +1,25 @@
+/**************************************************************************
+ 
+Some tools for OSM.
+
+ Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.converters.bel;
 
 import gen.alex73.osm.xmldatatypes.Node;
@@ -30,15 +52,13 @@ import javax.xml.stream.events.XMLEvent;
 import org.alex73.osm.utils.Lat;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
-
-
 /**
  * Пераносіць беларускія назвы ў стандартныя каб стварыць мапу для OsmAnd.
  */
 public class Convert {
     static final int BUFFER_SIZE = 1024 * 1024;
     static Set<String> uniqueTranslatedTags = new TreeSet<>();
-    static Map<Long,String> houseStreetBe = new HashMap<>();
+    static Map<Long, String> houseStreetBe = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         loadStreetNamesForHouses();
@@ -56,7 +76,7 @@ public class Convert {
                 "tmp/belarus-bel.osm"), BUFFER_SIZE));
         XMLEventWriter wrInt = xof.createXMLEventWriter(new BufferedOutputStream(new FileOutputStream(
                 "tmp/belarus-intl.osm"), BUFFER_SIZE));
- 
+
         // initialize jaxb
         JAXBContext jaxbCtx = JAXBContext.newInstance(Node.class, Way.class, Relation.class);
         Unmarshaller um = jaxbCtx.createUnmarshaller();
@@ -72,7 +92,7 @@ public class Convert {
                 switch (se.getName().getLocalPart()) {
                 case "way":
                     Way way = um.unmarshal(reader, Way.class).getValue();
-                    if (way.getId()==25439425) {
+                    if (way.getId() == 25439425) {
                         System.out.println();
                     }
                     fixBel(way.getTag(), "name:be", "name");
@@ -89,8 +109,8 @@ public class Convert {
                     break;
                 case "node":
                     Node node = um.unmarshal(reader, Node.class).getValue();
-                    fixBel(node.getTag(),"name:be","name");
-                    //fixBel(node.getTag(),"addr:street:be","addr:street");
+                    fixBel(node.getTag(), "name:be", "name");
+                    // fixBel(node.getTag(),"addr:street:be","addr:street");
                     m.marshal(node, wrCyr);
                     fixInt(node.getTag());
                     m.marshal(node, wrInt);
@@ -100,8 +120,8 @@ public class Convert {
                     break;
                 case "relation":
                     Relation relation = um.unmarshal(reader, Relation.class).getValue();
-                    fixBel(relation.getTag(),"name:be","name");
-                    //fixBel(relation.getTag(),"addr:street:be","addr:street");
+                    fixBel(relation.getTag(), "name:be", "name");
+                    // fixBel(relation.getTag(),"addr:street:be","addr:street");
                     m.marshal(relation, wrCyr);
                     fixInt(relation.getTag());
                     m.marshal(relation, wrInt);
@@ -126,23 +146,23 @@ public class Convert {
     }
 
     static void loadStreetNamesForHouses() throws Exception {
-//        Env.load("../nazvy/env.properties");
-//        SqlSession db;
-//        String resource = "osm.xml";
-//        SqlSessionFactory sqlSessionFactory;
-//        InputStream inputStream = Resources.getResourceAsStream(resource);
-//        try {
-//            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
-//        } finally {
-//            inputStream.close();
-//        }
-//        db = sqlSessionFactory.openSession();
-//        List<OsmHouseStreet> list = db.selectList("getStreetNameBeForAllHouses");
-//        for (OsmHouseStreet h : list) {
-//            if (h.name_be != null) {
-//                houseStreetBe.put(h.hid, h.name_be);
-//            }
-//        }
+        // Env.load("../nazvy/env.properties");
+        // SqlSession db;
+        // String resource = "osm.xml";
+        // SqlSessionFactory sqlSessionFactory;
+        // InputStream inputStream = Resources.getResourceAsStream(resource);
+        // try {
+        // sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, Env.env);
+        // } finally {
+        // inputStream.close();
+        // }
+        // db = sqlSessionFactory.openSession();
+        // List<OsmHouseStreet> list = db.selectList("getStreetNameBeForAllHouses");
+        // for (OsmHouseStreet h : list) {
+        // if (h.name_be != null) {
+        // houseStreetBe.put(h.hid, h.name_be);
+        // }
+        // }
     }
 
     static void fixInt(List<Tag> tags) {

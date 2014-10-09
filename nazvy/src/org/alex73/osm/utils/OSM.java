@@ -21,6 +21,11 @@
 
 package org.alex73.osm.utils;
 
+import java.util.Set;
+
+/**
+ * Некаторыя мэтады для паказу спасылак на osm у html.
+ */
 public class OSM {
     static String ICON_NODE = "<img src=\"http://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png\"/>";
     static String ICON_WAY = "<img src=\"http://wiki.openstreetmap.org/w/images/6/6a/Mf_way.png\"/>";
@@ -42,6 +47,15 @@ public class OSM {
     public static String josmIcon(String code) {
         return "<a href='#' onclick='javascript: send(\"load_object?objects=" + code + "\")'>" + ICON_JOSM
                 + "</a>";
+    }
+
+    public static String josmIcon(Set<String> codes) {
+        StringBuilder c = new StringBuilder();
+        for (String code : codes) {
+            c.append(',').append(code);
+        }
+        return "<a href='#' onclick='javascript: send(\"load_object?objects=" + c.substring(1) + "\")'>"
+                + ICON_JOSM + "</a>";
     }
 
     public static String histIcon(String code) {

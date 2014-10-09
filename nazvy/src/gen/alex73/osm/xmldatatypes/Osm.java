@@ -1,8 +1,8 @@
-
 package gen.alex73.osm.xmldatatypes;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -11,11 +11,12 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-
 /**
- * <p>Java class for anonymous complex type.
+ * <p>
+ * Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -42,13 +43,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-    "bounds",
-    "node",
-    "way",
-    "relation",
-    "changeset"
-})
+@XmlType(name = "", propOrder = { "bounds", "node", "way", "relation", "changeset" })
 @XmlRootElement(name = "osm")
 public class Osm {
 
@@ -74,10 +69,8 @@ public class Osm {
     /**
      * Gets the value of the bounds property.
      * 
-     * @return
-     *     possible object is
-     *     {@link Bounds }
-     *     
+     * @return possible object is {@link Bounds }
+     * 
      */
     public Bounds getBounds() {
         return bounds;
@@ -87,9 +80,8 @@ public class Osm {
      * Sets the value of the bounds property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link Bounds }
-     *     
+     *            allowed object is {@link Bounds }
+     * 
      */
     public void setBounds(Bounds value) {
         this.bounds = value;
@@ -99,21 +91,20 @@ public class Osm {
      * Gets the value of the node property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the node property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the node property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getNode().add(newItem);
+     * getNode().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Node }
+     * Objects of the following type(s) are allowed in the list {@link Node }
      * 
      * 
      */
@@ -128,21 +119,20 @@ public class Osm {
      * Gets the value of the way property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the way property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the way property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getWay().add(newItem);
+     * getWay().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Way }
+     * Objects of the following type(s) are allowed in the list {@link Way }
      * 
      * 
      */
@@ -157,21 +147,20 @@ public class Osm {
      * Gets the value of the relation property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the relation property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the relation property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getRelation().add(newItem);
+     * getRelation().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Relation }
+     * Objects of the following type(s) are allowed in the list {@link Relation }
      * 
      * 
      */
@@ -186,21 +175,20 @@ public class Osm {
      * Gets the value of the changeset property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the changeset property.
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
+     * you make to the returned list will be present inside the JAXB object. This is why there is not a
+     * <CODE>set</CODE> method for the changeset property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
+     * 
      * <pre>
-     *    getChangeset().add(newItem);
+     * getChangeset().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Changeset }
+     * Objects of the following type(s) are allowed in the list {@link Changeset }
      * 
      * 
      */
@@ -230,10 +218,8 @@ public class Osm {
     /**
      * Gets the value of the generator property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     * @return possible object is {@link String }
+     * 
      */
     public String getGenerator() {
         return generator;
@@ -243,9 +229,8 @@ public class Osm {
      * Sets the value of the generator property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *            allowed object is {@link String }
+     * 
      */
     public void setGenerator(String value) {
         this.generator = value;
@@ -254,10 +239,8 @@ public class Osm {
     /**
      * Gets the value of the copyright property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     * @return possible object is {@link String }
+     * 
      */
     public String getCopyright() {
         return copyright;
@@ -267,9 +250,8 @@ public class Osm {
      * Sets the value of the copyright property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *            allowed object is {@link String }
+     * 
      */
     public void setCopyright(String value) {
         this.copyright = value;
@@ -278,10 +260,8 @@ public class Osm {
     /**
      * Gets the value of the attribution property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     * @return possible object is {@link String }
+     * 
      */
     public String getAttribution() {
         return attribution;
@@ -291,9 +271,8 @@ public class Osm {
      * Sets the value of the attribution property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *            allowed object is {@link String }
+     * 
      */
     public void setAttribution(String value) {
         this.attribution = value;
@@ -302,10 +281,8 @@ public class Osm {
     /**
      * Gets the value of the license property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     * @return possible object is {@link String }
+     * 
      */
     public String getLicense() {
         return license;
@@ -315,9 +292,8 @@ public class Osm {
      * Sets the value of the license property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *            allowed object is {@link String }
+     * 
      */
     public void setLicense(String value) {
         this.license = value;
@@ -326,10 +302,8 @@ public class Osm {
     /**
      * Gets the value of the timestamp property.
      * 
-     * @return
-     *     possible object is
-     *     {@link XMLGregorianCalendar }
-     *     
+     * @return possible object is {@link XMLGregorianCalendar }
+     * 
      */
     public XMLGregorianCalendar getTimestamp() {
         return timestamp;
@@ -339,9 +313,8 @@ public class Osm {
      * Sets the value of the timestamp property.
      * 
      * @param value
-     *     allowed object is
-     *     {@link XMLGregorianCalendar }
-     *     
+     *            allowed object is {@link XMLGregorianCalendar }
+     * 
      */
     public void setTimestamp(XMLGregorianCalendar value) {
         this.timestamp = value;
