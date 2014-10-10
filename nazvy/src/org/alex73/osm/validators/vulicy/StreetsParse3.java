@@ -324,10 +324,6 @@ public class StreetsParse3 {
         public Names required = new Names();
         public String error;
 
-        public String getLink() {
-            return OSM.histIcon(objCode);
-        }
-
         public boolean needToChange() {
             if (error != null) {
                 return true;

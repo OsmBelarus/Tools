@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
+import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osmemory.IOsmObject;
@@ -153,7 +154,7 @@ public class CheckStreets3 extends StreetsParse3 {
         for (City c : cities) {
             System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
             VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
-                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
+                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c), "OSM", OSM.class);
             VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
                     + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
         }
@@ -227,6 +228,10 @@ public class CheckStreets3 extends StreetsParse3 {
             if (street.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.ZAN) {
                 throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
             }
+            break;
+        case "0":
+            street.term = StreetTerm.няма;
+            be.term = StreetTerm.няма;
             break;
         default:
             throw new Exception("Невядомы прэфікс у перакладзе: " + c.po.get(street.name));

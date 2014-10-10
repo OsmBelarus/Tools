@@ -65,7 +65,7 @@ RadioButton - выправіць ў JOSM.
         <td class="err">ERROR: $s.key</td>
         <td>
           #foreach ($n in $s.objects)
-            $n.link
+            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)}
           #end
           <a href="#" onClick='send("load_and_zoom?left=${s.xmin}&right=${s.xmax}&top=${s.ymax}&bottom=${s.ymin}&select=${s.commaObjectIds}")'>выправіць</a>
         </td>

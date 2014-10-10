@@ -65,7 +65,7 @@ RadioButton - выправіць ў JOSM.
         <td class="err">ERROR: $s.key</td>
         <td>
           #foreach ($n in $s.value)
-            $n.link
+            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)} &nbsp;&nbsp;
           #end
         </td>
       </tr>
@@ -83,7 +83,7 @@ RadioButton - выправіць ў JOSM.
       </tr>
     #foreach ( $s in $data.vulicy )
       <tr>
-        <td>$s.link</td>
+        <td>${OSM.histIcon($s.objCode)} ${OSM.josmIcon($s.objCode)}</td>
         #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
         #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
         #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
@@ -110,7 +110,7 @@ RadioButton - выправіць ў JOSM.
         #cell ($data.mergeCodes($entry.value) $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
         <td>
           #foreach ($n in $entry.value)
-            $n.link
+            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)}
           #end
         </td>
       </tr>
