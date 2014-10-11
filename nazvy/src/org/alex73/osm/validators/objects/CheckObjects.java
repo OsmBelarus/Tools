@@ -26,14 +26,10 @@ import gen.alex73.osm.validators.objects.Trap;
 import gen.alex73.osm.validators.objects.Type;
 
 import java.io.File;
-import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,6 +60,7 @@ public class CheckObjects {
     static Map<String, Set<String>> errors = new HashMap<>();
     static Map<String, Map<String, Set<String>>> errorsByUser = new HashMap<>();
     static Map<String, Integer> objectsCount = new HashMap<>();
+    static int[] tagsCount = new int[Short.MAX_VALUE];
 
     public static void main(String[] args) throws Exception {
         String out = Env.readProperty("out.dir") + "/pamylki.html";
@@ -73,6 +70,7 @@ public class CheckObjects {
         readConfig();
 
         osm.all(o -> check(o));
+        osm.all(o -> osm.contains(o), o -> addToStatistics(o));
         for (CheckType ct : knownTypes) {
             ct.finish();
         }
@@ -87,14 +85,15 @@ public class CheckObjects {
         }
         new File(out).getParentFile().mkdirs();
         VelocityOutput.output("org/alex73/osm/validators/objects/pamylki.velocity", out, "errorsList",
-                sort(errors.keySet()), "errors", errors, "OSM", OSM.class, "users",
-                sort(errorsByUser.keySet()), "this", CheckObjects.class, "objects",
-                sort(objectsCount.keySet()), "objectsCount", objectsCount);
+                OSM.sort(errors.keySet()), "errors", errors, "OSM", OSM.class, "users",
+                OSM.sort(errorsByUser.keySet()), "this", CheckObjects.class, "objects",
+                OSM.sort(objectsCount.keySet()), "objectsCount", objectsCount, "tagsCount",
+                getTagsCountByNames());
         for (String user : errorsByUser.keySet()) {
             String uout = Env.readProperty("out.dir") + "/pamylki-" + lat(user) + ".html";
             Map<String, Set<String>> e = errorsByUser.get(user);
             VelocityOutput.output("org/alex73/osm/validators/objects/pamylki.velocity", uout, "errorsList",
-                    sort(e.keySet()), "errors", e, "OSM", OSM.class, "user", user);
+                    OSM.sort(e.keySet()), "errors", e, "OSM", OSM.class, "user", user);
         }
     }
 
@@ -164,6 +163,22 @@ public class CheckObjects {
         }
     }
 
+    static void addToStatistics(IOsmObject o) {
+        for (short t : o.getTags()) {
+            tagsCount[t]++;
+        }
+    }
+
+    static Map<String, Integer> getTagsCountByNames() {
+        Map<String, Integer> result = new HashMap<>();
+        for (short i = 0; i < tagsCount.length; i++) {
+            if (tagsCount[i] > 0) {
+                result.put(osm.getTagsPack().getTagName(i), tagsCount[i]);
+            }
+        }
+        return result;
+    }
+
     static void readConfig() throws Exception {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(new File("src/object_types.xsd")));
@@ -216,19 +231,6 @@ public class CheckObjects {
             v = 0;
         }
         map.put(key, v + 1);
-    }
-
-    static List<String> sort(Set<String> list) {
-        List<String> result = new ArrayList<>(list);
-        final Locale BE = new Locale("be");
-        final Collator BEL = Collator.getInstance(BE);
-        Collections.sort(result, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                return BEL.compare(o1, o2);
-            }
-        });
-        return result;
     }
 
     static public int getErrorsCount(String user) {

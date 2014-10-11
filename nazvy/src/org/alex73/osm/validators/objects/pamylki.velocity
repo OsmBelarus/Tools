@@ -55,6 +55,14 @@
     <br/><br/>
 #end
 
+#if ( $tagsCount )
+    <br/> <b>Колькасьць існуючых тэгаў:</b>
+    #foreach ( $o in ${OSM.sort($tagsCount.keySet())} )
+     <br/> $o - ${tagsCount.get($o)}
+    #end
+    <br/><br/>
+#end
+
 #set ( $i = 1)
 #foreach ( $err in $errorsList )
   <p id="$err">${OSM.josmIcon($errors.get($err))} <b>$err (${errors.get($err).size()})</b> : 

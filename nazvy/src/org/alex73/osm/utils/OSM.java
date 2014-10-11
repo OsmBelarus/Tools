@@ -21,10 +21,16 @@
 
 package org.alex73.osm.utils;
 
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
- * Некаторыя мэтады для паказу спасылак на osm у html.
+ * Некаторыя мэтады для паказу шаблёнаў.
  */
 public class OSM {
     static String ICON_NODE = "<img src=\"http://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png\"/>";
@@ -73,5 +79,18 @@ public class OSM {
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "/history'>";
         r += icon + "</a>";
         return r;
+    }
+
+    public static List<String> sort(Set<String> list) {
+        List<String> result = new ArrayList<>(list);
+        final Locale BE = new Locale("be");
+        final Collator BEL = Collator.getInstance(BE);
+        Collections.sort(result, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return BEL.compare(o1, o2);
+            }
+        });
+        return result;
     }
 }
