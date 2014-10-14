@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.TSV;
+import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmNode;
 import org.apache.commons.io.FileUtils;
 

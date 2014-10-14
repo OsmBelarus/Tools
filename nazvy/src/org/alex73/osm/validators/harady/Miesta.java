@@ -19,7 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-package org.alex73.osm.daviednik;
+package org.alex73.osm.validators.harady;
 
 import java.lang.reflect.Field;
 

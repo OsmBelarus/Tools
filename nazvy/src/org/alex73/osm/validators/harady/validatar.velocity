@@ -71,9 +71,8 @@
 #parse ("org/alex73/osm/validators/harady/result_table.velocity")
 
 <h1 id="p3">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()}):</h1>
-Часова выключана да выпраўленьня памылак
 #set ( $table = $data.incorrectTags )
-<!--#parse ("org/alex73/osm/validators/harady/result_table.velocity")-->
+#parse ("org/alex73/osm/validators/harady/result_table.velocity")
 
 <h1 id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</h1> аб'екты мапы на якіх няма спасылак у даведніку
 <ul>

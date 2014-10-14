@@ -1,6 +1,6 @@
 /**************************************************************************
  
-Some tools for OSM.
+OSome tools for OSM.
 
  Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
@@ -20,7 +20,7 @@ Some tools for OSM.
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-package org.alex73.osm.daviednik;
+package org.alex73.osm.validators.harady;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.MemoryStorage;
 
@@ -39,52 +38,58 @@ import org.alex73.osmemory.MemoryStorage;
  * Вызначае правільную назву населенага пункту.
  */
 public class CalcCorrectTags2 {
-    static public OsmPlace calc(Miesta m, MemoryStorage storage, IOsmNode node) throws Exception {
+    static public PlaceTags calc(Miesta m, MemoryStorage storage, IOsmNode node) throws Exception {
         String typ;
-        if (m.osmForceTyp != null) {
-            typ = m.osmForceTyp;
-        } else {
-            switch (m.typ) {
-            case "г.":
-                if (node == null) {
-                    throw new Exception("Няма горада: " + m);
-                }
-                String population = node.getTag("population", storage);
-                if (population != null && Integer.parseInt(population) >= 50000) {
-                    typ = "city";
-                } else {
-                    typ = "town";
-                }
-                break;
-            case "г.п.":
-            case "г. п.":
-            case "к. п.":
-                typ = "village";
-                break;
-            case "в.":
-            case "п.":
-            case "р.п.":
-            case "р. п.":
-            case "аг.":
-                typ = "hamlet";
-                break;
-            case "х.":
-                typ = "isolated_dwelling";
-                break;
-            case "ст.":
-            case "с.":
-            case "раз’езд":
-            case "рзд":
-                typ = null;
-                break;
-            default:
-                throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
+        
+        switch (m.typ) {
+        case "г.":
+            if (node == null) {
+                throw new Exception("Няма горада: " + m);
             }
+            String population = node.getTag("population", storage);
+            if (population != null && Integer.parseInt(population) >= 50000) {
+                typ = "city";
+            } else {
+                typ = "town";
+            }
+            break;
+        case "г.п.":
+        case "г. п.":
+        case "к. п.":
+            typ = "village";
+            break;
+        case "в.":
+        case "п.":
+        case "р.п.":
+        case "р. п.":
+        case "аг.":
+            typ = "hamlet";
+            break;
+        case "х.":
+            typ = "isolated_dwelling";
+            break;
+        case "ст.":
+        case "с.":
+        case "раз’езд":
+        case "рзд":
+            typ = "hamlet";
+            break;
+        default:
+            throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
+        }
+        
+        boolean abandoned = false;
+        if (m.osmForceTyp != null && m.osmForceTyp.equals("abandoned")) {
+            abandoned = true;
+        } else if (m.osmForceTyp != null) {
+            typ = m.osmForceTyp;
         }
 
         String name_be = m.nazvaNoStress;
         String name_be_tarask = unstress(m.osmNameBeTarask);
-        String variants_be = variantsToString(splitVariants(m.varyjantyBel));
+        List<String> variantsBel = splitVariants(m.varyjantyBel);
+        variantsBel.remove(name_be);
+        String variants_be = variantsToString(variantsBel);
         String int_name = m.translit;
 
         String name_ru = m.osmForceNameRu != null ? m.osmForceNameRu : m.ras;
@@ -95,14 +100,18 @@ public class CalcCorrectTags2 {
         sdel(vru, name_ru);
         String variants_ru = variantsToString(vru);
 
-        OsmPlace result = new OsmPlace();
+        PlaceTags result = new PlaceTags();
         result.name = name_ru;
         result.name_ru = name_ru;
         result.name_be = name_be;
         result.int_name = int_name;
         result.name_be_tarask = name_be_tarask;
         if (typ != null) {
-            result.place = typ;
+            if (abandoned) {
+                result.abandonedPlace = typ;
+            } else {
+                result.place = typ;
+            }
         }
         result.alt_name_ru = variants_ru;
         result.alt_name_be = variants_be;

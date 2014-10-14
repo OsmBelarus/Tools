@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.alex73.osm.daviednik.CalcCorrectTags2;
-import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
@@ -39,7 +37,6 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
-import org.alex73.osm.validators.vulicy2.OsmPlace;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 
@@ -88,11 +85,6 @@ public class CheckCities3 {
 
         System.out.println("Parsing csv from " + dav);
         daviednik = new TSV('\t').readCSV(dav, Miesta.class);
-        for (Miesta m : daviednik) {
-            if (m.osmID != null && m.osmID == 0) {
-                m.osmID = null;
-            }
-        }
 
         loadData();
 
@@ -120,6 +112,7 @@ public class CheckCities3 {
         // шукаем цэнтры гарадоў
         dbPlaces = new HashMap<>();
         storage.byTag("place", o -> storage.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
+        storage.byTag("abandoned:place", o -> storage.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
     }
 
     static void loadAdminLevels() {
@@ -276,6 +269,7 @@ public class CheckCities3 {
     static void findIncorrectTags() throws Exception {
         List<String> attrs = new ArrayList<>();
         addColumnIfAllowed("place", attrs);
+        addColumnIfAllowed("abandoned:place", attrs);
         addColumnIfAllowed("name", attrs);
         addColumnIfAllowed("name:ru", attrs);
         addColumnIfAllowed("name:be", attrs);
@@ -297,24 +291,19 @@ public class CheckCities3 {
                 IOsmObject p = dbPlaces.get(code);
                 Map<String, String> tags = p.extractTags(storage);
                 IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
-                OsmPlace correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
-                if ("suburb".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
-                    // hamlet => suburb - ok
-                    correctTags.place = tags.get("place");
+                if (centerNode == null) {
+                    result.nonExistInOsm.add("Няма цэнтру для " + OSM.histText(code));
+                    continue;
                 }
-                if ("neighbourhood".equals(tags.get("place")) && "hamlet".equals(correctTags.place)) {
-                    // hamlet => neighbourhood - ok
-                    correctTags.place = tags.get("place");
-                }
+                PlaceTags correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
                 // правяраем тэгі
                 setAttrIfAllowed(w, "name", tags.get("name"), correctTags.name);
                 setAttrIfAllowed(w, "name:be", tags.get("name:be"), correctTags.name_be);
                 setAttrIfAllowed(w, "name:ru", tags.get("name:ru"), correctTags.name_ru);
                 setAttrIfAllowed(w, "int_name", tags.get("int_name"), correctTags.int_name);
                 setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"), correctTags.name_be_tarask);
-                if (correctTags.place != null) {
-                    setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
-                }
+                setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
+                setAttrIfAllowed(w, "abandoned:place", tags.get("abandoned:place"), correctTags.abandonedPlace);
                 setAttrIfAllowed(w, "alt_name:be", tags.get("alt_name:be"), correctTags.alt_name_be);
                 setAttrIfAllowed(w, "alt_name:ru", tags.get("alt_name:ru"), correctTags.alt_name_ru);
                 setAttrIfAllowed(w, "alt_name", tags.get("alt_name"), null);

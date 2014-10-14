@@ -50,8 +50,7 @@ public class Env {
         }
         String v = env.getProperty(name);
         if (v == null) {
-            System.err.println("Property '" + name + "' not defined");
-            System.exit(1);
+            throw new RuntimeException("Property '" + name + "' not defined");
         }
         return v.replace("$HOME", System.getProperty("user.home"));
     }

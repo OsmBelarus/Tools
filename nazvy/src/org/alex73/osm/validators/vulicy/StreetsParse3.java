@@ -38,7 +38,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import org.alex73.osm.daviednik.Miesta;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
@@ -46,6 +45,7 @@ import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.TSV;
+import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.geometry.Area;
