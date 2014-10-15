@@ -1,6 +1,6 @@
 /**************************************************************************
  
-OSome tools for OSM.
+ Some tools for OSM.
 
  Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
