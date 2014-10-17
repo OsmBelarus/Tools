@@ -34,14 +34,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.OSM;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.POWriter;
-import org.alex73.osm.utils.TSV;
 import org.alex73.osm.utils.VelocityOutput;
-import org.alex73.osm.validators.harady.ResultTable;
+import org.alex73.osm.validators.common.Errors;
+import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
@@ -50,6 +51,11 @@ import org.alex73.osmemory.geometry.FastArea;
  * Экспартуе некаторыя аб'екты для перакладу.
  */
 public class ExtractObjectsForTranslation {
+    static final Pattern RE_ALLOWED_CHARS_BE = Pattern
+            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]*");
+    static final Pattern RE_ALLOWED_CHARS_RU = Pattern
+            .compile("[1234567890ЁЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮъёйцукенгшщзхфывапролджэячсмитьбю \\/\\-]*");
+
     static Belarus osm;
     static short nameTag, namebeTag;
     static Map<String, String> oldReplace = new HashMap<>();
@@ -68,7 +74,6 @@ public class ExtractObjectsForTranslation {
         nameTag = osm.getTagsPack().getTagCode("name");
         namebeTag = osm.getTagsPack().getTagCode("name:be");
         short highwayTag = osm.getTagsPack().getTagCode("highway");
-        short railwayTag = osm.getTagsPack().getTagCode("railway");
         short waterTag = osm.getTagsPack().getTagCode("water");
         short waterwayTag = osm.getTagsPack().getTagCode("waterway");
         short naturalTag = osm.getTagsPack().getTagCode("natural");
@@ -103,12 +108,24 @@ public class ExtractObjectsForTranslation {
         out(o -> "place_of_worship".equals(o.getTag(amenityTag)) && osm.contains(o), "relihijnyja_budynki");
 
         processed.clear();
-        out(o -> "halt".equals(o.getTag(railwayTag)) && osm.contains(o), "railway_halt");
-        out(o -> "station".equals(o.getTag(railwayTag)) && osm.contains(o), "railway_station");
-
-        processed.clear();
         out(o -> "park".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_park");
         out(o -> "stadium".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_stadium");
+
+        processed.clear();
+        out(o -> isSubway(o) && osm.contains(o), "subway");
+    }
+
+    static boolean isSubway(IOsmObject o) {
+        short railwayTag = osm.getTagsPack().getTagCode("railway");
+        short stationTag = osm.getTagsPack().getTagCode("station");
+
+        if ("subway_entrance".equals(o.getTag(railwayTag))) {
+            return true;
+        }
+        if ("subway".equals(o.getTag(stationTag)) && "station".equals(o.getTag(railwayTag))) {
+            return true;
+        }
+        return false;
     }
 
     static void out(Predicate<IOsmObject> predicate, String filename) throws Exception {
@@ -116,7 +133,7 @@ public class ExtractObjectsForTranslation {
         nameReplace.clear();
 
         try {
-            List<Replace> replaces = new TSV('\t').readCSV("../../OsmBelarus-Databases/Pieraklad/map/"
+            List<Replace> replaces = new CSV('\t').readCSV("../../OsmBelarus-Databases/Pieraklad/map/"
                     + filename + ".csv", Replace.class);
             for (Replace r : replaces) {
                 if (!r.from.equals(r.to)) {
@@ -148,17 +165,18 @@ public class ExtractObjectsForTranslation {
                 return RUC.compare(o1.from, o2.from);
             }
         });
-        new TSV('\t').saveCSV("../../OsmBelarus-Databases/Pieraklad/map/" + filename + ".csv", Replace.class,
+        new CSV('\t').saveCSV("../../OsmBelarus-Databases/Pieraklad/map/" + filename + ".csv", Replace.class,
                 names);
 
+        Errors errors = new Errors();
         ResultTable result = new ResultTable("name", "name:be");
 
         POReader rd = new POReader("../../OsmBelarus-Databases/Pieraklad/translation/" + filename + ".po");
-        osm.all(predicate, o -> in(rd, o, result));
+        osm.all(predicate, o -> in(rd, o, result, errors));
 
         result.sort();
         VelocityOutput.output("org/alex73/osm/translate/objects.velocity", "/var/www/osm/translate/"
-                + filename + ".html", "table", result, "OSM", OSM.class);
+                + filename + ".html", "table", result, "errors", errors);
     }
 
     static void out(POWriter po, IOsmObject obj) {
@@ -183,7 +201,7 @@ public class ExtractObjectsForTranslation {
         }
     }
 
-    static void in(POReader po, IOsmObject obj, ResultTable table) {
+    static void in(POReader po, IOsmObject obj, ResultTable table, Errors errors) {
         if (processed.contains(obj.getObjectCode())) {
             return;
         }
@@ -194,10 +212,19 @@ public class ExtractObjectsForTranslation {
             name = "<null>";
         }
         String nru = nameReplace.containsKey(name) ? nameReplace.get(name) : name;
+        if (!RE_ALLOWED_CHARS_RU.matcher(nru).matches()) {
+            errors.addError("Няправільныя літары ў расейскай назве: " + nru, obj);
+            return;
+        }
         String namebe = obj.getTag(namebeTag);
         String translated = po.get(nru);
-        if (translated != null && translated.isEmpty()) {
-            translated = null;
+        if (translated == null || translated.isEmpty()) {
+            errors.addError("Не перакладзена : " + nru, obj);
+            return;
+        }
+        if (!RE_ALLOWED_CHARS_BE.matcher(translated).matches()) {
+            errors.addError("Няправільныя літары ў беларускай назве: " + translated, obj);
+            return;
         }
         ResultTable.ResultTableRow row = table.new ResultTableRow(obj.getObjectCode(), name);
         row.setAttr("name", name, nru);

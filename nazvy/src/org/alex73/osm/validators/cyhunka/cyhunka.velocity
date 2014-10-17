@@ -1,0 +1,24 @@
+#set ( $title = "Валідатар чыгуначных станцый" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
+
+Праверка па зьвестках з https://github.com/OsmBelarus/Databases/blob/master/Daviedniki/Cyhunka.csv <br/>
+
+<a href="#p1">Памылкі</a><br/>
+<a href="#p2">Няправільныя назвы і тэгі</a><br/>
+<br/>
+
+Гэта тэставы валідатар аб'ектаў OSM. Ён таксама можа памыляцца.<br/>
+Калі вы бачыце што валідатар паказвае памылку там дзе яе няма - <br/>
+пішыце на <a href="http://forum.openstreetmap.org/viewforum.php?id=35">форум</a> ці <a href="mailto:alex73mail@gmail.com">пошту</a>.
+<br/>
+
+<h1 id="p1">Памылкі:</h1>
+#parse ("org/alex73/osm/validators/common/errors.velocity")
+
+<h1 id="p2">Няправільныя назвы і тэгі:</h1>
+Назва ўтрымлівае прыблізную адлегласьць каардынат у табліцы ад сапраўдных каардынат у OSM.
+#parse ("org/alex73/osm/validators/common/result_table.velocity")
+
+
+</body>
+</html>

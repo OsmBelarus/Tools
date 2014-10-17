@@ -1,0 +1,17 @@
+<table>
+  <tr>
+    <td>Памылка</td>
+    <td>osm</td>
+  </tr>
+#foreach ( $err in $OSM.sort($errors.errors.keySet()))
+#set ( $objects = $errors.errors.get($err) )
+  <tr>
+    <td class="err">$err ${OSM.josmIcon($objects)}</td>
+    <td>
+      #foreach ($n in $objects)
+        ${OSM.histIcon($n)} ${OSM.josmIcon($n)} &nbsp;&nbsp;
+      #end
+    </td>
+  </tr>
+#end
+</table>

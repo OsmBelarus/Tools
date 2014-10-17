@@ -52,7 +52,6 @@ import org.alex73.osmemory.IOsmObject;
  */
 public class CheckObjects {
 
-    // static FastArea Belarus;
     static List<CheckType> knownTypes;
     static List<CheckTrap> traps;
 

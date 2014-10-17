@@ -39,19 +39,16 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.TMX;
-import org.alex73.osm.utils.TSV;
+import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
-import org.alex73.osmemory.geometry.Way;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Стварае файлы .po для перакладу назваў вуліц.
@@ -59,7 +56,7 @@ import org.apache.commons.lang.StringUtils;
 public class StreetsParse3 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
-    public static final Pattern RE_HOUSENUMBER = Pattern.compile("[1-9][0-9]*(/[1-9][0-9]*)?[АБВГ]?");
+    public static final Pattern RE_HOUSENUMBER = Pattern.compile("[1-9][0-9]*(/[1-9][0-9]*)?(/?[АБВГДабвгд])?( к[0-9]+)?");
 
     static String poOutputDir;
     static String tmxOutputDir;
@@ -67,56 +64,54 @@ public class StreetsParse3 {
 
     Belarus storage;
     List<Miesta> daviednik;
-    List<String> errors = new ArrayList<>();
+    Errors globalErrors = new Errors();
     List<City> cities = new ArrayList<>();
-    List<StreetNames> resultStreets = new ArrayList<>();
-    List<HouseError> resultHouses = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
-        Env.load();
         poOutputDir = Env.readProperty("po.source.dir");
         tmxOutputDir = Env.readProperty("tmx.output.dir");
-        davFile = Env.readProperty("dav");
 
         StreetsParse3 s = new StreetsParse3();
         s.run();
     }
 
     void run() throws Exception {
+        davFile = Env.readProperty("dav") + "/Nazvy_nasielenych_punktau.csv";
         System.out.println("Parsing csv from " + davFile);
-        daviednik = new TSV('\t').readCSV(davFile, Miesta.class);
+        daviednik = new CSV('\t').readCSV(davFile, Miesta.class);
 
         System.out.println("Checking...");
-        init();
-
-        processStreets();
-        // processHouses();
-
-        end();
+        loadCities();
+        
+        for (City c : cities) {
+            start(c);
+            processStreets(c);
+            processHouses(c);
+            end(c);
+        }
     }
 
-    public void init() throws Exception {
+    short addrStreetTag, nameTag, namebeTag, houseNumberTag;
+    
+    public void loadCities() throws Exception {
         storage = new Belarus();
-
+        addrStreetTag = storage.getTagsPack().getTagCode("addr:street");
+        nameTag = storage.getTagsPack().getTagCode("name");
+        namebeTag = storage.getTagsPack().getTagCode("name:be");
+        houseNumberTag = storage.getTagsPack().getTagCode("addr:housenumber");
+       
         for (Miesta m : daviednik) {
             switch (m.typ) {
             case "г.":
                 if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
                     FastArea border = null;
                     for (String id : m.osmIDother.split(";")) {
-                        long cid = Long.parseLong(id.substring(1));
-                        String rqName;
-                        if (id.charAt(0) == 'r') {
-                            rqName = "osm.getPlaceByRelationId";
-                        } else {
-                            rqName = "osm.getPlaceByWayId";
-                        }
                         IOsmObject city = storage.getObject(id);
                         if (city != null) {
                             try {
                                 border = new FastArea(new Area(storage, city).getGeometry(), storage);
                             } catch (Exception ex) {
-                                errors.add("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
+                                globalErrors.addError("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
                             }
                             break;
                         }
@@ -124,7 +119,7 @@ public class StreetsParse3 {
                     if (border != null) {
                         cities.add(new City(m, border));
                     } else {
-                        errors.add("Няма межаў горада " + m.nazva);
+                        globalErrors.addError("Няма межаў горада " + m.nazva);
                     }
                 }
                 break;
@@ -132,8 +127,10 @@ public class StreetsParse3 {
         }
     }
 
-    void end() throws Exception {
-        for (City c : cities) {
+    void start(City c) throws Exception {
+        
+    }
+    void end(City c) throws Exception {
             List<String> us = new ArrayList<>(c.uniq.keySet());
             Collections.sort(us, new Comparator<String>() {
                 @Override
@@ -177,32 +174,14 @@ public class StreetsParse3 {
             wr.close();
             tmx.save(tmxFile);
             System.out.println(c.nazva + ": " + c.uniq.size());
-        }
     }
 
-    public void processStreets() {
-        List<IOsmObject> highways = new ArrayList<>();
-        List<Way> lines = new ArrayList<>();
-        storage.byTag("highway",
-                o -> o.isWay() && !o.hasTag("int_ref", storage) && !o.hasTag("ref", storage),
-                o -> highways.add(o));
-        for (IOsmObject o : highways) {
-            lines.add(new Way((IOsmWay) o, storage));
-        }
-        for (City c : cities) {
-            System.out.println("Check street in " + c.nazva);
-            for (Way li : lines) {
-                if (!c.geom.interceptBox(li.getBoundingBox())) {
-                    continue;
-                }
-                if (c.geom.covers(li.getWay())) {
-                    addStreet(c, li.getWay());
-                }
-            }
-        }
+    public void processStreets(City c) {
+        storage.byTag("highway", o -> o.isWay() && o.hasTag(nameTag) && c.geom.covers(o),
+                o -> processStreet(c, o));
     }
 
-    void addStreet(City c, IOsmObject s) {
+    void processStreet(City c, IOsmObject s) {
         String highway = s.getTag("highway", storage);
         switch (highway) {
         case "raceway":
@@ -212,182 +191,33 @@ public class StreetsParse3 {
             return;
         }
         c.streets.add(s);
-        StreetNames n = processTags(c, s, "name", "name:ru", "name:be",
-                System.getProperty("disableIntName") == null ? "int_name" : null);
-        if (n != null && n.needToChange()) {
-            resultStreets.add(n);
-        }
-    }
 
-    short addrStreetTag, nameTag, namebeTag;
-
-    public void processHouses() throws Exception {
-        addrStreetTag = storage.getTagsPack().getTagCode("addr:street");
-        nameTag = storage.getTagsPack().getTagCode("name");
-        namebeTag = storage.getTagsPack().getTagCode("name:be");
-        for (City c : cities) {
-            System.out.println("Check houses in " + c.nazva);
-            storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
-        }
-    }
-
-    public void processHouse(City c, IOsmObject s) {
-        String streetNameOnHouse = s.getTag(addrStreetTag);
-        if (streetNameOnHouse == null) {
-            // няма тэга addr:street
-            HouseError e = new HouseError();
-            e.c = c;
-            e.object = s;
-            e.error = "Няма тэга addr:street для дому";
-            resultHouses.add(e);
-            return;
-        }
-        boolean streetFound = false;
-        String prev_name_be = null;
-        for (IOsmObject r : c.streets) {
-            if (!streetNameOnHouse.equals(r.getTag(nameTag))) {
-                continue;
-            }
-            streetFound = true;
-            String name_be = r.getTag(namebeTag);
-            if (prev_name_be != null && !prev_name_be.equals(name_be)) {
-                // і беларуская назва не супадае
-                HouseError e = new HouseError();
-                e.c = c;
-                e.object = s;
-                e.error = "Беларускія назвы вуліц побач не супадаюць для дому з addr:street="
-                        + streetNameOnHouse;
-                resultHouses.add(e);
-            }
-            prev_name_be = name_be;
-        }
-        if (!streetFound) {
-            // няма вуліцы для гэтага дому
-            HouseError e = new HouseError();
-            e.c = c;
-            e.object = s;
-            e.error = "Няма вуліцы '" + streetNameOnHouse + "' для дому";
-            resultHouses.add(e);
-            return;
-        }
-    }
-
-    void checkHouseTags(City c, IOsmObject s) throws Exception {
-        for (Map.Entry<String, String> en : s.extractTags(storage).entrySet()) {
-            String k = en.getKey();
-            String v = en.getValue();
-            switch (k) {
-            case "addr:street":
-                break;
-            case "addr:postcode":
-                break;
-            case "building:levels":
-                break;
-            case "addr:housenumber":
-                if (!RE_HOUSENUMBER.matcher(v).matches()) {
-                    HouseError e = new HouseError();
-                    e.c = c;
-                    e.object = s;
-                    e.error = "Няправільны нумар дому: " + v;
-                    resultHouses.add(e);
-                }
-                break;
-            case "building":
-                if (!"yes".equals(v)) {
-                    HouseError e = new HouseError();
-                    e.c = c;
-                    e.object = s;
-                    e.error = "Няправільны тэг building для дому: " + v;
-                    resultHouses.add(e);
-                }
-                break;
-            default:
-                HouseError e = new HouseError();
-                e.c = c;
-                e.object = s;
-                e.error = "Невядомы тэг для дому : " + k + "=" + v;
-                resultHouses.add(e);
-                break;
-            }
-        }
-    }
-
-    public static class Names {
-        public String name, name_be, name_ru, int_name;
-    }
-
-    public static class StreetNames {
-        public City c;
-        public String objCode;
-        public Names tags = new Names();
-        public Names exist = new Names();
-        public Names required = new Names();
-        public String error;
-
-        public boolean needToChange() {
-            if (error != null) {
-                return true;
-            }
-            return !StringUtils.equals(exist.name, required.name)
-                    || !StringUtils.equals(exist.name_be, required.name_be)
-                    || !StringUtils.equals(exist.name_ru, required.name_ru)
-                    || !StringUtils.equals(exist.int_name, required.int_name);
-        }
-    }
-
-    StreetNames processTags(City c, IOsmObject obj, String nameTag, String nameRuTag, String nameBeTag,
-            String nameIntlTag) {
-
-        StreetNames names = new StreetNames();
-        names.c = c;
-        names.tags.name = nameTag;
-        names.tags.name_be = nameBeTag;
-        names.tags.name_ru = nameRuTag;
-        names.tags.int_name = nameIntlTag;
-
-        names.objCode = obj.getObjectCode();
-        names.exist.name = nameTag == null ? null : obj.getTag("name", storage);
-        names.exist.name_be = nameBeTag == null ? null : obj.getTag("name:be", storage);
-        names.exist.name_ru = nameRuTag == null ? null : obj.getTag("name:ru", storage);
-        names.exist.int_name = nameIntlTag == null ? null : obj.getTag("int_name", storage);
-
-        String nameOSM = names.exist.name;
+        String nameOSM = s.getTag("name", storage);
         if (nameOSM == null) {
-            return null;
+            return;
         }
         String name = StreetNameParser.fix(nameOSM);
-        String name_ru = null;
-        String name_be = null;
-        if (names.tags.name_ru != null) {
-            name_ru = names.exist.name_ru;
-        }
-        if (names.tags.name_be != null) {
-            name_be = names.exist.name_be;
-        }
+        String name_be = s.getTag("name:be", storage);
         if (name_be != null) {
             name_be = StreetNameParser.fix(name_be);
         }
 
         try {
-            process(c, obj, names, name, name_ru, name_be, names.exist.name);
+            process(c, s, name, name_be);
+        } catch (NullPointerException ex) {
+            throw ex;
         } catch (Exception ex) {
-            names.error = ex.getMessage();
+            postProcessError(c, s, ex.getMessage());
         }
-        return names;
     }
 
-    void process(City c, IOsmObject obj, StreetNames streetNames, String name, String name_ru,
-            String name_be, String toComment) throws Exception {
-        StreetName orig = StreetNameParser.parse(name);
-        StreetNameBe be = null;
+    public void processHouses(City c) throws Exception {
+        
+    }
 
-        if (name_be != null) {
-            be = new StreetNameBe();
-            try {
-                be.parseAny(name_be);
-            } catch (ParseException ex) {
-            }
-        }
+
+    void process(City c, IOsmObject obj, String name, String name_be) throws Exception {
+        StreetName orig = StreetNameParser.parse(name);
 
         if (orig.name == null) {
             return;
@@ -398,17 +228,25 @@ public class StreetsParse3 {
             li = new LocalizationInfo();
             c.uniq.put(orig.name, li);
         }
-        li.name.add(toComment);
-        if (be != null && be.name != null) {
-            li.name_be.add(be.name);
-        }
-        li.ways.add(streetNames.objCode);
+        li.name.add(name);
+        li.ways.add(obj.getObjectCode());
 
-        postProcess(c, obj, streetNames, orig, name, name_ru, name_be);
+        if (name_be != null) {
+            try {
+                StreetNameBe be = new StreetNameBe();
+                be.parseAny(name_be);
+                li.name_be.add(be.name);
+            } catch (ParseException ex) {
+            }
+        }
+
+        postProcess(c, obj, orig);
     }
 
-    void postProcess(City c, IOsmObject obj, StreetNames streetNames, StreetName street, String name,
-            String name_ru, String name_be) throws Exception {
+    void postProcessError(City c, IOsmObject obj, String error) {
+    }
+
+    void postProcess(City c, IOsmObject obj, StreetName orig) throws Exception {
     }
 
     static class LocalizationInfo {
@@ -444,17 +282,6 @@ public class StreetsParse3 {
             } else {
                 return false;
             }
-        }
-    }
-
-    public static class HouseError {
-        public City c;
-        public IOsmObject object;
-        public String error;
-        public String geom;
-
-        public String getLink() {
-            return OSM.histIcon(object.getObjectCode());
         }
     }
 }

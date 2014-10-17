@@ -20,21 +20,28 @@
  **************************************************************************/
 package org.alex73.osm.validators.vulicy;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * Сьпіс родавых тэрмінаў з пазначэньнем іх роду ў беларускай і расейскай мовах.
  */
 public enum StreetTerm {
+
+    вуліца("улица", StreetTermRod.ZAN, "вуліца", StreetTermRod.ZAN, "ул.", "вул.", "ул"),
+
     няма("", StreetTermRod.NI, "", StreetTermRod.NI),
 
-    бульвар("бульвар", StreetTermRod.MUZ, "бульвар", StreetTermRod.MUZ),
+    бульвар("бульвар", StreetTermRod.MUZ, "бульвар", StreetTermRod.MUZ, "бул."),
 
-    завулак("переулок", StreetTermRod.MUZ, "завулак", StreetTermRod.MUZ),
+    завулак("переулок", StreetTermRod.MUZ, "завулак", StreetTermRod.MUZ, "пер.", "зав.", "завул.", "пер"),
 
     тупік("тупик", StreetTermRod.MUZ, "тупік", StreetTermRod.MUZ),
 
-    праспект("проспект", StreetTermRod.MUZ, "праспект", StreetTermRod.MUZ),
+    праспект("проспект", StreetTermRod.MUZ, "праспект", StreetTermRod.MUZ, "просп."),
 
-    праезд("проезд", StreetTermRod.MUZ, "праезд", StreetTermRod.MUZ),
+    праезд("проезд", StreetTermRod.MUZ, "праезд", StreetTermRod.MUZ, "пр."),
 
     тракт("тракт", StreetTermRod.MUZ, "тракт", StreetTermRod.MUZ),
 
@@ -42,9 +49,7 @@ public enum StreetTerm {
 
     спуск("спуск", StreetTermRod.MUZ, "спуск", StreetTermRod.MUZ),
 
-    уезд("въезд", StreetTermRod.MUZ, "уезд", StreetTermRod.MUZ),
-
-    вуліца("улица", StreetTermRod.ZAN, "вуліца", StreetTermRod.ZAN),
+    уезд("въезд", StreetTermRod.MUZ, "уезд", StreetTermRod.MUZ, "ўезд"),
 
     алея("аллея", StreetTermRod.ZAN, "алея", StreetTermRod.ZAN),
 
@@ -54,20 +59,24 @@ public enum StreetTerm {
 
     пляцоўка("площадка", StreetTermRod.ZAN, "пляцоўка", StreetTermRod.ZAN),
 
-    пуцеправод("путепровод", StreetTermRod.MUZ, "пуцеправод", StreetTermRod.MUZ),
-
+    пуцеправод("путепровод", StreetTermRod.MUZ, "пуцеправод", StreetTermRod.MUZ, "пуцепровад"),
+    
     шаша("шоссе", StreetTermRod.NI, "шаша", StreetTermRod.ZAN);
 
     private final String nameRu;
     private final StreetTermRod rodRu;
     private final String nameBe;
     private final StreetTermRod rodBe;
+    private final Set<String> variants;
 
-    StreetTerm(String nameRu, StreetTermRod rodRu, String nameBe, StreetTermRod rodBe) {
+    StreetTerm(String nameRu, StreetTermRod rodRu, String nameBe, StreetTermRod rodBe, String... variants) {
         this.nameRu = nameRu;
         this.rodRu = rodRu;
         this.nameBe = nameBe;
         this.rodBe = rodBe;
+        this.variants = new TreeSet<>(Arrays.asList(variants));
+        this.variants.add(nameBe);
+        this.variants.add(nameRu);
     }
 
     public String getNameRu() {
@@ -84,5 +93,9 @@ public enum StreetTerm {
 
     public StreetTermRod getRodBe() {
         return rodBe;
+    }
+
+    public Set<String> getVariants() {
+        return variants;
     }
 }

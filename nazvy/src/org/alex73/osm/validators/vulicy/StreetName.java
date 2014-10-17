@@ -41,19 +41,19 @@ public class StreetName {
             words.add(w.trim());
         }
 
-        for (int i = 0; i < words.size(); i++) {
-            StreetTerm rt = parseRodavyTermin(words.get(i));
-            if (rt != null) {
-                if (term != null) {
-                    throw new ParseException("Зашмат родавых тэрмінаў: " + nameOrig, 0);
+        // шукаем родавы тэрмін
+        rt: for (StreetTerm st : StreetTerm.values()) {
+            for (int i = 0; i < words.size(); i++) {
+                String w = words.get(i);
+                if (st.getVariants().contains(w.toLowerCase())) {
+                    term = st;
+                    words.remove(i);
+                    break rt;
                 }
-                term = rt;
-                words.remove(i);
-                i--;
             }
         }
 
-        if (!nameOrig.contains("Линия") && !nameOrig.contains("Тупик")) {
+        if (!nameOrig.contains("Линия") && !nameOrig.contains("Тупик") && !nameOrig.contains("Переезд")) {
             // для "Ліній" індэксы толькі ў назве, акрамя "Другая Шостая Линия" :)
             for (int i = 0; i < words.size(); i++) {
                 Matcher m = RE_INDEX.matcher(words.get(i));
@@ -103,7 +103,7 @@ public class StreetName {
 
     @Override
     public String toString() {
-        return "idx:" + index + "_" + name + "_" + term;
+        return (index != null ? index + "_" : "") + name + "_" + term;
     }
 
     public String getIndexText() {
@@ -120,67 +120,6 @@ public class StreetName {
             return index + "-е";
         default:
             throw new RuntimeException();
-        }
-    }
-
-    StreetTerm parseRodavyTermin(String w) {
-        switch (w.toLowerCase()) {
-        case "бульвар":
-        case "бул.":
-            return StreetTerm.бульвар;
-        case "улица":
-        case "вуліца":
-        case "ул.":
-        case "вул.":
-        case "ул":
-            return StreetTerm.вуліца;
-        case "аллея":
-        case "алея":
-            return StreetTerm.алея;
-        case "переулок":
-        case "завулак":
-        case "пер.":
-        case "зав.":
-        case "завул.":
-        case "пер":
-            return StreetTerm.завулак;
-        case "тупик":
-            return StreetTerm.тупік;
-        case "проспект":
-        case "праспект":
-        case "просп.":
-            return StreetTerm.праспект;
-        case "проезд":
-        case "пр.":
-        case "праезд":
-            return StreetTerm.праезд;
-        case "тракт":
-            return StreetTerm.тракт;
-        case "мост":
-            return StreetTerm.мост;
-        case "площадь":
-        case "плошча":
-            return StreetTerm.плошча;
-        case "шоссе":
-            return StreetTerm.шаша;
-        case "набережная":
-        case "набярэжная":
-            return StreetTerm.набярэжная;
-        case "площадка":
-        case "пляцоўка":
-            return StreetTerm.пляцоўка;
-        case "путепровод":
-        case "пуцепровад":
-        case "пуцеправод":
-            return StreetTerm.пуцеправод;
-        case "спуск":
-            return StreetTerm.спуск;
-        case "въезд":
-        case "уезд":
-        case "ўезд":
-            return StreetTerm.уезд;
-        default:
-            return null;
         }
     }
 

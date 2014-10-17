@@ -21,21 +21,19 @@
 package org.alex73.osm.validators.vulicy;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.Errors;
+import org.alex73.osm.validators.common.ResultTable;
+import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
 import org.alex73.osmemory.IOsmObject;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -44,262 +42,175 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CheckStreets3 extends StreetsParse3 {
     static final Pattern RE_ALLOWED_CHARS = Pattern
-            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]+");
+            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]*");
     static String outDir;
     static String poInputDir;
 
     public static void main(String[] args) throws Exception {
-        Env.load();
-
-        davFile = Env.readProperty("dav");
         poInputDir = Env.readProperty("po.target.dir");
         outDir = Env.readProperty("out.dir");
 
         CheckStreets3 s = new CheckStreets3();
         s.run();
+        s.end();
     }
 
-    List<String> log2 = new ArrayList<>();
-    Map<City, Result> result = new HashMap<>();
+    Result cityResult;
+    Map<City,Integer> streetErrorsCount=new HashMap<>();
+    Map<City,Integer> houseErrorsCount=new HashMap<>();
 
     @Override
-    public void init() throws Exception {
-        super.init();
-        for (City c : cities) {
-            result.put(c, new Result());
-        }
-        for (City c : cities) {
-            String file = poInputDir + '/' + c.fn + ".po";
-            c.po = new POReader(file);
-            System.out.println("Read " + c.po.size() + " translations from " + file);
-        }
+    void start(City c) throws Exception {
+        cityResult = new Result();
+        String file = poInputDir + '/' + c.fn + ".po";
+        c.po = new POReader(file);
+        System.out.println("Read " + c.po.size() + " translations from " + file);
+    }
+    
+    @Override
+    void end(City c) throws Exception {
+        houseErrorsCount.put(c, cityResult.pamylkiDamou.getObjectsCount());
+        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount()+cityResult.vulicy.rows.size());
+
+        System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
+                + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", cityResult);
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
+                + c.fn + ".html", "horad", c.nazva, "data", cityResult);
     }
 
-    @Override
     void end() throws Exception {
-        for (StreetNames n : resultStreets) {
-            if (n.error == null) {
-                result.get(n.c).vulicy.add(n);
-            } else {
-                addWithCreate(result.get(n.c).pamylkiVulic, n.error, n);
-            }
-        }
-        for (HouseError n : resultHouses) {
-            result.get(n.c).pamylkiDamou.add(n);
-        }
-        for (Result r : result.values()) {
-            r.pamylkiDamouG = groupBy(r.pamylkiDamou, new Group.Keyer<HouseError>() {
-                public String getKey(HouseError data) {
-                    return data.error;
-                }
-            }, new Group.Creator<HouseError>() {
-                public Group<HouseError> create(HouseError data) {
-                    return new HouseGroup(data.error);
-                }
-            });
-            Collections.sort(r.pamylkiDamouG, new Comparator<Group<HouseError>>() {
-                @Override
-                public int compare(Group<HouseError> o1, Group<HouseError> o2) {
-                    return o1.getKey().compareTo(o2.getKey());
-                }
-            });
-            // for (HouseGroup hg : (List<HouseGroup>) (List) r.pamylkiDamouG) {
-            // hg.xmin = Double.MAX_VALUE;
-            // hg.xmax = Double.MIN_VALUE;
-            // hg.ymin = Double.MAX_VALUE;
-            // hg.ymax = Double.MIN_VALUE;
-            // for (HouseError he : hg.objects) {
-            // hg.xmin = Math.min(hg.xmin, he.object.xmin);
-            // hg.xmax = Math.max(hg.xmax, he.object.xmax);
-            // hg.ymin = Math.min(hg.ymin, he.object.ymin);
-            // hg.ymax = Math.max(hg.ymax, he.object.ymax);
-            // }
-            // hg.xmin -= 0.002;
-            // hg.xmax += 0.002;
-            // hg.ymin -= 0.002;
-            // hg.ymax += 0.002;
-            // }
-        }
-
-        for (Result r : result.values()) {
-            Collections.sort(r.vulicy, new Comparator<StreetNames>() {
-                @Override
-                public int compare(StreetNames o1, StreetNames o2) {
-                    String s1 = nvl(o1.required.name, o1.exist.name);
-                    String s2 = nvl(o2.required.name, o2.exist.name);
-                    return s1.compareToIgnoreCase(s2);
-                }
-
-                String nvl(String... ss) {
-                    for (String s : ss) {
-                        if (s != null) {
-                            return s;
-                        }
-                    }
-                    return "";
-                }
-            });
-        }
-
-        List<City> sortedList = new ArrayList<>(result.keySet());
-        Collections.sort(sortedList, new Comparator<City>() {
-            public int compare(City o1, City o2) {
-                return o1.nazva.compareToIgnoreCase(o2.nazva);
-            }
-        });
-
         System.out.println("Output to " + outDir + "/vulicy.html...");
         VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicySpis.velocity",
-                outDir + "/vulicy.html", "harady", sortedList, "data", result, "errors", errors);
-        for (City c : cities) {
-            System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
-                    + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", result.get(c), "OSM", OSM.class);
-            VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
-                    + c.fn + ".html", "horad", c.nazva, "data", result.get(c));
-        }
+                outDir + "/vulicy.html", "cities", cities, "errors", globalErrors, "streetErrorsCount",
+                streetErrorsCount, "houseErrorsCount", houseErrorsCount);
     }
 
     @Override
-    void postProcess(City c, IOsmObject obj, StreetNames streetNames, StreetName street, String name,
-            String name_ru, String name_be) throws Exception {
-        String trans = c.po.get(street.name);
-        if ("".equals(trans)) {
-            trans = null;
+    void postProcessError(City c, IOsmObject obj, String error) {
+        if (error == null) {
+            error = "<null>";
         }
-        if (trans == null) {
-            throw new Exception("Не перакладзена '" + street.name + "'");
-        }
-        // выдаляем лацінскія нумары
-        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "")
-                .replaceAll("\\-[XVI]+$", "").replaceAll(" [XVI]+ ", " ");
-        if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
-            throw new Exception("Невядомыя літары ў '" + trans + "'");
-        }
+     cityResult.pamylkiVulic.addError(error, obj);
+    }
 
-        if (street.term == null) {
-            street.term = StreetTerm.вуліца;
+    @Override
+    void postProcess(City c, IOsmObject obj, StreetName orig) throws Exception {
+        String trans = c.po.get(orig.name);
+        checkName(orig.name, trans);
+
+        if (orig.term == null) {
+            orig.term = StreetTerm.вуліца;
         }
 
         int pm = trans.indexOf('/');
         if (pm < 0) {
-            throw new Exception("Не пазначана часьціна мовы: " + street.name + " => " + trans);
+            throw new Exception("Не пазначана часьціна мовы: " + orig.name + " => " + trans);
         }
         String mode = trans.substring(0, pm);
         trans = trans.substring(pm + 1);
 
         if (!trans.equals(trans.trim().replaceAll("\\s{2,}", " "))) {
-            throw new Exception("Няправільныя прагалы ў перакладзе: " + street.name + " => " + trans);
+            throw new Exception("Няправільныя прагалы ў перакладзе: " + orig.name + " => " + trans);
         }
 
         StreetNameBe be = new StreetNameBe();
-        be.term = street.term;
-        be.index = street.index;
+        be.term = orig.term;
+        be.index = orig.index;
         be.name = trans;
         switch (mode) {
         case "н": // назоўнік
-            street.prym = false;
+            orig.prym = false;
             be.prym = false;
             break;
         case "пж": // прыметнік жаночага роду
-            street.prym = true;
+            orig.prym = true;
             be.prym = true;
-            if (street.term.getRodRu() != StreetTermRod.ZAN | be.term.getRodBe() != StreetTermRod.ZAN) {
-                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
+            if (orig.term.getRodRu() != StreetTermRod.ZAN | be.term.getRodBe() != StreetTermRod.ZAN) {
+                throw new Exception("Не супадае род: " + orig + " => " + be);
             }
             break;
         case "пм": // прыметнік мужчынскага роду
-            street.prym = true;
+            orig.prym = true;
             be.prym = true;
-            if (street.term.getRodRu() != StreetTermRod.MUZ | be.term.getRodBe() != StreetTermRod.MUZ) {
-                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
+            if (orig.term.getRodRu() != StreetTermRod.MUZ | be.term.getRodBe() != StreetTermRod.MUZ) {
+                throw new Exception("Не супадае род: " + orig + " => " + be);
             }
             break;
         case "пн":
-            street.prym = true;
+            orig.prym = true;
             be.prym = true;
-            if (street.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.NI) {
-                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
+            if (orig.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.NI) {
+                throw new Exception("Не супадае род: " + orig + " => " + be);
             }
             break;
         case "пнж":
-            street.prym = true;
+            orig.prym = true;
             be.prym = true;
-            if (street.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.ZAN) {
-                throw new Exception("Не супадае род: " + streetNames.exist.name + " => " + be);
+            if (orig.term.getRodRu() != StreetTermRod.NI | be.term.getRodBe() != StreetTermRod.ZAN) {
+                throw new Exception("Не супадае род: " + orig + " => " + be);
             }
             break;
         case "0":
-            street.term = StreetTerm.няма;
+            orig.term = StreetTerm.няма;
             be.term = StreetTerm.няма;
             break;
         default:
-            throw new Exception("Невядомы прэфікс у перакладзе: " + c.po.get(street.name));
+            throw new Exception("Невядомы прэфікс у перакладзе: " + c.po.get(orig.name));
         }
 
-        streetNames.required.name = streetNames.tags.name == null ? null : street.getRightName();
-        streetNames.required.name_ru = streetNames.tags.name_ru == null ? null : streetNames.required.name;
-        streetNames.required.name_be = streetNames.tags.name_be == null ? null : be.getRightName();
-        streetNames.required.int_name = streetNames.tags.int_name == null ? null : Lat.lat(be.getRightName(),
-                false);
+        ResultTableRow row = (cityResult.vulicy).new ResultTableRow(obj.getObjectCode(), "");
+        if ("skip".equals(Env.readProperty("nazvy_vulic.name"))) {
+            row.setAttr("name", null, null);
+        } else {
+            row.setAttr("name", obj.getTag("name", storage), orig.getRightName());
+        }
+        if ("skip".equals(Env.readProperty("nazvy_vulic.name_ru"))) {
+            row.setAttr("name:ru", null, null);
+        } else {
+            row.setAttr("name:ru", obj.getTag("name:ru", storage), orig.getRightName());
+        }
+        if ("skip".equals(Env.readProperty("nazvy_vulic.name_be"))) {
+            row.setAttr("name:be", null, null);
+        } else {
+            row.setAttr("name:be", obj.getTag("name:be", storage), be.getRightName());
+        }
+        if ("skip".equals(Env.readProperty("nazvy_vulic.int_name"))) {
+            row.setAttr("int_name", null, null);
+        } else {
+            row.setAttr("int_name", obj.getTag("int_name", storage), Lat.lat(be.getRightName(), false));
+        }
+        if ("skip".equals(Env.readProperty("nazvy_vulic.name_en"))) {
+            row.setAttr("name:en", null, null);
+        } else {
+            row.setAttr("name:en", obj.getTag("name:en", storage), null);
+        }
+        if ("skip".equals(Env.readProperty("nazvy_vulic.name_by"))) {
+            row.setAttr("name:by", null, null);
+        } else {
+            row.setAttr("name:by", obj.getTag("name:by", storage), null);
+        }
 
-        switch (Env.readProperty("nazvy_vulic.name")) {
-        case "skip":
-            streetNames.required.name = null;
-            streetNames.exist.name = null;
-            break;
-        case "change":
-            if (StringUtils.isEmpty(streetNames.exist.name)) {
-                streetNames.required.name = null;
-                streetNames.exist.name = null;
-            }
-            break;
-        }
-        switch (Env.readProperty("nazvy_vulic.name_ru")) {
-        case "skip":
-            streetNames.required.name_ru = null;
-            streetNames.exist.name_ru = null;
-            break;
-        case "change":
-            if (StringUtils.isEmpty(streetNames.exist.name_ru)) {
-                streetNames.required.name_ru = null;
-                streetNames.exist.name_ru = null;
-            }
-            break;
-        }
-        switch (Env.readProperty("nazvy_vulic.name_be")) {
-        case "skip":
-            streetNames.required.name_be = null;
-            streetNames.exist.name_be = null;
-            break;
-        case "change":
-            if (StringUtils.isEmpty(streetNames.exist.name_be)) {
-                streetNames.required.name_be = null;
-                streetNames.exist.name_be = null;
-            }
-            break;
-        }
-        switch (Env.readProperty("nazvy_vulic.int_name")) {
-        case "skip":
-            streetNames.required.int_name = null;
-            streetNames.exist.int_name = null;
-            break;
-        case "change":
-            if (StringUtils.isEmpty(streetNames.exist.int_name)) {
-                streetNames.required.int_name = null;
-                streetNames.exist.int_name = null;
-            }
-            break;
+        if (row.needChange()) {
+            cityResult.vulicy.rows.add(row);
         }
     }
 
-    static <K, V> void addWithCreate(Map<K, List<V>> map, K key, V value) {
-        List<V> list = map.get(key);
-        if (list == null) {
-            list = new ArrayList<>();
-            map.put(key, list);
+    static void checkName(String orig, String trans) throws Exception {
+        if ("".equals(trans)) {
+            trans = null;
         }
-        list.add(value);
+        if (trans == null) {
+            throw new Exception("Не перакладзена '" + orig + "'");
+        }
+        // выдаляем лацінскія нумары
+        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "")
+                .replaceAll("\\-[XVI]+$", "").replaceAll(" [XVI]+ ", " ");
+        // і праектуемыя вуліцы
+        test = test.replaceAll("№[0-9]+", "");
+        if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
+            throw new Exception("Невядомыя літары ў '" + trans + "'");
+        }
     }
 
     static <T> List<Group<T>> groupBy(List<T> data, Group.Keyer<T> keyer, Group.Creator<T> creator) {
@@ -315,85 +226,59 @@ public class CheckStreets3 extends StreetsParse3 {
         }
         return new ArrayList<>(groups.values());
     }
+    
 
-    public static class Result {
-        public int getErrCount() {
-            return vulicy.size() + pamylkiVulic.size() + damy.size();
+    @Override
+    public void processHouses(City c) throws Exception {
+            System.out.println("Check houses in " + c.nazva);
+            storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
+    }
+
+    public void processHouse(City c, IOsmObject s) {
+        
+        String streetNameOnHouse = s.getTag(addrStreetTag);
+        if (streetNameOnHouse == null) {
+            // няма тэга addr:street
+            cityResult.pamylkiDamou.addError("Няма тэга addr:street для дому", s);
+            return;
         }
-
-        public int getHouseErrCount() {
-            return pamylkiDamou.size();
+        boolean streetFound = false;
+        String prev_name_be = null;
+        for (IOsmObject r : c.streets) {
+            if (!streetNameOnHouse.equals(r.getTag(nameTag))) {
+                continue;
+            }
+            streetFound = true;
+            String name_be = r.getTag(namebeTag);
+            if (prev_name_be != null && !prev_name_be.equals(name_be)) {
+                // і беларуская назва не супадае
+                cityResult.pamylkiDamou.addError("Беларускія назвы вуліц побач не супадаюць для дому з addr:street="
+                        + streetNameOnHouse, s);
+            }
+            prev_name_be = name_be;
         }
+        if (!streetFound) {
+            // няма вуліцы для гэтага дому
+            cityResult.pamylkiDamou.addError("Няма вуліцы '" + streetNameOnHouse + "' для дому", s);
+            return;
+        }
+        checkHouseTags(c,s);
+    }
 
-        public List<StreetNames> vulicy = new ArrayList<>();
-
-        public Map<String, List<StreetNames>> pamylkiVulic = new TreeMap<>();
-
-        public List<HouseError> pamylkiDamou = new ArrayList<>();
-        public List<Group<HouseError>> pamylkiDamouG = new ArrayList<>();
-
-        public Map<StreetNames, List<StreetNames>> damy = new TreeMap<>(new Comparator<StreetNames>() {
-            public int compare(StreetNames o1, StreetNames o2) {
-                int c = 0;
-                if (c == 0) {
-                    c = cmp(o1.exist.name, o2.exist.name);
-                }
-                if (c == 0) {
-                    c = cmp(o1.required.name, o2.required.name);
-                }
-                if (c == 0) {
-                    c = cmp(o1.exist.name_be, o2.exist.name_be);
-                }
-                if (c == 0) {
-                    c = cmp(o1.required.name_be, o2.required.name_be);
-                }
-                if (c == 0) {
-                    c = cmp(o1.exist.name_ru, o2.exist.name_ru);
-                }
-                if (c == 0) {
-                    c = cmp(o1.required.name_ru, o2.required.name_ru);
-                }
-                if (c == 0) {
-                    c = cmp(o1.exist.int_name, o2.exist.int_name);
-                }
-                if (c == 0) {
-                    c = cmp(o1.required.int_name, o2.required.int_name);
-                }
-                return c;
+    void checkHouseTags(City c, IOsmObject s) {
+        String num = s.getTag(houseNumberTag);
+        if (num != null) {
+            if (!RE_HOUSENUMBER.matcher(num).matches()) {
+                cityResult.pamylkiDamou.addError("Няправільны нумар дому: " + num, s);
             }
-
-            int cmp(String s1, String s2) {
-                if (s1 == null)
-                    s1 = "";
-                if (s2 == null)
-                    s2 = "";
-                return s1.compareTo(s2);
-            }
-        });
-
-        public String mergeCodes(List<StreetNames> list) {
-            StringBuilder o = new StringBuilder();
-            for (StreetNames n : list) {
-                o.append(',');
-                o.append(n.objCode);
-            }
-            return o.substring(1);
         }
     }
 
-    public static class HouseGroup extends Group<HouseError> {
-        public double xmin, xmax, ymin, ymax;
+    public static class Result {
+        public ResultTable vulicy = new ResultTable("name", "name:ru", "name:be", "name:en", "int_name","name:en","name:by");
 
-        public HouseGroup(String key) {
-            super(key);
-        }
-
-        public String getCommaObjectIds() {
-            StringBuilder o = new StringBuilder(200);
-            for (HouseError h : objects) {
-                o.append(",").append(h.object.getObjectCode());
-            }
-            return o.substring(1);
-        }
+        public Errors pamylkiVulic = new Errors();
+        
+        public Errors pamylkiDamou = new Errors();
     }
 }

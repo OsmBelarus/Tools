@@ -74,6 +74,11 @@ public class POWriter {
             wr.write("# Objects : " + i.objects + "\n");
             wr.write("# name:be: " + i.translations + "\n");
             wr.write("msgid \"" + u + "\"\n");
+            if (i.translations.size() == 1) {
+                wr.write("msgstr \"" + i.translations.iterator().next() + "\"");
+            } else {
+                wr.write("msgstr \"\"");
+            }
             String t = "";
             wr.write("\n");
         }

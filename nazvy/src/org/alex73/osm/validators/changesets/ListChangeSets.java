@@ -69,8 +69,6 @@ public class ListChangeSets {
     public static void main(String[] args) throws Exception {
         CONTEXT = JAXBContext.newInstance(OsmChange.class, Osm.class);
 
-        Env.load();
-
         String out = Env.readProperty("out.dir") + "/changes.xml";
 
         OsmChange change = (OsmChange) CONTEXT.createUnmarshaller().unmarshal(

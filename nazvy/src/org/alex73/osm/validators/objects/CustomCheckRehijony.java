@@ -28,8 +28,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.TSV;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.geometry.Area;
@@ -62,8 +63,8 @@ public class CustomCheckRehijony implements ICustomCheck {
         nameTag = osm.getTagsPack().getTagCode("name:be");
         BelarusGeometry = osm.getGeometry();
         try {
-            List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
-                    "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+            List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
+                    PadzielOsmNas.class);
             rehijony = new HashSet<>();
             processed = new HashSet<>();
             voblasci = new HashMap<>();

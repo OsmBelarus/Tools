@@ -59,6 +59,8 @@ public class VelocityOutput {
         XMLGregorianCalendar xmlc = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
         context.put("currentDateTimeXML", xmlc.toXMLFormat());
 
+        context.put("OSM", OSM.class);
+
         Properties props = new Properties();
         InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
         try {

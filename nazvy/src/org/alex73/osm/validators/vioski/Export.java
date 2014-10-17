@@ -30,7 +30,7 @@ import java.util.TreeMap;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.TSV;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmNode;
 import org.apache.commons.io.FileUtils;
@@ -48,15 +48,13 @@ public class Export {
     static Map<String, List<Mosm>> map = new TreeMap<>();
 
     public static void main(String[] args) throws Exception {
-        Env.load();
-
-        List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
-                "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
+                PadzielOsmNas.class);
 
         osm = new Belarus();
 
-        String dav = Env.readProperty("dav");
-        List<Miesta> daviednik = new TSV('\t').readCSV(dav, Miesta.class);
+        String dav = Env.readProperty("dav") + "/Nazvy_nasielenych_punktau.csv";
+        List<Miesta> daviednik = new CSV('\t').readCSV(dav, Miesta.class);
 
         Map<String, List<Mdav>> rajony = new TreeMap<>();
         for (Miesta m : daviednik) {

@@ -35,8 +35,9 @@ import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.TSV;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 
@@ -76,15 +77,14 @@ public class CheckCities3 {
     static Map<String, Set<String>> usedInDav = new HashMap<>();
     static Map<String, IOsmObject> dbPlaces;
     static Map<String, String> adminLevelsBelToRus;
+    static String davDirectory;
 
     public static void main(String[] args) throws Exception {
-        Env.load();
-
         String out = Env.readProperty("out.dir") + "/nazvy.html";
-        String dav = Env.readProperty("dav");
+        davDirectory = Env.readProperty("dav");
 
-        System.out.println("Parsing csv from " + dav);
-        daviednik = new TSV('\t').readCSV(dav, Miesta.class);
+        System.out.println("Parsing csv from " + davDirectory);
+        daviednik = new CSV('\t').readCSV(davDirectory+"/Nazvy_nasielenych_punktau.csv", Miesta.class);
 
         loadData();
 
@@ -227,8 +227,8 @@ public class CheckCities3 {
         short addrRegionTag = storage.getTagsPack().getTagCode("addr:region");
         short isoTag = storage.getTagsPack().getTagCode("iso3166-2");
 
-        List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
-                "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(davDirectory + "/Rehijony.csv",
+                PadzielOsmNas.class);
         Map<String, String> codes = new HashMap<>();
         Map<String, String> voblasciBelToRus = new HashMap<>();
         for (PadzielOsmNas p : padziel) {
@@ -258,8 +258,7 @@ public class CheckCities3 {
             w.setAttr("int_name", o.getTag(intNameTag), Lat.lat(name, false));
             w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
             w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
-            w.setAttr("iso3166-2", o.getTag(isoTag),
-                    p.iso_3166_2 != null ? p.iso_3166_2 : codes.get(p.voblasc));
+            w.setAttr("iso3166-2", o.getTag(isoTag), p.iso_3166_2);
             if (w.needChange()) {
                 result.incorrectTagsRehijony.rows.add(w);
             }

@@ -1,77 +1,13 @@
-<!DOCTYPE html>
-<html lang="be">
-<head>
-    <meta charset="UTF-8">
-    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-	<style type="text/css">
-		body {
-		    font-family: sans-serif;
-		    font-size: 80%;
-		}
-		table {
-		    border-collapse: collapse;
-		}
-		td, th {
-		    border: 1px solid black;
-		}
-		.err {
-			background-color: #FF9090;
-		}
-	</style>
-</head>
-<body>
-<script language="javascript">
-    function send(cmd) {
-#set ( $d = "$")
-        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
-        return false;
-    }
-</script>
+#set ( $title = "Дамы горада : ${horad}" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/>
 <h1>${horad}</h1>
 <br/>
-Памылак : ${data.houseErrCount}
-<br/>
-RadioButton - выправіць ў JOSM.
-<br/>
 
-#macro ( cell $code $tag $exist $required)
-  #if ($exist)
-    #set ($e = $exist)
-  #else
-    #set ($e = "")
-  #end
-  #if ($required)
-    #set ($r = $required)
-  #else
-    #set ($r = "")
-  #end
-    #if ($e != $r)
-      <td class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></td>
-    #else
-      <td>$!exist</td>
-    #end
-#end
+<h2>Памылкі дамоў (${data.pamylkiDamou.objectsCount})</h2>
 
-<h2>Памылкі</h2>
-    <table>
-      <tr>
-        <td>Памылка</td>
-        <td>osm</td>
-      </tr>
-    #foreach ( $s in $data.pamylkiDamouG )
-      <tr>
-        <td class="err">ERROR: $s.key</td>
-        <td>
-          #foreach ($n in $s.objects)
-            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)}
-          #end
-          <a href="#" onClick='send("load_and_zoom?left=${s.xmin}&right=${s.xmax}&top=${s.ymax}&bottom=${s.ymin}&select=${s.commaObjectIds}")'>выправіць</a>
-        </td>
-      </tr>
-    #end
-    </table>
+#set ( $errors = $data.pamylkiDamou )
+#parse ("org/alex73/osm/validators/common/errors.velocity")
 
 </body>
 </html>

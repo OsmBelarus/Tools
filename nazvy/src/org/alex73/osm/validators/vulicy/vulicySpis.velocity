@@ -1,44 +1,20 @@
-<!DOCTYPE html>
-<html lang="be">
-<head>
-    <meta charset="UTF-8">
-    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-	<style type="text/css">
-		body {
-		    font-family: sans-serif;
-		    font-size: 80%;
-		}
-		table {
-		    border-collapse: collapse;
-		}
-		td, th {
-		    border: 1px solid black;
-		}
-		.err {
-			background-color: #FF8080;
-		}
-	</style>
-</head>
-<body>
+#set ( $title = "Вуліцы горада : сьпіс гарадоў" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
+
+#parse ("org/alex73/osm/validators/common/errors.velocity")
+
 
 <ul>
-	#foreach ( $e in $errors )
-	    <li>${e}</li>
-	#end 
-</ul>
-
-<ul>
-	#foreach ( $c in $harady )
+	#foreach ( $c in $cities )
 	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - 
-		  #if (${data.get($c).errCount} > 0)
-		    <span class="err">памылак : ${data.get($c).errCount}</span>,
+		  #if (${streetErrorsCount.get($c)} > 0)
+		    <span class="err">памылак : ${streetErrorsCount.get($c)}</span>,
 		  #else
 		    няма памылак,
 		  #end
-		  #if (${data.get($c).houseErrCount} > 0)
-		    <span class="err"><a href="damy-${c.fn}.html">памылак дамоў: ${data.get($c).houseErrCount}</a></span>
+		  #if (${houseErrorsCount.get($c)} > 0)
+		    <span class="err"><a href="damy-${c.fn}.html">памылак дамоў: ${houseErrorsCount.get($c)}</a></span>
 		  #else
 		    няма памылак дамоў
 		  #end

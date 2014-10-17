@@ -1,55 +1,14 @@
-<!DOCTYPE html>
-<html lang="be">
-<head>
-    <meta charset="UTF-8">
-    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <style type="text/css">
-        body {
-            font-family: sans-serif;
-            font-size: 80%;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        td, th {
-            border: 1px solid black;
-        }
-        .err {
-            background-color: #FF8080;
-        }
-    </style>
-</head>
-<body>
-#set ( $d = "$")
-<script language="javascript">
-    function send(cmd) {
-        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
-        return false;
-    }
-    function sendAll() {
-      ${d}.ajaxSetup({async: false});
-      ${d}('input:checkbox:checked').map(function() {
-        var cb = this;
-        ${d}.ajax("http://127.0.0.1:8111/"+cb.value)
-            .done(function( data ) {
-                cb.checked = false;
-            });
-      });
-    }
-</script>
+#set ( $title = "Пераклад" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
 
-<div style="position: fixed; right: 50px; top: 15px; color:red; background-color: white; border-style: solid; border-color: red">
-<b>Карыстайцеся JOSM 7521 ці пазьнейшым, бо стары JOSM псуе тэгі аб'ектаў !!!<br/>
-І абавязкова спачатку дашліце 1 аб'ект і пазначце "Accept All Tags",  <br/>
-бо калі дасылаеце больш за 1 аб'ект і паказваецца дыялог у JOSM,<br/>
-ён псуе тэгі.
-</b>
-<button onClick="javascript: sendAll();">Даслаць у JOSM</button>
-</div>
+Калі жадаеце дапамагчы з перакладам,
+пішыце на <a href="http://forum.openstreetmap.org/viewforum.php?id=35">форум</a> ці <a href="mailto:alex73mail@gmail.com">пошту</a>.
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
+<h1 id="p1">Памылкі:</h1>
+#parse ("org/alex73/osm/validators/common/errors.velocity")
 
-#parse ("org/alex73/osm/validators/harady/result_table.velocity")
+<h1 id="p1">Тэгі:</h1>
+#parse ("org/alex73/osm/validators/common/result_table.velocity")
 
 </body>
 </html>

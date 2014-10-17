@@ -37,10 +37,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 /**
  * Чытае і запісвае tab-separated файл.
  */
-public class TSV {
+public class CSV {
     char SEPARATOR;
 
-    public TSV(char separator) {
+    public CSV(char separator) {
         this.SEPARATOR = separator;
     }
 
@@ -101,12 +101,22 @@ public class TSV {
                     if (fs[i].isEmpty()) {
                         fs[i] = null;
                     }
-                    if (fs[i] != null && fields[i].getType().isAssignableFrom(long.class)) {
-                        fields[i].setLong(obj, Long.parseLong(fs[i]));
-                    } else if (fs[i] != null && fields[i].getType().isAssignableFrom(Long.class)) {
+                    if (fs[i] == null) {
+                        fields[i].set(obj, null);
+                    } else if (fields[i].getType().isAssignableFrom(long.class)
+                            || fields[i].getType().isAssignableFrom(Long.class)) {
                         fields[i].set(obj, Long.parseLong(fs[i]));
-                    } else {
+                    } else if (fields[i].getType().isAssignableFrom(int.class)
+                            || fields[i].getType().isAssignableFrom(Integer.class)) {
+                        fields[i].set(obj, Integer.parseInt(fs[i]));
+                    } else if (fields[i].getType().isAssignableFrom(double.class)
+                            || fields[i].getType().isAssignableFrom(Double.class)) {
+                        fields[i].set(obj, Double.parseDouble(fs[i]));
+                    } else if (fields[i].getType().isAssignableFrom(String.class)) {
                         fields[i].set(obj, fs[i]);
+                    } else {
+                        throw new Exception("Impossible to read CSV into field with type "
+                                + fields[i].getType());
                     }
                 }
                 result.add(obj);

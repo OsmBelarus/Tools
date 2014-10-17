@@ -19,7 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-package org.alex73.osm.validators.harady;
+package org.alex73.osm.validators.common;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -49,6 +49,10 @@ public class ResultTable {
     public ResultTable(List<String> attributes) {
         this.attributes = Collections.unmodifiableList(attributes);
         rows = new ArrayList<>();
+    }
+
+    public int getObjectsCount() {
+        return rows.size();
     }
 
     public void sort() {

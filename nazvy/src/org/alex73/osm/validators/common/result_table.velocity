@@ -1,0 +1,56 @@
+#if ( $tableIndex )
+  #set ( $tableIndex = $tableIndex + 1 )
+#else
+  #set ( $tableIndex = 1 )
+#end
+
+<table class="table$tableIndex">
+	<tr>
+	  <td>Назва</td>
+#set ( $columnIndex = 1 )
+#foreach ($a in $table.attributes)
+	  <td>
+	    $a
+	    <a href="javascript:void(0)" onclick="getAll('table$tableIndex','column$columnIndex').prop('checked',true)">+</a>
+	    <a href="javascript:void(0)" onclick="getAll('table$tableIndex','column$columnIndex').prop('checked',false)">-</a>
+	  </td>
+#set ( $columnIndex = $columnIndex + 1 )
+#end
+	</tr>
+#set ( $rowIndex = 1 )
+    #foreach ( $r in $table.rows )
+    <tr class='row$rowIndex'>
+      <td>
+        ${OSM.histIcon($r.id)} ${OSM.josmIcon($r.id)} ${r.name} 
+        <a href="javascript:void(0)" onclick="getAll('table$tableIndex','row$rowIndex').prop('checked',true)">+</a>
+        <a href="javascript:void(0)" onclick="getAll('table$tableIndex','row$rowIndex').prop('checked',false)">-</a>
+      </td>
+#set ( $columnIndex = 1 )
+#foreach ($v in $r.tags)
+  #if ( $v )
+    #if ( $v.oldValue )
+      #set ( $vo = $v.oldValue )
+    #else
+      #set ( $vo = "" )
+    #end
+    #if ( $v.newValue )
+      #set ( $vn = $v.newValue )
+    #else
+      #set ( $vn = "" )
+    #end
+    #if ( $vo == $vn )
+      <td class='column$columnIndex'>$vo</td>
+    #else
+	  <td class='err column$columnIndex'>$vo => $vn
+	    <input type='checkbox' value="load_object?objects=${r.id}&addtags=${v.attrName}=${vn}">
+	  </td>
+	#end
+  #else
+      <td></td>
+  #end
+#set ( $columnIndex = $columnIndex + 1 )
+#end
+    </tr>
+#set ( $rowIndex = $rowIndex + 1 )
+    #end
+</table>

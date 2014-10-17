@@ -1,121 +1,16 @@
-<!DOCTYPE html>
-<html lang="be">
-<head>
-    <meta charset="UTF-8">
-    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-	<style type="text/css">
-		body {
-		    font-family: sans-serif;
-		    font-size: 80%;
-		}
-		table {
-		    border-collapse: collapse;
-		}
-		td, th {
-		    border: 1px solid black;
-		}
-		.err {
-			background-color: #FF9090;
-		}
-	</style>
-</head>
-<body>
-<script language="javascript">
-    function send(cmd) {
-#set ( $d = "$")
-        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
-        return false;
-    }
-</script>
+#set ( $title = "Вуліцы горада : ${horad}" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/>
 <h1>${horad}</h1>
 <br/>
-Памылак : ${data.errCount}
-<br/>
-RadioButton - выправіць ў JOSM.
-<br/>
 
-#macro ( cell $code $tag $exist $required)
-  #if ($exist)
-    #set ($e = $exist)
-  #else
-    #set ($e = "")
-  #end
-  #if ($required)
-    #set ($r = $required)
-  #else
-    #set ($r = "")
-  #end
-    #if ($e != $r)
-      <td class="err">$!exist => $!required <input type='radio' onClick='send("load_object?objects=${code}&addtags=${tag}=${required}")'></td>
-    #else
-      <td>$!exist</td>
-    #end
-#end
+<h2>Агульныя памылкі (${data.pamylkiVulic.objectsCount})</h2>
+#set ( $errors = $data.pamylkiVulic )
+#parse ("org/alex73/osm/validators/common/errors.velocity")
 
-<h2>Агульныя памылкі</h2>
-    <table>
-      <tr>
-        <td>Памылка</td>
-        <td>osm</td>
-      </tr>
-    #foreach ( $s in $data.pamylkiVulic.entrySet() )
-      <tr>
-        <td class="err">ERROR: $s.key</td>
-        <td>
-          #foreach ($n in $s.value)
-            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)} &nbsp;&nbsp;
-          #end
-        </td>
-      </tr>
-    #end
-    </table>
-
-<h2>Памылкі вуліц</h2>
-    <table>
-      <tr>
-        <td>osm</td>
-        <td>name</td>
-        <td>name:ru</td>
-        <td>name:be</td>
-        <td>int_name</td>
-      </tr>
-    #foreach ( $s in $data.vulicy )
-      <tr>
-        <td>${OSM.histIcon($s.objCode)} ${OSM.josmIcon($s.objCode)}</td>
-        #cell ($s.objCode $s.tags.name, $s.exist.name, $s.required.name)
-        #cell ($s.objCode $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
-        #cell ($s.objCode $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
-        #cell ($s.objCode $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
-      </tr>
-    #end
-    </table>
-
-<!--h2>Памылкі дамоў</h2>
-    <table>
-      <tr>
-        <td>name</td>
-        <td>name:ru</td>
-        <td>name:be</td>
-        <td>int_name</td>
-        <td>osm</td>
-      </tr>
-    #foreach ( $entry in $data.damy.entrySet() )
-      <tr>
-        #set ($s = $entry.key)
-        #cell ($data.mergeCodes($entry.value) $s.tags.name, $s.exist.name, $s.required.name)
-        #cell ($data.mergeCodes($entry.value) $s.tags.name_ru, $s.exist.name_ru, $s.required.name_ru)
-        #cell ($data.mergeCodes($entry.value) $s.tags.name_be, $s.exist.name_be, $s.required.name_be)
-        #cell ($data.mergeCodes($entry.value) $s.tags.int_name, $s.exist.int_name, $s.required.int_name)
-        <td>
-          #foreach ($n in $entry.value)
-            ${OSM.histIcon($n.objCode)} ${OSM.josmIcon($n.objCode)}
-          #end
-        </td>
-      </tr>
-    #end
-    </table-->
+<h2>Памылкі вуліц (${data.vulicy.objectsCount})</h2>
+#set ( $table = $data.vulicy )
+#parse ("org/alex73/osm/validators/common/result_table.velocity")
 
 </body>
 </html>

@@ -33,9 +33,10 @@ import java.util.Locale;
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.TSV;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
 
@@ -78,8 +79,8 @@ public class ExportObjects {
     }
 
     static void loadRehijony() throws Exception {
-        List<PadzielOsmNas> padziel = new TSV('\t').readCSV(
-                "../../OsmBelarus-Databases/Nazvy_nasielenych_punktau/rehijony.csv", PadzielOsmNas.class);
+        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
+                PadzielOsmNas.class);
         for (PadzielOsmNas p : padziel) {
             String path = "/";
             if (p.voblasc != null) {

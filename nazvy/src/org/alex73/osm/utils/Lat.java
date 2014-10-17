@@ -31,6 +31,9 @@ public class Lat {
      *            ://be-x-old.wikipedia.org/wiki/Інструкцыя_па_трансьлітарацыі)
      */
     public static String lat(String text, boolean latTrad) {
+        if (text == null) {
+            return null;
+        }
         String out = "";
         Map<Character, String> simple = new HashMap<>();
         simple.put('а', "a");

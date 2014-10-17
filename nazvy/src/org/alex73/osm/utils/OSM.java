@@ -51,16 +51,19 @@ public class OSM {
     }
 
     public static String josmIcon(String code) {
-        return "<a href='#' onclick='javascript: send(\"load_object?objects=" + code + "\")'>" + ICON_JOSM
+        return "<a href='javascript:void(0)' onclick='javascript:send(\"load_object?objects=" + code + "\")'>" + ICON_JOSM
                 + "</a>";
     }
 
     public static String josmIcon(Set<String> codes) {
+        if (codes.isEmpty()) {
+            return "";
+        }
         StringBuilder c = new StringBuilder();
         for (String code : codes) {
             c.append(',').append(code);
         }
-        return "<a href='#' onclick='javascript: send(\"load_object?objects=" + c.substring(1) + "\")'>"
+        return "<a href='javascript:void(0)' onclick='javascript:send(\"load_object?objects=" + c.substring(1) + "\")'>"
                 + ICON_JOSM + "</a>";
     }
 
