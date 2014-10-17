@@ -103,6 +103,7 @@ public class StreetsParse3 {
         for (Miesta m : daviednik) {
             switch (m.typ) {
             case "г.":
+            case "г. п.":
                 if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
                     FastArea border = null;
                     for (String id : m.osmIDother.split(";")) {
@@ -235,7 +236,9 @@ public class StreetsParse3 {
             try {
                 StreetNameBe be = new StreetNameBe();
                 be.parseAny(name_be);
-                li.name_be.add(be.name);
+                if (be.name != null) {
+                    li.name_be.add(be.name);
+                }
             } catch (ParseException ex) {
             }
         }
