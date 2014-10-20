@@ -1,8 +1,8 @@
+
 package gen.alex73.osm.monitor;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -10,12 +10,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+
 /**
- * <p>
- * Java class for anonymous complex type.
+ * <p>Java class for anonymous complex type.
  * 
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -34,7 +33,9 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = { "group" })
+@XmlType(name = "", propOrder = {
+    "group"
+})
 @XmlRootElement(name = "monitor")
 public class Monitor {
 
@@ -49,20 +50,21 @@ public class Monitor {
      * Gets the value of the group property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the group property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the group property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getGroup().add(newItem);
+     *    getGroup().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link Group }
+     * Objects of the following type(s) are allowed in the list
+     * {@link Group }
      * 
      * 
      */
@@ -76,8 +78,10 @@ public class Monitor {
     /**
      * Gets the value of the output property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getOutput() {
         return output;
@@ -87,8 +91,9 @@ public class Monitor {
      * Sets the value of the output property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setOutput(String value) {
         this.output = value;
@@ -97,8 +102,10 @@ public class Monitor {
     /**
      * Gets the value of the sort property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getSort() {
         return sort;
@@ -108,8 +115,9 @@ public class Monitor {
      * Sets the value of the sort property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setSort(String value) {
         this.sort = value;

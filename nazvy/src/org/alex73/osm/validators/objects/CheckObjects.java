@@ -73,6 +73,9 @@ public class CheckObjects {
         for (CheckType ct : knownTypes) {
             ct.finish();
         }
+        for (CheckTrap ct : traps) {
+            ct.finish();
+        }
 
         File[] oldFiles = new File(out).getParentFile().listFiles();
         if (oldFiles != null) {

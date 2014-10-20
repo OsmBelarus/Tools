@@ -1,31 +1,9 @@
-<!DOCTYPE html>
-<html lang="be">
-<head>
-    <meta charset="UTF-8">
-    <script type = "text/javascript" src = "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <style type="text/css">
-        body {
-            font-family: sans-serif;
-            font-size: 80%;
-        }
-    </style>
-</head>
-<body>
-#set ( $d = "$")
-<script language="javascript">
-    function send(cmd) {
-        ${d}.ajax("http://127.0.0.1:8111/"+cmd);
-        return false;
-    }
-</script>
+#set ( $title = "Агульныя памылкі" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
 
-<b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
-
-Гэта тэставы валідатар аб'ектаў OSM. Ён таксама можа памыляцца.
-Калі вы бачыце што валідатар паказвае памылку там дзе яе няма - 
-пішыце на <a href="http://forum.openstreetmap.org/viewforum.php?id=35">форум</a> ці <a href="mailto:alex73mail@gmail.com">пошту</a>.
-
+Правілы вызначэньня памылак - на https://github.com/OsmBelarus/Tools/blob/master/nazvy/object-types.xml
 <br/><br/>
+
 #if ( $users )
 <b>Магчымыя памылкі :</b>
 #else

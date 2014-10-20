@@ -79,8 +79,7 @@ public class POWriter {
             } else {
                 wr.write("msgstr \"\"");
             }
-            String t = "";
-            wr.write("\n");
+            wr.write("\n\n");
         }
         wr.close();
     }

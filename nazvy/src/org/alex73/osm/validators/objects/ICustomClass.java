@@ -21,7 +21,7 @@
 
 package org.alex73.osm.validators.objects;
 
-public interface ICustomCheck {
+public interface ICustomClass {
     void init() throws Exception;
 
     void finish() throws Exception;

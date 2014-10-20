@@ -23,7 +23,6 @@ package org.alex73.osm.validators.objects;
 
 import gen.alex73.osm.validators.objects.Type;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,10 +45,9 @@ public class CheckType extends BaseCheck {
     private boolean requiredNode, requiredWay, requiredRelation;
     private TagCodeValues requiredTags, possibleTags;
     private Set<String> additions;
-    private ICustomCheck customCheck;
 
     public CheckType(MemoryStorage osm, Type type) throws Exception {
-        super(osm, type.getFilter());
+        super(osm, type);
         this.type = type;
 
         if (type.getRequired() == null || type.getRequired().getOsmTypes() == null) {
@@ -82,17 +80,6 @@ public class CheckType extends BaseCheck {
         } else {
             additions = Collections.emptySet();
         }
-
-        if (type.getCustomClass() != null) {
-            customCheck = (ICustomCheck) Class.forName(type.getCustomClass()).newInstance();
-            customCheck.init();
-        }
-    }
-
-    public void finish() throws Exception {
-        if (customCheck != null) {
-            customCheck.finish();
-        }
     }
 
     public String getId() {
@@ -107,20 +94,6 @@ public class CheckType extends BaseCheck {
         return additions;
     }
 
-    @Override
-    public boolean matches(IOsmObject obj) {
-        if (!super.matches(obj)) {
-            return false;
-        }
-
-        if (filter != null && filter.getCustomMethod() != null) {
-            boolean r = (boolean) callCustom(filter.getCustomMethod(), obj);
-            if (!r) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     public void getErrors(IOsmObject obj) {
         switch (obj.getType()) {
@@ -167,15 +140,6 @@ public class CheckType extends BaseCheck {
 
         if (type.getRequired() != null && type.getRequired().getCustomMethod() != null) {
             callCustom(type.getRequired().getCustomMethod(), obj);
-        }
-    }
-
-    protected Object callCustom(String method, IOsmObject obj) {
-        try {
-            Method m = customCheck.getClass().getMethod(method, IOsmObject.class);
-            return m.invoke(customCheck, obj);
-        } catch (Exception ex) {
-            throw new RuntimeException("Error in custom method: " + method + ": " + ex.getMessage(), ex);
         }
     }
 

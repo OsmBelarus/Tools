@@ -27,7 +27,7 @@ import org.alex73.osmemory.geometry.Area;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-public class CustomCheckHouse implements ICustomCheck {
+public class CustomCheckHouse implements ICustomClass {
     public static double LATITUDE_SIZE = 111.321;
     public static double LONGTITUDE_BELARUS_SIZE = 67.138;
 

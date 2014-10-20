@@ -1,18 +1,17 @@
+
 package gen.alex73.osm.xmldatatypes;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+
 /**
- * <p>
- * Java class for osmBasicChange complex type.
+ * <p>Java class for osmBasicChange complex type.
  * 
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="osmBasicChange">
@@ -31,7 +30,11 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "osmBasicChange", propOrder = { "node", "way", "relation" })
+@XmlType(name = "osmBasicChange", propOrder = {
+    "node",
+    "way",
+    "relation"
+})
 public class OsmBasicChange {
 
     protected List<Node> node;
@@ -42,20 +45,21 @@ public class OsmBasicChange {
      * Gets the value of the node property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the node property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the node property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getNode().add(newItem);
+     *    getNode().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link Node }
+     * Objects of the following type(s) are allowed in the list
+     * {@link Node }
      * 
      * 
      */
@@ -70,20 +74,21 @@ public class OsmBasicChange {
      * Gets the value of the way property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the way property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the way property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getWay().add(newItem);
+     *    getWay().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link Way }
+     * Objects of the following type(s) are allowed in the list
+     * {@link Way }
      * 
      * 
      */
@@ -98,20 +103,21 @@ public class OsmBasicChange {
      * Gets the value of the relation property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the relation property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the relation property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getRelation().add(newItem);
+     *    getRelation().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link Relation }
+     * Objects of the following type(s) are allowed in the list
+     * {@link Relation }
      * 
      * 
      */

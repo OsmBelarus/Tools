@@ -1,3 +1,4 @@
+
 package gen.alex73.osm.validators.objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -5,12 +6,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
+
 /**
- * <p>
- * Java class for required complex type.
+ * <p>Java class for required complex type.
  * 
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType name="required">
@@ -28,7 +28,9 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "required")
-public class Required extends TagList {
+public class Required
+    extends TagList
+{
 
     @XmlAttribute(name = "osmTypes")
     protected String osmTypes;
@@ -40,8 +42,10 @@ public class Required extends TagList {
     /**
      * Gets the value of the osmTypes property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getOsmTypes() {
         return osmTypes;
@@ -51,8 +55,9 @@ public class Required extends TagList {
      * Sets the value of the osmTypes property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setOsmTypes(String value) {
         this.osmTypes = value;
@@ -61,8 +66,10 @@ public class Required extends TagList {
     /**
      * Gets the value of the geometryType property.
      * 
-     * @return possible object is {@link GeometryType }
-     * 
+     * @return
+     *     possible object is
+     *     {@link GeometryType }
+     *     
      */
     public GeometryType getGeometryType() {
         return geometryType;
@@ -72,8 +79,9 @@ public class Required extends TagList {
      * Sets the value of the geometryType property.
      * 
      * @param value
-     *            allowed object is {@link GeometryType }
-     * 
+     *     allowed object is
+     *     {@link GeometryType }
+     *     
      */
     public void setGeometryType(GeometryType value) {
         this.geometryType = value;
@@ -82,8 +90,10 @@ public class Required extends TagList {
     /**
      * Gets the value of the customMethod property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getCustomMethod() {
         return customMethod;
@@ -93,8 +103,9 @@ public class Required extends TagList {
      * Sets the value of the customMethod property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setCustomMethod(String value) {
         this.customMethod = value;

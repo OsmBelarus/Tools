@@ -13,15 +13,17 @@
 
     <xs:element name="type">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="filter" type="filter" minOccurs="0" />
-                <xs:element name="required" type="required" minOccurs="0" />
-                <xs:element name="allow" type="allow" minOccurs="0" />
-            </xs:sequence>
-            <xs:attribute name="id" type="xs:string" use="required" />
-            <xs:attribute name="main" type="xs:boolean" default="false" />
-            <xs:attribute name="additions" type="xs:string" use="optional" />
-            <xs:attribute name="customClass" type="xs:string" use="optional" />
+            <xs:complexContent>
+                <xs:extension base="BaseFilter">
+                    <xs:sequence>
+                        <xs:element name="required" type="required" minOccurs="0" />
+                        <xs:element name="allow" type="allow" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="id" type="xs:string" use="required" />
+                    <xs:attribute name="main" type="xs:boolean" default="false" />
+                    <xs:attribute name="additions" type="xs:string" use="optional" />
+                </xs:extension>
+            </xs:complexContent>
         </xs:complexType>
     </xs:element>
 
@@ -53,17 +55,27 @@
 
     <xs:element name="trap">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="filter" type="filter" minOccurs="0" />
-                <xs:element name="required" minOccurs="0">
-                    <xs:complexType>
-                        <xs:attribute name="geometryType" type="GeometryType" use="optional" />
-                    </xs:complexType>
-                </xs:element>
-            </xs:sequence>
-            <xs:attribute name="message" type="xs:string" use="required" />
+            <xs:complexContent>
+                <xs:extension base="BaseFilter">
+                    <xs:sequence>
+                        <xs:element name="required" minOccurs="0">
+                            <xs:complexType>
+                                <xs:attribute name="geometryType" type="GeometryType" use="optional" />
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="message" type="xs:string" use="required" />
+                </xs:extension>
+            </xs:complexContent>
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="BaseFilter">
+        <xs:sequence>
+            <xs:element name="filter" type="filter" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="customClass" type="xs:string" use="optional" />
+    </xs:complexType>
 
     <xs:complexType name="TagList">
         <xs:sequence>

@@ -1,20 +1,19 @@
+
 package gen.alex73.osm.xmldatatypes;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+
 /**
- * <p>
- * Java class for anonymous complex type.
+ * <p>Java class for anonymous complex type.
  * 
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
+ * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -38,7 +37,11 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = { "create", "modify", "delete" })
+@XmlType(name = "", propOrder = {
+    "create",
+    "modify",
+    "delete"
+})
 @XmlRootElement(name = "osmChange")
 public class OsmChange {
 
@@ -60,20 +63,21 @@ public class OsmChange {
      * Gets the value of the create property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the create property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the create property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getCreate().add(newItem);
+     *    getCreate().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link OsmBasicChange }
+     * Objects of the following type(s) are allowed in the list
+     * {@link OsmBasicChange }
      * 
      * 
      */
@@ -88,20 +92,21 @@ public class OsmChange {
      * Gets the value of the modify property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the modify property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the modify property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getModify().add(newItem);
+     *    getModify().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link OsmBasicChange }
+     * Objects of the following type(s) are allowed in the list
+     * {@link OsmBasicChange }
      * 
      * 
      */
@@ -116,20 +121,21 @@ public class OsmChange {
      * Gets the value of the delete property.
      * 
      * <p>
-     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification
-     * you make to the returned list will be present inside the JAXB object. This is why there is not a
-     * <CODE>set</CODE> method for the delete property.
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the delete property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
-     * 
      * <pre>
-     * getDelete().add(newItem);
+     *    getDelete().add(newItem);
      * </pre>
      * 
      * 
      * <p>
-     * Objects of the following type(s) are allowed in the list {@link OsmBasicChange }
+     * Objects of the following type(s) are allowed in the list
+     * {@link OsmBasicChange }
      * 
      * 
      */
@@ -159,8 +165,10 @@ public class OsmChange {
     /**
      * Gets the value of the generator property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getGenerator() {
         return generator;
@@ -170,8 +178,9 @@ public class OsmChange {
      * Sets the value of the generator property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setGenerator(String value) {
         this.generator = value;
@@ -180,8 +189,10 @@ public class OsmChange {
     /**
      * Gets the value of the copyright property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getCopyright() {
         return copyright;
@@ -191,8 +202,9 @@ public class OsmChange {
      * Sets the value of the copyright property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setCopyright(String value) {
         this.copyright = value;
@@ -201,8 +213,10 @@ public class OsmChange {
     /**
      * Gets the value of the attribution property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getAttribution() {
         return attribution;
@@ -212,8 +226,9 @@ public class OsmChange {
      * Sets the value of the attribution property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setAttribution(String value) {
         this.attribution = value;
@@ -222,8 +237,10 @@ public class OsmChange {
     /**
      * Gets the value of the license property.
      * 
-     * @return possible object is {@link String }
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
     public String getLicense() {
         return license;
@@ -233,8 +250,9 @@ public class OsmChange {
      * Sets the value of the license property.
      * 
      * @param value
-     *            allowed object is {@link String }
-     * 
+     *     allowed object is
+     *     {@link String }
+     *     
      */
     public void setLicense(String value) {
         this.license = value;

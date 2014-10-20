@@ -22,6 +22,7 @@ Some tools for OSM.
 
 package org.alex73.osm.translate;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.POWriter;
+import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
@@ -51,15 +53,8 @@ import org.alex73.osmemory.geometry.FastArea;
  * Экспартуе некаторыя аб'екты для перакладу.
  */
 public class ExtractObjectsForTranslation {
-    static final Pattern RE_ALLOWED_CHARS_BE = Pattern
-            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]*");
-    static final Pattern RE_ALLOWED_CHARS_RU = Pattern
-            .compile("[1234567890ЁЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮъёйцукенгшщзхфывапролджэячсмитьбю \\/\\-]*");
-
     static Belarus osm;
     static short nameTag, namebeTag;
-    static Map<String, String> oldReplace = new HashMap<>();
-    static Map<String, String> nameReplace = new HashMap<>();
     static Set<String> processed = new HashSet<>();
 
     public static void main(String[] args) throws Exception {
@@ -83,36 +78,37 @@ public class ExtractObjectsForTranslation {
         short leisureTag = osm.getTagsPack().getTagCode("leisure");
 
         processed.clear();
-        out(o -> ("river".equals(o.getTag(waterTag)) || "river".equals(o.getTag(waterwayTag)))
+        process(o -> ("river".equals(o.getTag(waterTag)) || "river".equals(o.getTag(waterwayTag)))
                 && osm.contains(o), "water_reki");
-        out(o -> "lake".equals(o.getTag(waterTag)) && osm.contains(o), "water_aziory");
-        out(o -> "water".equals(o.getTag(naturalTag)) && osm.contains(o), "water_other");
+        process(o -> "lake".equals(o.getTag(waterTag)) && osm.contains(o), "water_aziory");
+        process(o -> "water".equals(o.getTag(naturalTag)) && osm.contains(o), "water_other");
 
         processed.clear();
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Miensk.covers(o), "bus_stop_Miensk");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Brest.covers(o), "bus_stop_Brest");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Hrodna.covers(o), "bus_stop_Hrodna");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Viciebsk.covers(o), "bus_stop_Viciebsk");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Mahilou.covers(o), "bus_stop_Mahilou");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && Homiel.covers(o), "bus_stop_Homiel");
-        out(o -> "bus_stop".equals(o.getTag(highwayTag)) && osm.contains(o), "bus_stop_other");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Miensk.covers(o), "bus_stop_Miensk");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Brest.covers(o), "bus_stop_Brest");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Hrodna.covers(o), "bus_stop_Hrodna");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Viciebsk.covers(o), "bus_stop_Viciebsk");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Mahilou.covers(o), "bus_stop_Mahilou");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && Homiel.covers(o), "bus_stop_Homiel");
+        process(o -> "bus_stop".equals(o.getTag(highwayTag)) && osm.contains(o), "bus_stop_other");
 
         processed.clear();
-        out(o -> "suburb".equals(o.getTag(placeTag)) && osm.contains(o), "place_suburb");
-        out(o -> "neighbourhood".equals(o.getTag(placeTag)) && osm.contains(o), "place_neighbourhood");
+        process(o -> "suburb".equals(o.getTag(placeTag)) && osm.contains(o), "place_suburb");
+        process(o -> "neighbourhood".equals(o.getTag(placeTag)) && osm.contains(o), "place_neighbourhood");
 
         processed.clear();
-        out(o -> "supermarket".equals(o.getTag(shopTag)) && osm.contains(o), "shop_supermarket");
+        process(o -> "supermarket".equals(o.getTag(shopTag)) && osm.contains(o), "shop_supermarket");
 
         processed.clear();
-        out(o -> "place_of_worship".equals(o.getTag(amenityTag)) && osm.contains(o), "relihijnyja_budynki");
+        process(o -> "place_of_worship".equals(o.getTag(amenityTag)) && osm.contains(o),
+                "relihijnyja_budynki");
 
         processed.clear();
-        out(o -> "park".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_park");
-        out(o -> "stadium".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_stadium");
+        process(o -> "park".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_park");
+        process(o -> "stadium".equals(o.getTag(leisureTag)) && osm.contains(o), "leisure_stadium");
 
         processed.clear();
-        out(o -> isSubway(o) && osm.contains(o), "subway");
+        process(o -> isSubway(o) && osm.contains(o), "subway");
     }
 
     static boolean isSubway(IOsmObject o) {
@@ -128,29 +124,53 @@ public class ExtractObjectsForTranslation {
         return false;
     }
 
-    static void out(Predicate<IOsmObject> predicate, String filename) throws Exception {
-        oldReplace.clear();
-        nameReplace.clear();
+    static void process(Predicate<IOsmObject> predicate, String filename) throws Exception {
+        System.out.println("Out " + filename);
+        Map<String, String> fixes = processMapRuRu(predicate, filename);
 
+        POWriter po = new POWriter();
+        TMX tmx = new TMX();
+        osm.all(predicate, o -> addToSourcePo(po, tmx, o, fixes));
+        po.write("../../OsmBelarus-Databases/Pieraklad/map/" + filename + ".po");
+        tmx.save(new File("../../OsmBelarus-Databases/Pieraklad/tm/" + filename + ".tmx"));
+
+        Errors errors = new Errors();
+        ResultTable result = new ResultTable("name", "name:be");
+
+        POReader rd = new POReader("../../OsmBelarus-Databases/Pieraklad/translation/" + filename + ".po");
+        osm.all(predicate, o -> getFromTranslatedPo(rd, o, fixes, result, errors));
+
+        result.sort();
+        VelocityOutput.output("org/alex73/osm/translate/objects.velocity", "/var/www/osm/translate/"
+                + filename + ".html", "table", result, "errors", errors);
+    }
+
+    /**
+     * Чытае файл .csv з мэпінгам name->name, выдаляе неіснуючыя назвы і дадае новыя
+     */
+    static Map<String, String> processMapRuRu(Predicate<IOsmObject> predicate, String filename)
+            throws Exception {
+        Map<String, String> fixes = new HashMap<>();
+
+        // чытаем з csv
         try {
-            List<Replace> replaces = new CSV('\t').readCSV("../../OsmBelarus-Databases/Pieraklad/map/"
+            List<Replace> replaces = new CSV('\t').readCSV("../../OsmBelarus-Databases/Pieraklad/fixes/"
                     + filename + ".csv", Replace.class);
             for (Replace r : replaces) {
-                if (!r.from.equals(r.to)) {
-                    oldReplace.put(r.from, r.to);
+                if (!r.from.equals(r.to)) {// толькі тыя што не супадаюць
+                    fixes.put(r.from, r.to);
                 }
             }
         } catch (FileNotFoundException ex) {
         }
 
-        POWriter po = new POWriter();
+        // дадаем невыпраўленыя
+        osm.all(predicate.and(o -> o.getTag(nameTag) != null && !fixes.containsKey(o.getTag(nameTag))),
+                o -> fixes.put(o.getTag(nameTag), o.getTag(nameTag)));
 
-        osm.all(predicate, o -> out(po, o));
-
-        po.write("../../OsmBelarus-Databases/Pieraklad/map/" + filename + ".po");
-
+        // запісваем ў csv
         List<Replace> names = new ArrayList<>();
-        for (Map.Entry<String, String> en : nameReplace.entrySet()) {
+        for (Map.Entry<String, String> en : fixes.entrySet()) {
             Replace r = new Replace();
             r.from = en.getKey();
             r.to = en.getValue();
@@ -165,44 +185,37 @@ public class ExtractObjectsForTranslation {
                 return RUC.compare(o1.from, o2.from);
             }
         });
-        new CSV('\t').saveCSV("../../OsmBelarus-Databases/Pieraklad/map/" + filename + ".csv", Replace.class,
-                names);
+        new CSV('\t').saveCSV("../../OsmBelarus-Databases/Pieraklad/fixes/" + filename + ".csv",
+                Replace.class, names);
 
-        Errors errors = new Errors();
-        ResultTable result = new ResultTable("name", "name:be");
-
-        POReader rd = new POReader("../../OsmBelarus-Databases/Pieraklad/translation/" + filename + ".po");
-        osm.all(predicate, o -> in(rd, o, result, errors));
-
-        result.sort();
-        VelocityOutput.output("org/alex73/osm/translate/objects.velocity", "/var/www/osm/translate/"
-                + filename + ".html", "table", result, "errors", errors);
+        return fixes;
     }
 
-    static void out(POWriter po, IOsmObject obj) {
+    static void addToSourcePo(POWriter po, TMX tmx, IOsmObject obj, Map<String, String> fixes) {
         if (processed.contains(obj.getObjectCode())) {
             return;
         }
-        if (obj.hasTag(nameTag) || obj.hasTag(namebeTag)) {
-            String name = obj.getTag(nameTag);
-            if (name == null) {
-                name = "<null>";
-            }
-            String old = oldReplace.remove(name);
-            if (old != null) {
-                nameReplace.put(name, old);
-            }
-            if (!nameReplace.containsKey(name)) {
-                nameReplace.put(name, name);
-            }
-            String nru = nameReplace.get(name);
-
-            po.add(nru, obj.getTag(namebeTag), obj.getObjectCode());
+        if (!obj.hasTag(nameTag) && !obj.hasTag(namebeTag)) {
+            return;
         }
+
+        String name = obj.getTag(nameTag);
+        if (name == null) {
+            name = "<null>";
+        }
+        name = fixes.get(name);
+        if (obj.hasTag(nameTag) && obj.hasTag(namebeTag)) {
+            tmx.put(name, obj.getTag(namebeTag));
+        }
+        po.add(name, "", obj.getObjectCode());
     }
 
-    static void in(POReader po, IOsmObject obj, ResultTable table, Errors errors) {
+    static void getFromTranslatedPo(POReader po, IOsmObject obj, Map<String, String> fixes,
+            ResultTable table, Errors errors) {
         if (processed.contains(obj.getObjectCode())) {
+            return;
+        }
+        if (!obj.hasTag(nameTag) && !obj.hasTag(namebeTag)) {
             return;
         }
         processed.add(obj.getObjectCode());
@@ -211,26 +224,42 @@ public class ExtractObjectsForTranslation {
         if (name == null) {
             name = "<null>";
         }
-        String nru = nameReplace.containsKey(name) ? nameReplace.get(name) : name;
-        if (!RE_ALLOWED_CHARS_RU.matcher(nru).matches()) {
-            errors.addError("Няправільныя літары ў расейскай назве: " + nru, obj);
+        name = fixes.get(name);
+
+        if (name == null || name.isEmpty()) {
+            errors.addError("Няма расейскай назвы", obj);
             return;
         }
-        String namebe = obj.getTag(namebeTag);
-        String translated = po.get(nru);
+        String errName = checkLetters(RE_ALLOWED_CHARS_RU, name);
+        if (errName != null) {
+            errors.addError("Няправільныя літары ў расейскай назьве: " + errName, obj);
+            return;
+        }
+        String translated = po.get(name);
         if (translated == null || translated.isEmpty()) {
-            errors.addError("Не перакладзена : " + nru, obj);
-            return;
-        }
-        if (!RE_ALLOWED_CHARS_BE.matcher(translated).matches()) {
-            errors.addError("Няправільныя літары ў беларускай назве: " + translated, obj);
-            return;
+            errors.addError("Не перакладзена : " + name, obj);
+        } else {
+            String errTranslated = checkLetters(RE_ALLOWED_CHARS_BE, translated);
+            if (errTranslated != null) {
+                errors.addError("Няправільныя літары ў беларускай назьве: " + errTranslated, obj);
+                return;
+            }
         }
         ResultTable.ResultTableRow row = table.new ResultTableRow(obj.getObjectCode(), name);
-        row.setAttr("name", name, nru);
-        row.setAttr("name:be", namebe, translated);
+        row.setAttr("name", obj.getTag(nameTag), name);
+        row.setAttr("name:be", obj.getTag(namebeTag), translated);
         if (row.needChange()) {
             table.rows.add(row);
         }
+    }
+
+    static final Pattern RE_ALLOWED_CHARS_BE = Pattern
+            .compile("([^1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]+)");
+    static final Pattern RE_ALLOWED_CHARS_RU = Pattern
+            .compile("([^1234567890ЁЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮъёйцукенгшщзхфывапролджэячсмитьбю \\/\\-]+)");
+
+    static String checkLetters(Pattern regexp, String str) {
+        String r = regexp.matcher(str).replaceAll("<b><u>$1</u></b>");
+        return r.equals(str) ? null : r;
     }
 }

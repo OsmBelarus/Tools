@@ -17,10 +17,18 @@
         .err {
             background-color: #FF8080;
         }
+        .warn {
+            background-color: #FFFF80;
+        }
     </style>
     <title>$title</title>
 </head>
 <body>
+
+Валідатар аб'ектаў OSM таксама можа памыляцца.<br/>
+Калі вы бачыце што валідатар паказвае памылку там дзе яе няма - <br/>
+пішыце на <a href="http://forum.openstreetmap.org/viewforum.php?id=35">форум</a> ці <a href="mailto:alex73mail@gmail.com">пошту</a>.
+<br/><br/><br/>
 
 <b><u>Вынікі ад ${currentDateTime}</u></b> <br/><br/>
 
@@ -41,7 +49,6 @@
       });
     }
     function getAll(tableClass, partClass) {
-     var s=${d}('table.' +tableClass+ ' .'+partClass+' :checkbox');
       return ${d}('table.' +tableClass+ ' .'+partClass+' :checkbox');
     }
 </script>

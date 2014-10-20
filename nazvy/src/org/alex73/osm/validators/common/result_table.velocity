@@ -40,6 +40,10 @@
     #end
     #if ( $vo == $vn )
       <td class='column$columnIndex'>$vo</td>
+    #elseif ( $vo == "" )
+	  <td class='warn column$columnIndex'>$vo => $vn
+	    <input type='checkbox' value="load_object?objects=${r.id}&addtags=${v.attrName}=${vn}">
+	  </td>
     #else
 	  <td class='err column$columnIndex'>$vo => $vn
 	    <input type='checkbox' value="load_object?objects=${r.id}&addtags=${v.attrName}=${vn}">

@@ -35,8 +35,8 @@ import org.alex73.osmemory.geometry.Way;
 public class CheckTrap extends BaseCheck {
     private final Trap trap;
 
-    public CheckTrap(MemoryStorage osm, Trap trap) {
-        super(osm, trap.getFilter());
+    public CheckTrap(MemoryStorage osm, Trap trap) throws Exception {
+        super(osm, trap);
         this.trap = trap;
     }
 

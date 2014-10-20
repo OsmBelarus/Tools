@@ -44,7 +44,7 @@ import com.vividsolutions.jts.geom.Geometry;
  * 
  * 2) ці ўсе раёны знаходзяцца ў межах краіны і вобласьці
  */
-public class CustomCheckRehijony implements ICustomCheck {
+public class CustomCheckRehijony implements ICustomClass {
     static Geometry BelarusGeometry;
     static short nameTag;
     static Belarus osm;
