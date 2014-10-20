@@ -77,7 +77,7 @@ public class CalcCorrectTags2 {
         default:
             throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
         }
-        
+
         boolean abandoned = false;
         if (m.osmForceTyp != null && m.osmForceTyp.equals("abandoned")) {
             abandoned = true;
@@ -109,6 +109,7 @@ public class CalcCorrectTags2 {
         if (typ != null) {
             if (abandoned) {
                 result.abandonedPlace = typ;
+                result.place = "locality";
             } else {
                 result.place = typ;
             }

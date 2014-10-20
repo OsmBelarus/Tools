@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
+import org.alex73.osm.utils.LettersCheck;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
@@ -41,8 +42,6 @@ import org.alex73.osmemory.IOsmObject;
  * -DdisableIntName - не правяраць int_name
  */
 public class CheckStreets3 extends StreetsParse3 {
-    static final Pattern RE_ALLOWED_CHARS = Pattern
-            .compile("[1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]*");
     static String outDir;
     static String poInputDir;
 
@@ -56,8 +55,8 @@ public class CheckStreets3 extends StreetsParse3 {
     }
 
     Result cityResult;
-    Map<City,Integer> streetErrorsCount=new HashMap<>();
-    Map<City,Integer> houseErrorsCount=new HashMap<>();
+    Map<City, Integer> streetErrorsCount = new HashMap<>();
+    Map<City, Integer> houseErrorsCount = new HashMap<>();
 
     @Override
     void start(City c) throws Exception {
@@ -66,15 +65,15 @@ public class CheckStreets3 extends StreetsParse3 {
         c.po = new POReader(file);
         System.out.println("Read " + c.po.size() + " translations from " + file);
     }
-    
+
     @Override
     void end(City c) throws Exception {
         houseErrorsCount.put(c, cityResult.pamylkiDamou.getObjectsCount());
-        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount()+cityResult.vulicy.rows.size());
+        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount() + cityResult.vulicy.rows.size());
 
         System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
-        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir
-                + "/vulicy-" + c.fn + ".html", "horad", c.nazva, "data", cityResult);
+        VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-"
+                + c.fn + ".html", "horad", c.nazva, "data", cityResult);
         VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
                 + c.fn + ".html", "horad", c.nazva, "data", cityResult);
     }
@@ -91,7 +90,7 @@ public class CheckStreets3 extends StreetsParse3 {
         if (error == null) {
             error = "<null>";
         }
-     cityResult.pamylkiVulic.addError(error, obj);
+        cityResult.pamylkiVulic.addError(error, obj);
     }
 
     @Override
@@ -204,12 +203,25 @@ public class CheckStreets3 extends StreetsParse3 {
             throw new Exception("Не перакладзена '" + orig + "'");
         }
         // выдаляем лацінскія нумары
-        String test = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "")
-                .replaceAll("\\-[XVI]+$", "").replaceAll(" [XVI]+ ", " ");
+        trans = trans.replaceAll("/[XVI]+ ", "/").replaceAll(" [XVI]+$", "").replaceAll("\\-[XVI]+$", "")
+                .replaceAll(" [XVI]+ ", " ");
         // і праектуемыя вуліцы
-        test = test.replaceAll("№[0-9]+", "");
-        if (!RE_ALLOWED_CHARS.matcher(test).matches()) {
-            throw new Exception("Невядомыя літары ў '" + trans + "'");
+        trans = trans.replaceAll("№[0-9]+", "");
+
+        String errName = LettersCheck.checkBe(trans);
+        if (errName != null) {
+            throw new Exception("Няправільныя літары ў беларускай назьве: " + errName);
+        }
+
+        // выдаляем лацінскія нумары
+        orig = orig.replaceAll("^[XVI]+ ", "").replaceAll(" [XVI]+$", "").replaceAll("\\-[XVI]+$", "")
+                .replaceAll(" [XVI]+ ", " ");
+        // і праектуемыя вуліцы
+        orig = orig.replaceAll("№[0-9]+", "");
+
+        errName = LettersCheck.checkRu(orig);
+        if (errName != null) {
+            throw new Exception("Няправільныя літары ў расейскай назьве: " + errName);
         }
     }
 
@@ -226,16 +238,15 @@ public class CheckStreets3 extends StreetsParse3 {
         }
         return new ArrayList<>(groups.values());
     }
-    
 
     @Override
     public void processHouses(City c) throws Exception {
-            System.out.println("Check houses in " + c.nazva);
-            storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
+        System.out.println("Check houses in " + c.nazva);
+        storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
     }
 
     public void processHouse(City c, IOsmObject s) {
-        
+
         String streetNameOnHouse = s.getTag(addrStreetTag);
         if (streetNameOnHouse == null) {
             // няма тэга addr:street
@@ -252,8 +263,9 @@ public class CheckStreets3 extends StreetsParse3 {
             String name_be = r.getTag(namebeTag);
             if (prev_name_be != null && !prev_name_be.equals(name_be)) {
                 // і беларуская назва не супадае
-                cityResult.pamylkiDamou.addError("Беларускія назвы вуліц побач не супадаюць для дому з addr:street="
-                        + streetNameOnHouse, s);
+                cityResult.pamylkiDamou.addError(
+                        "Беларускія назвы вуліц побач не супадаюць для дому з addr:street="
+                                + streetNameOnHouse, s);
             }
             prev_name_be = name_be;
         }
@@ -262,7 +274,7 @@ public class CheckStreets3 extends StreetsParse3 {
             cityResult.pamylkiDamou.addError("Няма вуліцы '" + streetNameOnHouse + "' для дому", s);
             return;
         }
-        checkHouseTags(c,s);
+        checkHouseTags(c, s);
     }
 
     void checkHouseTags(City c, IOsmObject s) {
@@ -275,10 +287,11 @@ public class CheckStreets3 extends StreetsParse3 {
     }
 
     public static class Result {
-        public ResultTable vulicy = new ResultTable("name", "name:ru", "name:be", "name:en", "int_name","name:en","name:by");
+        public ResultTable vulicy = new ResultTable("name", "name:ru", "name:be", "name:en", "int_name",
+                "name:en", "name:by");
 
         public Errors pamylkiVulic = new Errors();
-        
+
         public Errors pamylkiDamou = new Errors();
     }
 }

@@ -53,7 +53,7 @@ public class StreetName {
             }
         }
 
-        if (!nameOrig.contains("Линия") && !nameOrig.contains("Тупик") && !nameOrig.contains("Переезд")) {
+        if (!words.contains("Линия") && !words.contains("Тупик") && !words.contains("Переезд")) {
             // для "Ліній" індэксы толькі ў назьве, акрамя "Другая Шостая Линия" :)
             for (int i = 0; i < words.size(); i++) {
                 Matcher m = RE_INDEX.matcher(words.get(i));

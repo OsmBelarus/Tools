@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
+import org.alex73.osm.utils.LettersCheck;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.POWriter;
 import org.alex73.osm.utils.TMX;
@@ -230,7 +231,7 @@ public class ExtractObjectsForTranslation {
             errors.addError("Няма расейскай назвы", obj);
             return;
         }
-        String errName = checkLetters(RE_ALLOWED_CHARS_RU, name);
+        String errName = LettersCheck.checkRu(name);
         if (errName != null) {
             errors.addError("Няправільныя літары ў расейскай назьве: " + errName, obj);
             return;
@@ -239,7 +240,7 @@ public class ExtractObjectsForTranslation {
         if (translated == null || translated.isEmpty()) {
             errors.addError("Не перакладзена : " + name, obj);
         } else {
-            String errTranslated = checkLetters(RE_ALLOWED_CHARS_BE, translated);
+            String errTranslated = LettersCheck.checkBe(translated);
             if (errTranslated != null) {
                 errors.addError("Няправільныя літары ў беларускай назьве: " + errTranslated, obj);
                 return;
@@ -251,15 +252,5 @@ public class ExtractObjectsForTranslation {
         if (row.needChange()) {
             table.rows.add(row);
         }
-    }
-
-    static final Pattern RE_ALLOWED_CHARS_BE = Pattern
-            .compile("([^1234567890ЁЙЦУКЕНГШЎЗХФЫВАПРОЛДЖЭЯЧСМІТЬБЮ’ёйцукенгшўзхфывапролджэячсмітьбю \\/\\-]+)");
-    static final Pattern RE_ALLOWED_CHARS_RU = Pattern
-            .compile("([^1234567890ЁЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮъёйцукенгшщзхфывапролджэячсмитьбю \\/\\-]+)");
-
-    static String checkLetters(Pattern regexp, String str) {
-        String r = regexp.matcher(str).replaceAll("<b><u>$1</u></b>");
-        return r.equals(str) ? null : r;
     }
 }
