@@ -92,7 +92,7 @@ public class CSV {
                 String[] fs = split(s, SEPARATOR);
                 if (fields.length != fs.length) {
                     if (!warn) {
-                        System.err.println("Count of fields is not the same");
+                        System.err.println("Count of fields is not the same in " + s);
                         warn = true;
                     }
                 }

@@ -1,0 +1,18 @@
+#set ( $title = "Прыпынкі (Менск)" )
+#parse ("org/alex73/osm/validators/common/header.velocity")
+
+<a href="#p1">Памылкі</a><br/>
+<a href="#p2">Няправільныя назвы</a><br/>
+<br/>
+
+<h1 id="p1">Памылкі:</h1>
+#parse ("org/alex73/osm/validators/common/errors.velocity")
+
+<h1 id="p2">Няправільныя назвы:</h1>
+
+Назва ўтрымлівае прыблізную адлегласьць каардынат у табліцы Мінсктранса ад сапраўдных каардынат у OSM.
+#parse ("org/alex73/osm/validators/common/result_table.velocity")
+
+
+</body>
+</html>
