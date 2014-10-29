@@ -33,19 +33,19 @@ import java.util.Set;
  * Некаторыя мэтады для паказу шаблёнаў.
  */
 public class OSM {
-    static String ICON_NODE = "<img src=\"http://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png\"/>";
-    static String ICON_WAY = "<img src=\"http://wiki.openstreetmap.org/w/images/6/6a/Mf_way.png\"/>";
-    static String ICON_REL = "<img src=\"http://wiki.openstreetmap.org/w/images/5/59/Relation.png\"/>";
-    static String ICON_JOSM = "<img src=\"http://wiki.openstreetmap.org/w/images/6/6a/JOSM-Icon_Daten_download.jpg\"/>";
+    static String ICON_NODE = "<img src=\"https://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png\"/>";
+    static String ICON_WAY = "<img src=\"https://wiki.openstreetmap.org/w/images/6/6a/Mf_way.png\"/>";
+    static String ICON_REL = "<img src=\"https://wiki.openstreetmap.org/w/images/5/59/Relation.png\"/>";
+    static String ICON_JOSM = "<img src=\"https://wiki.openstreetmap.org/w/images/6/6a/JOSM-Icon_Daten_download.jpg\"/>";
 
     public static String browse(String code) {
-        return "<a href='http://www.openstreetmap.org/"
+        return "<a href='https://www.openstreetmap.org/"
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "'>" + code
                 + "</a>";
     }
 
     public static String histText(String code) {
-        return "<a target='_blank' href='http://www.openstreetmap.org/"
+        return "<a target='_blank' href='https://www.openstreetmap.org/"
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "/history'>"
                 + code + "</a>";
     }
@@ -78,7 +78,7 @@ public class OSM {
         } else {
             icon = code;
         }
-        String r = "<a target='_blank' href='http://www.openstreetmap.org/"
+        String r = "<a target='_blank' href='https://www.openstreetmap.org/"
                 + code.replace("n", "node/").replace("w", "way/").replace("r", "relation/") + "/history'>";
         r += icon + "</a>";
         return r;
