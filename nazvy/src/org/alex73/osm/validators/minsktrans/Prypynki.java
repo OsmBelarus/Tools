@@ -114,8 +114,11 @@ public class Prypynki {
 
     static void readMap() throws Exception {
         short highwayTag = osm.getTagsPack().getTagCode("highway");
+        short amenityTag = osm.getTagsPack().getTagCode("amenity");
         map = new ArrayList<IOsmNode>();
         osm.byTag("highway", o -> o.isNode() && "bus_stop".equals(o.getTag(highwayTag)) && Miensk.covers(o),
+                o -> map.add((IOsmNode) o));
+        osm.byTag("amenity", o -> o.isNode() && "bus_station".equals(o.getTag(amenityTag)) && Miensk.covers(o),
                 o -> map.add((IOsmNode) o));
     }
 
