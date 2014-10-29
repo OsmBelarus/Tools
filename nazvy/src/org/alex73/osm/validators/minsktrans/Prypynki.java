@@ -88,7 +88,7 @@ public class Prypynki {
                 errors.addError("Няма прыпынку '" + mt.name + "' на мапе");
             } else {
                 errors.addError("Няма прыпынку '" + mt.name
-                        + "' на <a href='http://www.openstreetmap.org/#map=18/" + mt.lat / 100000.0 + "/"
+                        + "' на <a href='https://www.openstreetmap.org/#map=18/" + mt.lat / 100000.0 + "/"
                         + mt.lon / 100000.0 + "'>мапе</a>");
             }
         }
