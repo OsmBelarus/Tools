@@ -47,8 +47,8 @@ import org.alex73.osm.utils.TMX;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.geometry.AdaptiveFastArea;
 import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.FastArea;
 
 /**
  * Стварае файлы .po для перакладу назваў вуліц.
@@ -105,12 +105,12 @@ public class StreetsParse3 {
             case "г.":
             case "г. п.":
                 if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
-                    FastArea border = null;
+                    AdaptiveFastArea border = null;
                     for (String id : m.osmIDother.split(";")) {
                         IOsmObject city = storage.getObject(id);
                         if (city != null) {
                             try {
-                                border = new FastArea(new Area(storage, city).getGeometry(), storage);
+                                border = new AdaptiveFastArea(new Area(storage, city).getGeometry(), storage);
                             } catch (Exception ex) {
                                 globalErrors.addError("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
                             }
@@ -261,13 +261,13 @@ public class StreetsParse3 {
     public static class City {
         public final String fn;
         public final String nazva;
-        public final FastArea geom;
+        public final AdaptiveFastArea geom;
         List<IOsmObject> streets = new ArrayList<>();
         POReader po;
         Map<String, LocalizationInfo> uniq = new HashMap<>();
         Map<String, Set<String>> renames = new TreeMap<>();
 
-        public City(Miesta m, FastArea geomText) {
+        public City(Miesta m, AdaptiveFastArea geomText) {
             this.nazva = m.voblasc + '/' + m.nazvaNoStress;
             this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_');
             this.geom = geomText;

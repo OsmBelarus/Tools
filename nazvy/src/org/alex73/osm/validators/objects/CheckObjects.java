@@ -55,7 +55,7 @@ public class CheckObjects {
     static List<CheckType> knownTypes;
     static List<CheckTrap> traps;
 
-    static Belarus osm;
+    public static Belarus osm;
     static Map<String, Set<String>> errors = new HashMap<>();
     static Map<String, Map<String, Set<String>>> errorsByUser = new HashMap<>();
     static Map<String, Integer> objectsCount = new HashMap<>();
