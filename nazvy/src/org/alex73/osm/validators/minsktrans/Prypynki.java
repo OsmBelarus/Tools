@@ -88,7 +88,7 @@ public class Prypynki {
                 errors.addError("Няма прыпынку '" + mt.name + "' на мапе");
             } else {
                 errors.addError("Няма прыпынку '" + mt.name
-                        + "' на <a href='http://www.openstreetmap.org/#map=18/" + mt.lat / 100000.0 + "/"
+                        + "' на <a href='https://www.openstreetmap.org/#map=18/" + mt.lat / 100000.0 + "/"
                         + mt.lon / 100000.0 + "'>мапе</a>");
             }
         }
@@ -114,8 +114,11 @@ public class Prypynki {
 
     static void readMap() throws Exception {
         short highwayTag = osm.getTagsPack().getTagCode("highway");
+        short amenityTag = osm.getTagsPack().getTagCode("amenity");
         map = new ArrayList<IOsmNode>();
         osm.byTag("highway", o -> o.isNode() && "bus_stop".equals(o.getTag(highwayTag)) && Miensk.covers(o),
+                o -> map.add((IOsmNode) o));
+        osm.byTag("amenity", o -> o.isNode() && "bus_station".equals(o.getTag(amenityTag)) && Miensk.covers(o),
                 o -> map.add((IOsmNode) o));
     }
 
