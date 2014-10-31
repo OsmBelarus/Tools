@@ -47,6 +47,10 @@ public class Belarus extends MemoryStorage {
                 .read(new File(Env.readProperty("data.file")));
         showStat();
 
+        if (nodes.size() < 250000 || ways.size() < 1400000 || relations.size() < 10000) {
+            throw new Exception("Wrong o5m data");
+        }
+
         area = new Area(this, getRelationById(BELARUS_BORDER_RELATION_ID));
         fastArea = new FastArea(area.getGeometry(), this) {
             @Override
