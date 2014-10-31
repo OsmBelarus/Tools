@@ -22,6 +22,7 @@ public class Prypynki {
     static FastArea Miensk;
 
     static List<MinsktransStop> minsktrans;
+    static List<MinsktransStop> minsktransSave;
     static List<IOsmNode> map = new ArrayList<IOsmNode>();
     static ResultTable table;
     static Errors errors = new Errors();
@@ -45,6 +46,9 @@ public class Prypynki {
         String out = Env.readProperty("out.dir") + "/prypynkiMiensk.html";
         VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out, "table", table,
                 "errors", errors);
+        
+        new CSV('\t').saveCSV(  "/tmp/stops2.csv", MinsktransStop.class, minsktransSave);
+        
     }
 
     static void compare(double maxDistance) {
@@ -76,6 +80,10 @@ public class Prypynki {
                 row.setAttr("name", n, n);
                 row.setAttr("name:be", p.node.getTag(namebeTag), p.node.getTag(namebeTag));
                 table.rows.add(row);
+                
+                mt.osmNodeId=p.node.getId();
+                mt.osmNameRu = p.node.getTag(nameTag);
+                mt.osmNameBe = p.node.getTag(namebeTag);
             }
         }
 
@@ -110,6 +118,7 @@ public class Prypynki {
                 prevName = stop.name;
             }
         }
+        minsktransSave=new ArrayList<MinsktransStop>(minsktrans);
     }
 
     static void readMap() throws Exception {

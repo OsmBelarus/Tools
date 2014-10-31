@@ -25,4 +25,11 @@ public class MinsktransStop {
     public String stopNum;
     @XmlAttribute(name = "Pikas2012.11.19")
     public String pikas;
+
+    @XmlAttribute(name = "osm:NodeID")
+    public Long osmNodeId;
+    @XmlAttribute(name = "osm:name:ru")
+    public String osmNameRu;
+    @XmlAttribute(name = "osm:name:be")
+    public String osmNameBe;
 }
