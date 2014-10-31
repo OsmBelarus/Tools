@@ -16,7 +16,7 @@ import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.geometry.Area;
 import org.alex73.osmemory.geometry.FastArea;
 
-public class Prypynki {
+public class PrypynkiPosukBlizejsych {
 
     static Belarus osm;
     static FastArea Miensk;
@@ -43,12 +43,7 @@ public class Prypynki {
 
         none();
 
-        String out = Env.readProperty("out.dir") + "/prypynkiMiensk.html";
-        VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out, "table", table,
-                "errors", errors);
-        
-        new CSV('\t').saveCSV(  "/tmp/stops2.csv", MinsktransStop.class, minsktransSave);
-        
+        new CSV('\t').saveCSV("/tmp/stops2.csv", MinsktransStop.class, minsktransSave);
     }
 
     static void compare(double maxDistance) {
@@ -80,8 +75,8 @@ public class Prypynki {
                 row.setAttr("name", n, n);
                 row.setAttr("name:be", p.node.getTag(namebeTag), p.node.getTag(namebeTag));
                 table.rows.add(row);
-                
-                mt.osmNodeId=p.node.getId();
+
+                mt.osmNodeId = p.node.getId();
                 mt.osmNameRu = p.node.getTag(nameTag);
                 mt.osmNameBe = p.node.getTag(namebeTag);
             }
@@ -118,7 +113,7 @@ public class Prypynki {
                 prevName = stop.name;
             }
         }
-        minsktransSave=new ArrayList<MinsktransStop>(minsktrans);
+        minsktransSave = new ArrayList<MinsktransStop>(minsktrans);
     }
 
     static void readMap() throws Exception {
@@ -127,7 +122,8 @@ public class Prypynki {
         map = new ArrayList<IOsmNode>();
         osm.byTag("highway", o -> o.isNode() && "bus_stop".equals(o.getTag(highwayTag)) && Miensk.covers(o),
                 o -> map.add((IOsmNode) o));
-        osm.byTag("amenity", o -> o.isNode() && "bus_station".equals(o.getTag(amenityTag)) && Miensk.covers(o),
+        osm.byTag("amenity",
+                o -> o.isNode() && "bus_station".equals(o.getTag(amenityTag)) && Miensk.covers(o),
                 o -> map.add((IOsmNode) o));
     }
 

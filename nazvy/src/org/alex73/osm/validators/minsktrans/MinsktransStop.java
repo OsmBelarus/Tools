@@ -16,9 +16,9 @@ public class MinsktransStop {
     @XmlAttribute(name = "Info")
     public String info;
     @XmlAttribute(name = "Lng")
-    public int lon;
+    public double lon;
     @XmlAttribute(name = "Lat")
-    public int lat;
+    public double lat;
     @XmlAttribute(name = "Stops")
     public String stops;
     @XmlAttribute(name = "StopNum")

@@ -16,4 +16,5 @@ time nice $JAVA_EXEC org.alex73.osm.validators.cyhunka.CheckStancyi || exit 1
 time nice $JAVA_EXEC org.alex73.osm.validators.vioski.Export || exit 1
 time nice $JAVA_EXEC org.alex73.osm.validators.objects.CheckObjects || exit 1
 time nice $JAVA_EXEC org.alex73.osm.translate.ExtractObjectsForTranslation || exit 1
+time nice $JAVA_EXEC org.alex73.osm.validators.minsktrans.PrypynkiZBazy || exit 1
 cp index.html /var/www/osm/ || exit 1
