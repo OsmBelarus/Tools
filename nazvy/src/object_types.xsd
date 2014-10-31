@@ -21,6 +21,7 @@
                     </xs:sequence>
                     <xs:attribute name="id" type="xs:string" use="required" />
                     <xs:attribute name="main" type="xs:boolean" default="false" />
+                    <xs:attribute name="monitoring" type="GranularityType" />
                     <xs:attribute name="additions" type="xs:string" use="optional" />
                 </xs:extension>
             </xs:complexContent>
@@ -93,6 +94,15 @@
             <xs:enumeration value="LINE" />
             <xs:enumeration value="AREA" />
             <xs:enumeration value="POINT" />
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="GranularityType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="KRAINA" />
+            <xs:enumeration value="VOBLASC" />
+            <xs:enumeration value="RAJON" />
+            <xs:enumeration value="MIESTA" />
         </xs:restriction>
     </xs:simpleType>
 

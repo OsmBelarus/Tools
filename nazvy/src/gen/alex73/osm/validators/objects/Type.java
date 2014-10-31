@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;/sequence>
  *       &lt;attribute name="id" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="main" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="monitoring" type="{}GranularityType" />
  *       &lt;attribute name="additions" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -47,6 +48,8 @@ public class Type
     protected String id;
     @XmlAttribute(name = "main")
     protected Boolean main;
+    @XmlAttribute(name = "monitoring")
+    protected GranularityType monitoring;
     @XmlAttribute(name = "additions")
     protected String additions;
 
@@ -148,6 +151,30 @@ public class Type
      */
     public void setMain(Boolean value) {
         this.main = value;
+    }
+
+    /**
+     * Gets the value of the monitoring property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link GranularityType }
+     *     
+     */
+    public GranularityType getMonitoring() {
+        return monitoring;
+    }
+
+    /**
+     * Sets the value of the monitoring property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link GranularityType }
+     *     
+     */
+    public void setMonitoring(GranularityType value) {
+        this.monitoring = value;
     }
 
     /**

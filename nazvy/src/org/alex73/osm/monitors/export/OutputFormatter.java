@@ -157,10 +157,10 @@ public class OutputFormatter {
                 out.append(IOsmObject.getRelationCode(mid));
                 if (r2 != null) {
                     out.append(": [ ");
-                    for (int j = 0; i < r2.getMembersCount(); j++) {
+                    for (int j = 0; j < r2.getMembersCount(); j++) {
                         out.append(r2.getMemberRole(osm, j));
                         out.append(' ');
-                        switch (r2.getMemberType(i)) {
+                        switch (r2.getMemberType(j)) {
                         case OsmBase.TYPE_NODE:
                             out.append(IOsmObject.getNodeCode(r2.getMemberID(j)));
                             break;
