@@ -33,11 +33,11 @@ import java.util.Locale;
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.CSV;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
 /**
@@ -91,7 +91,7 @@ public class ExportObjects {
             }
             Rehijon rehijon = new Rehijon();
             rehijon.nazva = Lat.unhac(Lat.lat(path, false)).replace(' ', '_');
-            rehijon.area = new FastArea(new Area(osm, osm.getRelationById(p.relationID)).getGeometry(), osm);
+            rehijon.area = new FastArea(new ExtendedRelation(osm.getRelationById(p.relationID), osm).getArea(), osm);
             rehijony.add(rehijon);
         }
     }

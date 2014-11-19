@@ -56,9 +56,11 @@ import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.IOsmWay;
-import org.alex73.osmemory.geometry.AdaptiveFastArea;
-import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.Way;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedRelation;
+import org.alex73.osmemory.geometry.ExtendedWay;
+import org.alex73.osmemory.geometry.Fast;
+import org.alex73.osmemory.geometry.FastArea;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -68,10 +70,12 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 public class ExportObjectsByType {
     static Belarus osm;
+    static Fast fast;
     static OutputFormatter formatter;
 
     static List<CheckType> checkTypes;
-    static Map<GranularityType, List<Rehijon>> rehijony = new TreeMap<>();
+    static Map<GranularityType, List<Rehijon>[][]> rehijony = new TreeMap<>();
+    static Map<GranularityType, SplitCities> rehijonySplit = new TreeMap<>();
     static Map<String, Output> outputs = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
@@ -86,6 +90,7 @@ public class ExportObjectsByType {
 
         osm = new Belarus();
         CheckObjects.osm = osm;
+        fast = new Fast(osm.getGeometry());
 
         loadRehijony();
 
@@ -100,6 +105,8 @@ public class ExportObjectsByType {
         t.setId("other");
         t.setMonitoring(GranularityType.MIESTA);
         checkTypes.add(new CheckType(osm, t));
+
+        System.out.println("Process...");
 
         osm.all(o -> osm.contains(o), o -> process(o));
 
@@ -128,23 +135,90 @@ public class ExportObjectsByType {
     static boolean store(GranularityType granularity, IOsmObject obj, String fn) {
         boolean found = false;
 
-        Envelope bound;
+        Geometry geo;
         if (obj.isWay()) {
-            bound = new Way((IOsmWay) obj, osm).getBoundingBox();
+            ExtendedWay w = new ExtendedWay((IOsmWay) obj, osm);
+            Envelope bound = w.getBoundingBox();
+
+            for (Rehijon r : getRehijonyForArea(granularity, bound)) {
+                if (r.area.covers(obj)) {
+                    found = true;
+                    String path = r.path + fn;
+                    storeToFile(obj, path);
+                }
+            }
+
+            return found;
+        } else if (obj.isNode()) {
+            IOsmNode n = (IOsmNode) obj;
+            for (Rehijon r : getRehijonyForNode(granularity, n.getLat(), n.getLon())) {
+                if (r.area.covers(obj)) {
+                    found = true;
+                    String path = r.path + fn;
+                    storeToFile(obj, path);
+                }
+            }
+            return found;
         } else {
-            bound = null;
+            return true;
         }
-        for (Rehijon r : rehijony.get(granularity)) {
-            if (bound != null && !r.area.mayCovers(bound)) {
-                continue;
-            }
-            if (r.area.covers(obj)) {
-                found = true;
-                String path = r.path + fn;
-                storeToFile(obj, path);
+        // for (Rehijon r : getrehijony.get(granularity)) {
+        // if (bound != null && !r.area.mayCovers(bound)) {
+        // continue;
+        // }
+        // if (r.area.covers(obj)) {
+        // found = true;
+        // String path = r.path + fn;
+        // storeToFile(obj, path);
+        // }
+        // }
+        // return found;
+    }
+
+    // static boolean storeNode(GranularityType granularity, IOsmObject obj, String fn) {
+    // boolean found = false;
+    //
+    // for (Rehijon r : rehijony.get(granularity)) {
+    // if (r.area.covers(obj)) {
+    // found = true;
+    // String path = r.path + fn;
+    // storeToFile(obj, path);
+    // }
+    // }
+    // return found;
+    // }
+
+    static List<Rehijon> getRehijonyForNode(GranularityType granularity, int lat, int lon) {
+        Fast.Cell c = fast.getCellForPoint(lat, lon);
+        return rehijony.get(granularity)[c.getX()][c.getY()];
+    }
+
+    static List<Rehijon> getRehijonyForArea(GranularityType granularity, Envelope bound) {
+        Fast.Cell c1 = fast.getCellForPoint((int) (bound.getMinY() / IOsmNode.DIVIDER),
+                (int) (bound.getMinX() / IOsmNode.DIVIDER));
+        Fast.Cell c2 = fast.getCellForPoint((int) (bound.getMaxY() / IOsmNode.DIVIDER),
+                (int) (bound.getMaxX() / IOsmNode.DIVIDER));
+        List<Rehijon> result = new ArrayList<>();
+        if (c1 == null && c2 == null) {
+            return result;
+        }
+        if (c1 == null) {
+            c1 = new Fast.Cell(0, 0, false, false, null);
+        }
+        if (c2 == null) {
+            c2 = new Fast.Cell(Fast.PARTS_COUNT_BYXY - 1, Fast.PARTS_COUNT_BYXY - 1, false, false, null);
+        }
+
+        for (int i = c1.getX(); i <= c2.getX(); i++) {
+            for (int j = c1.getY(); j <= c2.getY(); j++) {
+                for (Rehijon r : rehijony.get(granularity)[i][j]) {
+                    if (!result.contains(r)) {
+                        result.add(r);
+                    }
+                }
             }
         }
-        return found;
+        return result;
     }
 
     static GranularityType upper(GranularityType g) {
@@ -176,13 +250,19 @@ public class ExportObjectsByType {
      * Чытаем рэгіёны рознага ўзроўня.
      */
     static void loadRehijony() throws Exception {
-        rehijony.put(GranularityType.KRAINA, new ArrayList<>());
-        rehijony.put(GranularityType.VOBLASC, new ArrayList<>());
-        rehijony.put(GranularityType.RAJON, new ArrayList<>());
-        rehijony.put(GranularityType.MIESTA, new ArrayList<>());
+        for (GranularityType g : new GranularityType[] { GranularityType.KRAINA, GranularityType.VOBLASC,
+                GranularityType.RAJON, GranularityType.MIESTA }) {
+            List[][] list = new List[Fast.PARTS_COUNT_BYXY][Fast.PARTS_COUNT_BYXY];
+            rehijony.put(g, list);
+            for (int i = 0; i < Fast.PARTS_COUNT_BYXY; i++) {
+                list[i] = new List[Fast.PARTS_COUNT_BYXY];
+                for (int j = 0; j < Fast.PARTS_COUNT_BYXY; j++) {
+                    list[i][j] = new ArrayList<Rehijon>();
+                }
+            }
+        }
 
-        rehijony.get(GranularityType.KRAINA).add(
-                new Rehijon("/", new AdaptiveFastArea(osm.getGeometry(), osm)));
+        putRehijon(GranularityType.KRAINA, new Rehijon("/", new FastArea(osm.getGeometry(), osm)));
 
         List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
                 PadzielOsmNas.class);
@@ -190,16 +270,15 @@ public class ExportObjectsByType {
             if (p.voblasc == null) {
                 continue;
             }
-            AdaptiveFastArea area = new AdaptiveFastArea(
-                    new Area(osm, osm.getRelationById(p.relationID)).getGeometry(), osm);
+            FastArea area = new FastArea(new ExtendedRelation(osm.getRelationById(p.relationID), osm).getArea(), osm);
             if (p.rajon == null) {
                 // вобласьць
                 String path = p.voblasc + " вобласць" + '/';
-                rehijony.get(GranularityType.VOBLASC).add(new Rehijon(path, area));
+                putRehijon(GranularityType.VOBLASC, new Rehijon(path, area));
             } else {
                 // раён
                 String path = p.voblasc + " вобласць" + '/' + p.rajon + " раён" + '/';
-                rehijony.get(GranularityType.RAJON).add(new Rehijon(path, area));
+                putRehijon(GranularityType.RAJON, new Rehijon(path, area));
             }
         }
 
@@ -216,23 +295,37 @@ public class ExportObjectsByType {
             path += m.nazvaNoStress + "/";
 
             Geometry g = null;
-            for (String oc : m.osmIDother.split(";")) {
-                IOsmObject o = osm.getObject(oc);
-                if (o == null) {
-                    continue;
+            try {
+                for (String oc : m.osmIDother.split(";")) {
+                    IOsmObject o = osm.getObject(oc);
+                    if (o == null) {
+                        continue;
+                    }
+                    if (g == null) {
+                        g = OsmHelper.areaFromObject(o, osm);
+                    } else {
+                        g = g.union(OsmHelper.areaFromObject(o, osm));
+                    }
                 }
-                if (g == null) {
-                    g = new Area(osm, o).getGeometry();
-                } else {
-                    g = g.union(new Area(osm, o).getGeometry());
-                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                g = null;
             }
             if (g != null) {
-                rehijony.get(GranularityType.MIESTA).add(new Rehijon(path, new AdaptiveFastArea(g, osm)));
+                putRehijon(GranularityType.MIESTA, new Rehijon(path, new FastArea(g, osm)));
             }
         }
-        for (GranularityType g : rehijony.keySet()) {
-            System.out.println(g + " " + rehijony.get(g).size());
+    }
+
+    static void putRehijon(GranularityType granularity, Rehijon r) {
+        List[][] lists = rehijony.get(granularity);
+        for (int i = 0; i < Fast.PARTS_COUNT_BYXY; i++) {
+            for (int j = 0; j < Fast.PARTS_COUNT_BYXY; j++) {
+                Fast.Cell c = fast.getCell(i, j);
+                if (r.area.getGeometry().intersects(c.getGeom())) {
+                    lists[i][j].add(r);
+                }
+            }
         }
     }
 
@@ -294,9 +387,9 @@ public class ExportObjectsByType {
 
     static class Rehijon {
         final String path;
-        final AdaptiveFastArea area;
+        final FastArea area;
 
-        public Rehijon(String path, AdaptiveFastArea area) {
+        public Rehijon(String path, FastArea area) {
             this.path = path;
             this.area = area;
         }

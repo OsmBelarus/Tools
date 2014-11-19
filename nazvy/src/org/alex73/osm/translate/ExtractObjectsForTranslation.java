@@ -47,7 +47,8 @@ import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
 /**
@@ -60,12 +61,12 @@ public class ExtractObjectsForTranslation {
 
     public static void main(String[] args) throws Exception {
         osm = new Belarus();
-        FastArea Miensk = new FastArea(new Area(osm, osm.getRelationById(59195)).getGeometry(), osm);
-        FastArea Brest = new FastArea(new Area(osm, osm.getRelationById(72615)).getGeometry(), osm);
-        FastArea Hrodna = new FastArea(new Area(osm, osm.getRelationById(130921)).getGeometry(), osm);
-        FastArea Viciebsk = new FastArea(new Area(osm, osm.getRelationById(68614)).getGeometry(), osm);
-        FastArea Mahilou = new FastArea(new Area(osm, osm.getRelationById(62145)).getGeometry(), osm);
-        FastArea Homiel = new FastArea(new Area(osm, osm.getRelationById(163244)).getGeometry(), osm);
+        FastArea Miensk = new FastArea(new ExtendedRelation(osm.getRelationById(59195), osm).getArea(), osm);
+        FastArea Brest = new FastArea(new ExtendedRelation(osm.getRelationById(72615), osm).getArea(), osm);
+        FastArea Hrodna = new FastArea(new ExtendedRelation(osm.getRelationById(130921), osm).getArea(), osm);
+        FastArea Viciebsk = new FastArea(new ExtendedRelation(osm.getRelationById(68614), osm).getArea(), osm);
+        FastArea Mahilou = new FastArea(new ExtendedRelation(osm.getRelationById(62145), osm).getArea(), osm);
+        FastArea Homiel = new FastArea(new ExtendedRelation(osm.getRelationById(163244), osm).getArea(), osm);
 
         nameTag = osm.getTagsPack().getTagCode("name");
         namebeTag = osm.getTagsPack().getTagCode("name:be");
