@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
@@ -35,6 +34,7 @@ import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.geometry.IExtendedObject;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -242,7 +242,11 @@ public class CheckStreets3 extends StreetsParse3 {
     @Override
     public void processHouses(City c) throws Exception {
         System.out.println("Check houses in " + c.nazva);
-        storage.byTag("addr:housenumber", h -> c.geom.covers(h), h -> processHouse(c, h));
+        for (IExtendedObject h : houses) {
+            if (c.geom.covers(h)) {
+                processHouse(c, h.getObject());
+            }
+        }
     }
 
     public void processHouse(City c, IOsmObject s) {

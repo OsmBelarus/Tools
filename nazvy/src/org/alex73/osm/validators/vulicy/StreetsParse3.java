@@ -47,8 +47,9 @@ import org.alex73.osm.utils.TMX;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.geometry.AdaptiveFastArea;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.FastArea;
+import org.alex73.osmemory.geometry.IExtendedObject;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 /**
  * Стварае файлы .po для перакладу назваў вуліц.
@@ -56,7 +57,8 @@ import org.alex73.osmemory.geometry.Area;
 public class StreetsParse3 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
-    public static final Pattern RE_HOUSENUMBER = Pattern.compile("[1-9][0-9]*(/[1-9][0-9]*)?(/?[АБВГДабвгд])?( к[0-9]+)?");
+    public static final Pattern RE_HOUSENUMBER = Pattern
+            .compile("[1-9][0-9]*(/[1-9][0-9]*)?(/?[АБВГДабвгд])?( к[0-9]+)?");
 
     static String poOutputDir;
     static String tmxOutputDir;
@@ -66,6 +68,7 @@ public class StreetsParse3 {
     List<Miesta> daviednik;
     Errors globalErrors = new Errors();
     List<City> cities = new ArrayList<>();
+    List<IExtendedObject> houses = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
         poOutputDir = Env.readProperty("po.source.dir");
@@ -82,7 +85,8 @@ public class StreetsParse3 {
 
         System.out.println("Checking...");
         loadCities();
-        
+        storage.byTag("addr:housenumber", h -> houses.add(OsmHelper.extendedFromObject(h, storage)));
+
         for (City c : cities) {
             start(c);
             processStreets(c);
@@ -92,27 +96,28 @@ public class StreetsParse3 {
     }
 
     short addrStreetTag, nameTag, namebeTag, houseNumberTag;
-    
+
     public void loadCities() throws Exception {
         storage = new Belarus();
         addrStreetTag = storage.getTagsPack().getTagCode("addr:street");
         nameTag = storage.getTagsPack().getTagCode("name");
         namebeTag = storage.getTagsPack().getTagCode("name:be");
         houseNumberTag = storage.getTagsPack().getTagCode("addr:housenumber");
-       
+
         for (Miesta m : daviednik) {
             switch (m.typ) {
             case "г.":
             case "г. п.":
                 if (m.osmIDother != null && !m.osmIDother.trim().isEmpty()) {
-                    AdaptiveFastArea border = null;
+                    FastArea border = null;
                     for (String id : m.osmIDother.split(";")) {
                         IOsmObject city = storage.getObject(id);
                         if (city != null) {
                             try {
-                                border = new AdaptiveFastArea(new Area(storage, city).getGeometry(), storage);
+                                border = new FastArea(city, storage);
                             } catch (Exception ex) {
-                                globalErrors.addError("Памылка стварэньня межаў " + m.nazva + ": " + ex.getMessage());
+                                globalErrors.addError("Памылка стварэньня межаў " + m.nazva + ": "
+                                        + ex.getMessage());
                             }
                             break;
                         }
@@ -129,52 +134,53 @@ public class StreetsParse3 {
     }
 
     void start(City c) throws Exception {
-        
+
     }
+
     void end(City c) throws Exception {
-            List<String> us = new ArrayList<>(c.uniq.keySet());
-            Collections.sort(us, new Comparator<String>() {
+        List<String> us = new ArrayList<>(c.uniq.keySet());
+        Collections.sort(us, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return BEL.compare(o1.toLowerCase(BE), o2.toLowerCase(BE));
+            }
+        });
+
+        TMX tmx = new TMX();
+        File poFile = new File(poOutputDir + '/' + c.fn + ".po");
+        File tmxFile = new File(tmxOutputDir + '/' + c.fn + ".tmx");
+        poFile.getParentFile().mkdirs();
+        tmxFile.getParentFile().mkdirs();
+        BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
+        for (String u : us) {
+            LocalizationInfo li = c.uniq.get(u);
+            Collections.sort(li.ways, new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
-                    return BEL.compare(o1.toLowerCase(BE), o2.toLowerCase(BE));
+                    long i1 = Long.parseLong(o1.substring(1));
+                    long i2 = Long.parseLong(o2.substring(1));
+                    return Long.compare(i1, i2);
                 }
             });
+            wr.write("# Objects : " + li.ways + "\n");
+            wr.write("# Names: " + li.name + "\n");
+            wr.write("msgid \"" + u + "\"\n");
+            String t = "";
+            if (!li.name_be.isEmpty()) {
+                wr.write("msgstr \"\"\n");
 
-            TMX tmx = new TMX();
-            File poFile = new File(poOutputDir + '/' + c.fn + ".po");
-            File tmxFile = new File(tmxOutputDir + '/' + c.fn + ".tmx");
-            poFile.getParentFile().mkdirs();
-            tmxFile.getParentFile().mkdirs();
-            BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
-            for (String u : us) {
-                LocalizationInfo li = c.uniq.get(u);
-                Collections.sort(li.ways, new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        long i1 = Long.parseLong(o1.substring(1));
-                        long i2 = Long.parseLong(o2.substring(1));
-                        return Long.compare(i1, i2);
-                    }
-                });
-                wr.write("# Objects : " + li.ways + "\n");
-                wr.write("# Names: " + li.name + "\n");
-                wr.write("msgid \"" + u + "\"\n");
-                String t = "";
-                if (!li.name_be.isEmpty()) {
-                    wr.write("msgstr \"\"\n");
-
-                    for (String s : li.name_be) {
-                        t += "#" + s;
-                    }
-                }
-                wr.write("\n");
-                if (!t.isEmpty()) {
-                    tmx.put(u, t);
+                for (String s : li.name_be) {
+                    t += "#" + s;
                 }
             }
-            wr.close();
-            tmx.save(tmxFile);
-            System.out.println(c.nazva + ": " + c.uniq.size());
+            wr.write("\n");
+            if (!t.isEmpty()) {
+                tmx.put(u, t);
+            }
+        }
+        wr.close();
+        tmx.save(tmxFile);
+        System.out.println(c.nazva + ": " + c.uniq.size());
     }
 
     public void processStreets(City c) {
@@ -213,9 +219,8 @@ public class StreetsParse3 {
     }
 
     public void processHouses(City c) throws Exception {
-        
-    }
 
+    }
 
     void process(City c, IOsmObject obj, String name, String name_be) throws Exception {
         StreetName orig = StreetNameParser.parse(name);
@@ -261,13 +266,13 @@ public class StreetsParse3 {
     public static class City {
         public final String fn;
         public final String nazva;
-        public final AdaptiveFastArea geom;
+        public final FastArea geom;
         List<IOsmObject> streets = new ArrayList<>();
         POReader po;
         Map<String, LocalizationInfo> uniq = new HashMap<>();
         Map<String, Set<String>> renames = new TreeMap<>();
 
-        public City(Miesta m, AdaptiveFastArea geomText) {
+        public City(Miesta m, FastArea geomText) {
             this.nazva = m.voblasc + '/' + m.nazvaNoStress;
             this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_');
             this.geom = geomText;

@@ -13,7 +13,8 @@ import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
 import org.alex73.osmemory.IOsmNode;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
 public class PrypynkiPosukBlizejsych {
@@ -29,7 +30,7 @@ public class PrypynkiPosukBlizejsych {
 
     public static void main(String[] args) throws Exception {
         osm = new Belarus();
-        Miensk = new FastArea(new Area(osm, osm.getRelationById(59195)).getGeometry(), osm);
+        Miensk = new FastArea(new ExtendedRelation(osm.getRelationById(59195), osm).getArea(), osm);
 
         readMinsktrans();
         readMap();

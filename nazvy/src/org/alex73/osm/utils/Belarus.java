@@ -28,18 +28,18 @@ import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.O5MReader;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
- * Пашырэньне MemoryStorage менавіта для Беларусі. 
+ * Пашырэньне MemoryStorage менавіта для Беларусі.
  */
 public class Belarus extends MemoryStorage {
     public static final long BELARUS_BORDER_RELATION_ID = 59065;
 
-    private Area area;
+    private ExtendedRelation area;
     private FastArea fastArea;
 
     public Belarus() throws Exception {
@@ -51,15 +51,11 @@ public class Belarus extends MemoryStorage {
             throw new Exception("Wrong o5m data");
         }
 
-        area = new Area(this, getRelationById(BELARUS_BORDER_RELATION_ID));
-        fastArea = new FastArea(area.getGeometry(), this) {
+        area = new ExtendedRelation(getRelationById(BELARUS_BORDER_RELATION_ID), this);
+        fastArea = new FastArea(area.getArea(), this) {
             @Override
-            protected boolean coversNode(IOsmNode node) {
-                if (area.getBorderNodes().contains(node.getId())) {
-                    // border
-                    return false;
-                }
-                return super.coversNode(node);
+            protected boolean isSkipped(IOsmNode node) {
+                return area.getBorderNodes().contains(node.getId());
             }
         };
     }
@@ -73,6 +69,6 @@ public class Belarus extends MemoryStorage {
     }
 
     public Geometry getGeometry() {
-        return area.getGeometry();
+        return area.getArea();
     }
 }
