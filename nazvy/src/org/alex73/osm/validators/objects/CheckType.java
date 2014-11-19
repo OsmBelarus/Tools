@@ -31,8 +31,8 @@ import java.util.Set;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.Way;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedWay;
 
 /**
  * Правярае аб'екты й тэгі для вызначанага тыпу.
@@ -137,6 +137,14 @@ public class CheckType extends BaseCheck {
                 }
             }
         }
+        if (type.getRequired() != null && type.getRequired().getRequiredRelationType() != null
+                && obj.isRelation()) {
+            // тэг у requiredRelationType
+            String requiredType = type.getRequired().getRequiredRelationType();
+            if (!requiredType.equals(obj.getTag("type", osm))) {
+                CheckObjects.addError(obj, "'" + type.getId() + "' павінен мець 'type=" + requiredType + "'");
+            }
+        }
 
         if (type.getRequired() != null && type.getRequired().getCustomMethod() != null) {
             callCustom(type.getRequired().getCustomMethod(), obj);
@@ -180,19 +188,19 @@ public class CheckType extends BaseCheck {
         switch (type.getRequired().getGeometryType()) {
         case AREA:
             try {
-                new Area(osm, obj).getGeometry();
+                OsmHelper.areaFromObject(obj, osm);
             } catch (Exception ex) {
                 CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
             }
             break;
         case LINE:
             if (obj.isWay()) {
-                Way way = new Way((IOsmWay) obj, osm);
-                // try {
-                // way.getLineGeometry();
-                // } catch (Exception ex) {
-                // CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
-                // }
+                ExtendedWay way = new ExtendedWay((IOsmWay) obj, osm);
+                try {
+                    way.getLine();
+                } catch (Exception ex) {
+                    CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
+                }
             } else {
                 CheckObjects.addError(obj, "'" + type.getId() + "' мае няправільную геамэтрыю");
             }

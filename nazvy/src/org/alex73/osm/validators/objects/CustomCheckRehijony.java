@@ -33,7 +33,8 @@ import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmRelation;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedRelation;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -75,7 +76,7 @@ public class CustomCheckRehijony implements ICustomClass {
                 } else if (p.rajon == null) {
                     // вобласьць
                     IOsmRelation r = osm.getRelationById(p.relationID);
-                    voblasci.put(p.voblasc, new Area(osm, r).getGeometry());
+                    voblasci.put(p.voblasc, new ExtendedRelation(r, osm).getArea());
                 } else {
                     // раён
                     voblasci.put((p.osmName == null ? p.rajon : p.osmName) + " раён", voblasci.get(p.voblasc));
@@ -103,7 +104,7 @@ public class CustomCheckRehijony implements ICustomClass {
         processed.add(o.getObjectCode());
         Geometry voblascGeometry;
         try {
-            voblascGeometry = new Area(osm, o).getGeometry();
+            voblascGeometry = OsmHelper.areaFromObject(o, osm);
         } catch (Exception ex) {
             CheckObjects.addError(o, "Няправільная геамэтрыя вобласьці");
             return;
@@ -122,7 +123,7 @@ public class CustomCheckRehijony implements ICustomClass {
         }
         Geometry rajonGeometry;
         try {
-            rajonGeometry = new Area(osm, o).getGeometry();
+            rajonGeometry = OsmHelper.areaFromObject(o, osm);
         } catch (Exception ex) {
             CheckObjects.addError(o, "Няправільная геамэтрыя раёну");
             return;

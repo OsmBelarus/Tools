@@ -13,7 +13,7 @@
             <tag name="name:be" />
             <tag name="name:ru" />
             <tag name="population" />
-            <tag name="population_date" />
+            <tag name="population:date" />
             <tag name="ISO3166-1" value="BY" />
             <tag name="ISO3166-1:alpha2" value="BY" />
             <tag name="ISO3166-1:alpha3" value="BLR" />
@@ -44,7 +44,7 @@
             <tag name="name:be" />
             <tag name="name:ru" />
             <tag name="population" />
-            <tag name="population_date" />
+            <tag name="population:date" />
             <tag name="iso3166-2" />
             <tag name="addr:country" />
         </required>
@@ -69,7 +69,7 @@
             <tag name="name:be" />
             <tag name="name:ru" />
             <tag name="population" />
-            <tag name="population_date" />
+            <tag name="population:date" />
             <tag name="addr:country" />
             <tag name="addr:region" />
         </required>
@@ -79,7 +79,7 @@
             <tag name="wikipedia:*" />
         </allow>
     </type>
-    <type id="Зьніклая вёска" main="true" monitoring="RAJON" additions="Назва">
+    <!-- type id="Зьніклая вёска" main="true" monitoring="RAJON" additions="Назва">
         <filter>
             <tag name="place" value="locality"/>
         </filter>
@@ -87,7 +87,7 @@
             <tag name="abandoned:place"/>
         </required>
     </type>
-    <type id="Населены пункт node" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
+    <type id="Населены пункт(цэнтр)" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
         <filter osmTypes="node">
             <tag name="place"/>
         </filter>
@@ -100,14 +100,14 @@
             <tag name="addr:postcode"/>
             <tag name="admin_level" value="8" />
             <tag name="population" />
-            <tag name="population_date" />
+            <tag name="population:date" />
         </allow>
     </type>
-    <type id="Населены пункт way" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
-        <filter osmTypes="way">
+    <type id="Населены пункт(мяжа)" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
+        <filter osmTypes="way,relation">
             <tag name="place"/>
         </filter>
-        <required geometryType="AREA" osmTypes="way">
+        <required geometryType="AREA" osmTypes="way" requiredRelationType="border">
             <tag name="addr:country" />
             <tag name="addr:region" />
             <tag name="addr:district" />
@@ -117,28 +117,10 @@
             <tag name="admin_level" value="8" />
             <tag name="boundary" value="administrative" />
             <tag name="population" />
-            <tag name="population_date" />
+            <tag name="population:date" />
         </allow>
-    </type>
-    <type id="Населены пункт relation" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
-        <filter osmTypes="relation">
-            <tag name="place"/>
-        </filter>
-        <required geometryType="AREA" osmTypes="relation">
-            <tag name="type" value="boundary" />
-            <tag name="addr:country" />
-            <tag name="addr:region" />
-            <tag name="addr:district" />
-        </required>
-        <allow>
-            <tag name="addr:postcode"/>
-            <tag name="admin_level" value="8" />
-            <tag name="boundary" value="administrative" />
-            <tag name="population" />
-            <tag name="population_date" />
-        </allow>
-    </type>
-    <type id="Дом" main="true" additions="Крыніца" monitoring="MIESTA" customClass="org.alex73.osm.validators.objects.CustomCheckHouse">
+    </type-->
+    <!-- type id="Дом" main="true" additions="Крыніца" monitoring="MIESTA" customClass="org.alex73.osm.validators.objects.CustomCheckHouse">
         <filter osmTypes="way,relation">
             <tag name="building" value="house" />
         </filter>
@@ -165,7 +147,7 @@
             <tag name="addr:street" />
             <tag name="addr:housenumber" />
         </allow>
-    </type>
+    </type-->
     <type id="Электрычны слуп" main="true" monitoring="MIESTA" additions="Крыніца,Лямпа на слупе,Гняздо на слупе">
         <filter>
             <tag name="power" value="pole" />
@@ -177,7 +159,7 @@
         </allow>
     </type>
 
-    <type id="Дарога(motorway)" main="true" monitoring="KRAINA" additions="Крыніца">
+    <!-- type id="Дарога(motorway)" main="true" monitoring="KRAINA" additions="Крыніца">
         <filter>
             <tag name="highway" value="motorway" />
         </filter>
@@ -187,6 +169,7 @@
             <tag name="maxspeed" />
         </required>
         <allow>
+            <tag name="embankment" value="yes" />
             <tag name="oneway" value="yes" />
             <tag name="bridge" value="yes" />
             <tag name="toll" value="yes" />
@@ -194,8 +177,9 @@
             <tag name="int_ref" />
             <tag name="surface" />
             <tag name="layer" />
+            <tag name="turn:lanes" />
         </allow>
-    </type>
+    </type-->
     <!--type id="Дарога" requiredOsmTypes="way" wayType="LINE" additions="name" main="true">
         <tag name="highway" value="trunk|primary|secondary|tertiary|unclassified|residential"/>
         <possible name="addr:street" />

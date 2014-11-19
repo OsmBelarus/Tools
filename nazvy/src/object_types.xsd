@@ -43,6 +43,7 @@
                 <xs:attribute name="osmTypes" type="xs:string" use="optional" />
                 <xs:attribute name="geometryType" type="GeometryType" use="optional" />
                 <xs:attribute name="customMethod" type="xs:string" use="optional" />
+                <xs:attribute name="requiredRelationType" type="xs:string" use="optional" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

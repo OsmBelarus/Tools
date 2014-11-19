@@ -26,8 +26,8 @@ import gen.alex73.osm.validators.objects.Trap;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.Area;
-import org.alex73.osmemory.geometry.Way;
+import org.alex73.osmemory.geometry.OsmHelper;
+import org.alex73.osmemory.geometry.ExtendedWay;
 
 /**
  * Сюды трапляюць аб'екты нявызначанага тыпу. Толькі каб паказаць іх як памылку, альбо спраўдзіць геамэтрыю.
@@ -54,7 +54,7 @@ public class CheckTrap extends BaseCheck {
                     CheckObjects.addError(obj, "Чакаецца way");
                 } else {
                     try {
-                        new Way((IOsmWay) obj, osm).getLineGeometry();
+                        new ExtendedWay((IOsmWay) obj, osm).getLine();
                     } catch (Exception ex) {
                         CheckObjects.addError(obj, trap.getMessage());
                     }
@@ -65,7 +65,7 @@ public class CheckTrap extends BaseCheck {
                     CheckObjects.addError(obj, "Чакаецца way альбо relation");
                 } else {
                     try {
-                        new Area(osm, obj).getGeometry();
+                        OsmHelper.areaFromObject(obj, osm);
                     } catch (Exception ex) {
                         CheckObjects.addError(obj, trap.getMessage());
                     }

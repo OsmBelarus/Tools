@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="osmTypes" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="geometryType" type="{}GeometryType" />
  *       &lt;attribute name="customMethod" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="requiredRelationType" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -38,6 +39,8 @@ public class Required
     protected GeometryType geometryType;
     @XmlAttribute(name = "customMethod")
     protected String customMethod;
+    @XmlAttribute(name = "requiredRelationType")
+    protected String requiredRelationType;
 
     /**
      * Gets the value of the osmTypes property.
@@ -109,6 +112,30 @@ public class Required
      */
     public void setCustomMethod(String value) {
         this.customMethod = value;
+    }
+
+    /**
+     * Gets the value of the requiredRelationType property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getRequiredRelationType() {
+        return requiredRelationType;
+    }
+
+    /**
+     * Sets the value of the requiredRelationType property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setRequiredRelationType(String value) {
+        this.requiredRelationType = value;
     }
 
 }

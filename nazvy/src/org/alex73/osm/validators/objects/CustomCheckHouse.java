@@ -23,7 +23,7 @@ package org.alex73.osm.validators.objects;
 
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.Area;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -41,7 +41,7 @@ public class CustomCheckHouse implements ICustomClass {
     public void checkSize(IOsmObject obj) throws Exception {
         Geometry geo;
         try {
-            geo = new Area(osm, obj).getGeometry();
+            geo = OsmHelper.areaFromObject(obj, osm);
         } catch (Exception ex) {
             CheckObjects.addError(obj, "Няправільная геамэтрыя будынку");
             return;
