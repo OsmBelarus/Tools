@@ -35,16 +35,43 @@
 <script language="javascript">
 #set ( $d = "$")
     function send(cmd) {
+      ${d}.ajax("http://127.0.0.1:8111/version",{
+        async: false
+      }).done(function( data ) {
+        if (data.protocolversion.major<2 && data.protocolversion.minor<7) {
+          alert("У вас занадта стары JOSM. Карыстайцеся вэрсіяй не менш за 7680");
+        } else {
+          sendChecked(cmd);
+        }
+      }).fail(function(jq,status,error) {
+        alert("Памылка запыту вэрсіі JOSM. Можа ён не стартаваны ці не дазволены Remote Control ?\n\n "+error);
+      });
+    }
+    function sendChecked(cmd) {
         ${d}.ajax("http://127.0.0.1:8111/"+cmd);
         return false;
     }
     function sendAll() {
-      ${d}.ajaxSetup({async: false});
+      ${d}.ajax("http://127.0.0.1:8111/version",{
+        async: false
+      }).done(function( data ) {
+        if (data.protocolversion.major<2 && data.protocolversion.minor<7) {
+          alert("У вас занадта стары JOSM. Карыстайцеся вэрсіяй не менш за 7680");
+        } else {
+          sendAllChecked();
+        }
+      }).fail(function(jq,status,error) {
+        alert("Памылка запыту вэрсіі JOSM. Можа ён не стартаваны ці не дазволены Remote Control ?\n\n "+error);
+      });
+    }
+    function sendAllChecked() {
       ${d}('input:checkbox:checked').map(function() {
         var cb = this;
         ${d}.ajax("http://127.0.0.1:8111/"+cb.value)
             .done(function( data ) {
-                cb.checked = false;
+              cb.checked = false;
+            }).fail(function(jq,status,error) {
+              alert("Памылка запыту JOSM:\n\n"+error);
             });
       });
     }
@@ -53,11 +80,7 @@
     }
 </script>
 
-<div style="position: fixed; right: 50px; top: 15px; color:red; background-color: white; border-style: solid; border-color: red">
-<b>Карыстайцеся JOSM 7521 ці пазьнейшым, бо стары JOSM псуе тэгі аб'ектаў !!!<br/>
-І абавязкова спачатку дашліце 1 аб'ект і пазначце "Accept All Tags",  <br/>
-бо калі дасылаеце больш за 1 аб'ект і паказваецца дыялог у JOSM,<br/>
-ён псуе тэгі.
-</b>
+<div style="position: fixed; right: 50px; top: 25px; background-color: white; border-style: solid; border-color: red">
+Спачатку дашліце некалькі аб'ектаў каб пазначыць "Accept All Tags"<br/>
 <button onClick="javascript: sendAll();">Даслаць у JOSM</button>
 </div>
