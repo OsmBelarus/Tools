@@ -28,40 +28,34 @@ import gen.alex73.osm.monitor.Monitor;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 
-import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.CSV;
-import org.alex73.osm.utils.Env;
-import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osmemory.geometry.ExtendedRelation;
+import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.geometry.FastArea;
 
 /**
  * This class exports some critical objects to text file for commit to git. It allows to monitor changes of
  * these objects.
+ * 
+ * @deprecated use ExportObjectByType
  */
 public class ExportObjects {
-    static Belarus osm;
-    static OutputFormatter formatter;
-    static List<Rehijon> rehijony = new ArrayList<>();
 
-    public static void main(String[] args) throws Exception {
-        Locale.setDefault(Locale.ENGLISH);
+    OutputFormatter formatter;
+    Config config;
 
+    public ExportObjects() throws Exception {
         JAXBContext CTX = JAXBContext.newInstance(Config.class);
-        Config config = (Config) CTX.createUnmarshaller().unmarshal(new File("monitor-config.xml"));
+        config = (Config) CTX.createUnmarshaller().unmarshal(new File("monitor-config.xml"));
+    }
 
-        osm = new Belarus();
-
-        loadRehijony();
-        for (Rehijon r : rehijony) {
+    public void export(Map<String, FastArea> borders, MemoryStorage osm) throws Exception {
+        for (Map.Entry<String, FastArea> en : borders.entrySet()) {
             List<MonitorContext> monitors = new ArrayList<>();
             for (Monitor m : config.getMonitor()) {
-                monitors.add(new MonitorContext(osm, m, r.area));
+                monitors.add(new MonitorContext(osm, m, en.getValue()));
             }
 
             // formatter = new OutputFormatter(osm);
@@ -70,34 +64,11 @@ public class ExportObjects {
                 osm.all(o -> m.process(o));
             }
 
-            File outdir = new File("../../OsmBelarus-Monitoring/" + r.nazva);
+            File outdir = new File("../../OsmBelarus-Monitoring/" + en.getKey());
             outdir.mkdirs();
             for (int i = 0; i < monitors.size(); i++) {
                 monitors.get(i).dump(outdir);
             }
         }
-    }
-
-    static void loadRehijony() throws Exception {
-        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
-        for (PadzielOsmNas p : padziel) {
-            String path = "/";
-            if (p.voblasc != null) {
-                path += p.voblasc + " вобласць" + '/';
-            }
-            if (p.rajon != null) {
-                path += p.rajon + " раён" + '/';
-            }
-            Rehijon rehijon = new Rehijon();
-            rehijon.nazva = Lat.unhac(Lat.lat(path, false)).replace(' ', '_');
-            rehijon.area = new FastArea(new ExtendedRelation(osm.getRelationById(p.relationID), osm).getArea(), osm);
-            rehijony.add(rehijon);
-        }
-    }
-
-    public static class Rehijon {
-        public String nazva;
-        public FastArea area;
     }
 }

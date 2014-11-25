@@ -28,11 +28,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
-import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.OsmHelper;
 import org.alex73.osmemory.geometry.ExtendedWay;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 /**
  * Правярае аб'екты й тэгі для вызначанага тыпу.
@@ -46,7 +46,7 @@ public class CheckType extends BaseCheck {
     private TagCodeValues requiredTags, possibleTags;
     private Set<String> additions;
 
-    public CheckType(MemoryStorage osm, Type type) throws Exception {
+    public CheckType(Belarus osm, Type type) throws Exception {
         super(osm, type);
         this.type = type;
 

@@ -23,11 +23,11 @@ package org.alex73.osm.validators.objects;
 
 import gen.alex73.osm.validators.objects.Trap;
 
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
-import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.OsmHelper;
 import org.alex73.osmemory.geometry.ExtendedWay;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 /**
  * Сюды трапляюць аб'екты нявызначанага тыпу. Толькі каб паказаць іх як памылку, альбо спраўдзіць геамэтрыю.
@@ -35,7 +35,7 @@ import org.alex73.osmemory.geometry.ExtendedWay;
 public class CheckTrap extends BaseCheck {
     private final Trap trap;
 
-    public CheckTrap(MemoryStorage osm, Trap trap) throws Exception {
+    public CheckTrap(Belarus osm, Trap trap) throws Exception {
         super(osm, trap);
         this.trap = trap;
     }

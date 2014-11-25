@@ -45,19 +45,32 @@ public class OutputFormatter {
     }
 
     String objectName(IOsmObject o) {
+        String name = o.getTag("name", osm);
+        String intname = o.getTag("int_name", osm);
+        String namebe = o.getTag("name:be", osm);
+        String tarask = o.getTag("name:be-tarask", osm);
+        String nameru = o.getTag("name:ru", osm);
+        if (name == null && intname == null && namebe == null && tarask == null && nameru == null) {
+            return o.getObjectCode();
+        }
+
         StringBuilder out = new StringBuilder(200);
         out.append(o.getObjectCode());
         out.append("  ");
-        out.append(o.getTag("name:be", osm));
-        String tarask = o.getTag("name:be-tarask", osm);
+        out.append(namebe);
         if (tarask != null) {
             out.append(" / ");
             out.append(tarask);
         }
         out.append(" / ");
-        out.append(o.getTag("int_name", osm));
+        out.append(intname);
         out.append(" / ");
-        out.append(o.getTag("name", osm));
+        out.append(name);
+
+        if (nameru != null) {
+            out.append(" / ");
+            out.append(nameru);
+        }
         return out.toString();
     }
 
@@ -68,6 +81,8 @@ public class OutputFormatter {
             switch (t) {
             case "name":
             case "name:be":
+            case "name:be-tarask":
+            case "name:ru":
             case "int_name":
                 break;
             default:
@@ -80,7 +95,7 @@ public class OutputFormatter {
                 break;
             }
         }
-        return out.length() > 0 ? out.substring(3) : "";
+        return out.length() > 0 ? out.substring(3) : null;
     }
 
     String otherTags(IOsmObject o) {

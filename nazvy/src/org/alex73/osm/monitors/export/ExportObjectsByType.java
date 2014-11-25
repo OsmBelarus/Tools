@@ -26,16 +26,12 @@ import gen.alex73.osm.validators.objects.GranularityType;
 import gen.alex73.osm.validators.objects.ObjectTypes;
 import gen.alex73.osm.validators.objects.Type;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -45,180 +41,113 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.CSV;
-import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.validators.harady.Miesta;
-import org.alex73.osm.validators.objects.CheckObjects;
 import org.alex73.osm.validators.objects.CheckType;
-import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.IOsmRelation;
-import org.alex73.osmemory.IOsmWay;
-import org.alex73.osmemory.geometry.OsmHelper;
-import org.alex73.osmemory.geometry.ExtendedRelation;
-import org.alex73.osmemory.geometry.ExtendedWay;
-import org.alex73.osmemory.geometry.Fast;
 import org.alex73.osmemory.geometry.FastArea;
-
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.alex73.osmemory.geometry.IExtendedObject;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 /**
  * Экспартуе аб'екты па тыпах.
  */
 public class ExportObjectsByType {
-    static Belarus osm;
-    static Fast fast;
-    static OutputFormatter formatter;
+    final ObjectTypes config;
+    Belarus osm;
+    Borders borders;
 
-    static List<CheckType> checkTypes;
-    static Map<GranularityType, List<Rehijon>[][]> rehijony = new TreeMap<>();
-    static Map<GranularityType, SplitCities> rehijonySplit = new TreeMap<>();
-    static Map<String, Output> outputs = new HashMap<>();
+    List<CheckTypeWithFile> checkTypes;
+    Map<String, ExportOutput> outputs;
 
-    public static void main(String[] args) throws Exception {
-        Locale.setDefault(Locale.ENGLISH);
-
+    public ExportObjectsByType() throws Exception {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(new File("src/object_types.xsd")));
         JAXBContext CTX = JAXBContext.newInstance(ObjectTypes.class);
         Unmarshaller unm = CTX.createUnmarshaller();
         unm.setSchema(schema);
-        ObjectTypes config = (ObjectTypes) unm.unmarshal(new File("object-types.xml"));
+        config = (ObjectTypes) unm.unmarshal(new File("object-types.xml"));
+    }
 
-        osm = new Belarus();
-        CheckObjects.osm = osm;
-        fast = new Fast(osm.getGeometry());
-
-        loadRehijony();
+    public void export(Belarus osm, Borders borders, GitClient git) throws Exception {
+        this.osm = osm;
+        this.borders = borders;
 
         checkTypes = new ArrayList<>();
+        outputs = new HashMap<>();
+        for (ExportOutput eo : ExportOutput.listExist(osm)) {
+            outputs.put(eo.path, eo);
+        }
         for (Type t : config.getType()) {
             if (t.isMain()) {
-                checkTypes.add(new CheckType(osm, t));
+                checkTypes.add(new CheckTypeWithFile(osm, t));
             }
         }
 
         Type t = new Type();
         t.setId("other");
         t.setMonitoring(GranularityType.MIESTA);
-        checkTypes.add(new CheckType(osm, t));
-
-        System.out.println("Process...");
+        checkTypes.add(new CheckTypeWithFile(osm, t));
 
         osm.all(o -> osm.contains(o), o -> process(o));
 
-        for (Output o : outputs.values()) {
-            o.close();
+        System.out.println(new Date() + " Write...");
+        for (ExportOutput o : outputs.values()) {
+            o.save(git);
         }
     }
 
-    static void process(IOsmObject obj) {
-        for (CheckType ct : checkTypes) {
-            if (ct.matches(obj)) {
-                String fn = ct.getType().getId() + ".txt";
-
-                GranularityType g = ct.getType().getMonitoring();
-                while (!store(g, obj, fn)) {
-                    g = upper(g);
-                    if (g == null) {
-                        throw new RuntimeException();
+    void process(IOsmObject obj) {
+        try {
+            IExtendedObject ext = OsmHelper.extendedFromObject(obj, osm);
+            for (CheckTypeWithFile ct : checkTypes) {
+                if (ct.matches(obj)) {
+                    GranularityType g = ct.getType().getMonitoring();
+                    while (!store(g, ext, ct.getFilename())) {
+                        g = upper(g);
+                        if (g == null) {
+                            throw new RuntimeException();
+                        }
                     }
+                    break;
                 }
-                break;
             }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 
-    static boolean store(GranularityType granularity, IOsmObject obj, String fn) {
-        boolean found = false;
+    boolean store(GranularityType granularity, IExtendedObject ext, String fn) throws Exception {
+        final StoreFound result = new StoreFound();
 
-        Geometry geo;
-        if (obj.isWay()) {
-            ExtendedWay w = new ExtendedWay((IOsmWay) obj, osm);
-            Envelope bound = w.getBoundingBox();
-
-            for (Rehijon r : getRehijonyForArea(granularity, bound)) {
-                if (r.area.covers(obj)) {
-                    found = true;
-                    String path = r.path + fn;
-                    storeToFile(obj, path);
-                }
+        for (Borders.Border b : getRehijony(granularity, borders)) {
+            if (b.area.covers(ext)) {
+                result.found = true;
+                storeToQueue(ext.getObject(), b.name + fn);
             }
-
-            return found;
-        } else if (obj.isNode()) {
-            IOsmNode n = (IOsmNode) obj;
-            for (Rehijon r : getRehijonyForNode(granularity, n.getLat(), n.getLon())) {
-                if (r.area.covers(obj)) {
-                    found = true;
-                    String path = r.path + fn;
-                    storeToFile(obj, path);
-                }
-            }
-            return found;
-        } else {
-            return true;
         }
-        // for (Rehijon r : getrehijony.get(granularity)) {
-        // if (bound != null && !r.area.mayCovers(bound)) {
-        // continue;
-        // }
-        // if (r.area.covers(obj)) {
-        // found = true;
-        // String path = r.path + fn;
-        // storeToFile(obj, path);
-        // }
-        // }
-        // return found;
+        // getRehijony(granularity,
+        // borders).parallelStream().filter(b->b.area.covers(ext)).forEach(b->{result.found = true;
+        // storeToQueue(ext.getObject(), b.name + fn);});
+        return result.found;
     }
 
-    // static boolean storeNode(GranularityType granularity, IOsmObject obj, String fn) {
-    // boolean found = false;
-    //
-    // for (Rehijon r : rehijony.get(granularity)) {
-    // if (r.area.covers(obj)) {
-    // found = true;
-    // String path = r.path + fn;
-    // storeToFile(obj, path);
-    // }
-    // }
-    // return found;
-    // }
-
-    static List<Rehijon> getRehijonyForNode(GranularityType granularity, int lat, int lon) {
-        Fast.Cell c = fast.getCellForPoint(lat, lon);
-        return rehijony.get(granularity)[c.getX()][c.getY()];
+    static class StoreFound {
+        volatile boolean found = false;
     }
 
-    static List<Rehijon> getRehijonyForArea(GranularityType granularity, Envelope bound) {
-        Fast.Cell c1 = fast.getCellForPoint((int) (bound.getMinY() / IOsmNode.DIVIDER),
-                (int) (bound.getMinX() / IOsmNode.DIVIDER));
-        Fast.Cell c2 = fast.getCellForPoint((int) (bound.getMaxY() / IOsmNode.DIVIDER),
-                (int) (bound.getMaxX() / IOsmNode.DIVIDER));
-        List<Rehijon> result = new ArrayList<>();
-        if (c1 == null && c2 == null) {
-            return result;
+    static List<Borders.Border> getRehijony(GranularityType granularity, Borders borders) {
+        switch (granularity) {
+        case KRAINA:
+            return borders.kraina;
+        case VOBLASC:
+            return borders.voblasci;
+        case RAJON:
+            return borders.rajony;
+        case MIESTA:
+            return borders.miesty;
+        default:
+            throw new RuntimeException();
         }
-        if (c1 == null) {
-            c1 = new Fast.Cell(0, 0, false, false, null);
-        }
-        if (c2 == null) {
-            c2 = new Fast.Cell(Fast.PARTS_COUNT_BYXY - 1, Fast.PARTS_COUNT_BYXY - 1, false, false, null);
-        }
-
-        for (int i = c1.getX(); i <= c2.getX(); i++) {
-            for (int j = c1.getY(); j <= c2.getY(); j++) {
-                for (Rehijon r : rehijony.get(granularity)[i][j]) {
-                    if (!result.contains(r)) {
-                        result.add(r);
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     static GranularityType upper(GranularityType g) {
@@ -233,155 +162,29 @@ public class ExportObjectsByType {
         return null;
     }
 
-    static void storeToFile(IOsmObject obj, String path) {
-        Output o = outputs.get(path);
+    void storeToQueue(IOsmObject obj, String path) {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        ExportOutput o = outputs.get(path);
         if (o == null) {
-            o = new Output(path);
+            // new file
+            o = new ExportOutput(path, osm);
             outputs.put(path, o);
         }
-        try {
-            o.out(obj);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        o.out(obj);
     }
 
-    /**
-     * Чытаем рэгіёны рознага ўзроўня.
-     */
-    static void loadRehijony() throws Exception {
-        for (GranularityType g : new GranularityType[] { GranularityType.KRAINA, GranularityType.VOBLASC,
-                GranularityType.RAJON, GranularityType.MIESTA }) {
-            List[][] list = new List[Fast.PARTS_COUNT_BYXY][Fast.PARTS_COUNT_BYXY];
-            rehijony.put(g, list);
-            for (int i = 0; i < Fast.PARTS_COUNT_BYXY; i++) {
-                list[i] = new List[Fast.PARTS_COUNT_BYXY];
-                for (int j = 0; j < Fast.PARTS_COUNT_BYXY; j++) {
-                    list[i][j] = new ArrayList<Rehijon>();
-                }
-            }
+    class CheckTypeWithFile extends CheckType {
+        String fn;
+
+        public CheckTypeWithFile(Belarus osm, Type type) throws Exception {
+            super(osm, type);
+            fn = Lat.unhac(Lat.lat(getType().getId() + ".txt", false)).replace(' ', '_');
         }
 
-        putRehijon(GranularityType.KRAINA, new Rehijon("/", new FastArea(osm.getGeometry(), osm)));
-
-        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
-        for (PadzielOsmNas p : padziel) {
-            if (p.voblasc == null) {
-                continue;
-            }
-            FastArea area = new FastArea(new ExtendedRelation(osm.getRelationById(p.relationID), osm).getArea(), osm);
-            if (p.rajon == null) {
-                // вобласьць
-                String path = p.voblasc + " вобласць" + '/';
-                putRehijon(GranularityType.VOBLASC, new Rehijon(path, area));
-            } else {
-                // раён
-                String path = p.voblasc + " вобласць" + '/' + p.rajon + " раён" + '/';
-                putRehijon(GranularityType.RAJON, new Rehijon(path, area));
-            }
-        }
-
-        List<Miesta> miesty = new CSV('\t').readCSV(Env.readProperty("dav")
-                + "/Nazvy_nasielenych_punktau.csv", Miesta.class);
-        for (Miesta m : miesty) {
-            if (m.osmIDother == null) {
-                continue;
-            }
-            String path = m.voblasc + " вобласць/";
-            if (!"<вобласць>".equals(m.rajon)) {
-                path += m.rajon + " раён/";
-            }
-            path += m.nazvaNoStress + "/";
-
-            Geometry g = null;
-            try {
-                for (String oc : m.osmIDother.split(";")) {
-                    IOsmObject o = osm.getObject(oc);
-                    if (o == null) {
-                        continue;
-                    }
-                    if (g == null) {
-                        g = OsmHelper.areaFromObject(o, osm);
-                    } else {
-                        g = g.union(OsmHelper.areaFromObject(o, osm));
-                    }
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                g = null;
-            }
-            if (g != null) {
-                putRehijon(GranularityType.MIESTA, new Rehijon(path, new FastArea(g, osm)));
-            }
-        }
-    }
-
-    static void putRehijon(GranularityType granularity, Rehijon r) {
-        List[][] lists = rehijony.get(granularity);
-        for (int i = 0; i < Fast.PARTS_COUNT_BYXY; i++) {
-            for (int j = 0; j < Fast.PARTS_COUNT_BYXY; j++) {
-                Fast.Cell c = fast.getCell(i, j);
-                if (r.area.getGeometry().intersects(c.getGeom())) {
-                    lists[i][j].add(r);
-                }
-            }
-        }
-    }
-
-    static class Output {
-        final String path;
-        final OutputFormatter formatter;
-        PrintStream wr;
-
-        Output(String path) {
-            this.path = path;
-            this.formatter = new OutputFormatter(osm);
-        }
-
-        void out(IOsmObject o) throws Exception {
-            if (wr == null) {
-                open();
-            }
-            switch (o.getType()) {
-            case IOsmObject.TYPE_NODE:
-                IOsmNode n = (IOsmNode) o;
-                wr.println(formatter.objectName(n));
-                wr.println("  other names: " + formatter.otherNames(n));
-                wr.println("  other tags : " + formatter.otherTags(n));
-                wr.println("    geometry : " + formatter.getGeometry(n));
-                break;
-            case IOsmObject.TYPE_WAY:
-                IOsmWay w = (IOsmWay) o;
-                wr.println(formatter.objectName(w));
-                wr.println("  other names: " + formatter.otherNames(w));
-                wr.println("  other tags : " + formatter.otherTags(w));
-                wr.println("    geometry :" + formatter.getGeometry(w));
-                break;
-            case IOsmObject.TYPE_RELATION:
-                IOsmRelation r = (IOsmRelation) o;
-                wr.println(formatter.objectName(r));
-                wr.println("  other names: " + formatter.otherNames(r));
-                wr.println("  other tags : " + formatter.otherTags(r));
-                for (String g : formatter.getGeometry(r)) {
-                    wr.println("    geometry : " + g);
-                }
-                break;
-            default:
-                throw new RuntimeException();
-            }
-        }
-
-        void open() throws Exception {
-            File f = new File("/data/tmp/ooo/" + Lat.unhac(Lat.lat(path, false)).replace(' ', '_'));
-            f.getParentFile().mkdirs();
-            wr = new PrintStream(new BufferedOutputStream(new FileOutputStream(f)), false, "UTF-8");
-        }
-
-        void close() {
-            if (wr != null) {
-                wr.close();
-            }
+        public String getFilename() {
+            return fn;
         }
     }
 

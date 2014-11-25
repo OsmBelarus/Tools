@@ -28,13 +28,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.CSV;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmRelation;
-import org.alex73.osmemory.geometry.OsmHelper;
 import org.alex73.osmemory.geometry.ExtendedRelation;
+import org.alex73.osmemory.geometry.IExtendedObject;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -48,9 +49,9 @@ import com.vividsolutions.jts.geom.Geometry;
 public class CustomCheckRehijony implements ICustomClass {
     static Geometry BelarusGeometry;
     static short nameTag;
-    static Belarus osm;
+    Belarus osm;
     static Set<String> rehijony, processed;
-    static Map<String, Geometry> voblasci;
+    static Map<String, ExtendedRelation> voblasci;
 
     public boolean filter(IOsmObject obj) {
         if (!rehijony.contains(obj.getObjectCode())) {
@@ -59,8 +60,8 @@ public class CustomCheckRehijony implements ICustomClass {
         return true;
     }
 
-    public void init() {
-        osm = CheckObjects.osm;
+    public void init(Belarus osm) {
+        this.osm = osm;
         nameTag = osm.getTagsPack().getTagCode("name:be");
         BelarusGeometry = osm.getGeometry();
         try {
@@ -76,7 +77,7 @@ public class CustomCheckRehijony implements ICustomClass {
                 } else if (p.rajon == null) {
                     // вобласьць
                     IOsmRelation r = osm.getRelationById(p.relationID);
-                    voblasci.put(p.voblasc, new ExtendedRelation(r, osm).getArea());
+                    voblasci.put(p.voblasc, new ExtendedRelation(r, osm));
                 } else {
                     // раён
                     voblasci.put((p.osmName == null ? p.rajon : p.osmName) + " раён", voblasci.get(p.voblasc));
@@ -116,7 +117,7 @@ public class CustomCheckRehijony implements ICustomClass {
 
     public void checkRajon(IOsmObject o) {
         processed.add(o.getObjectCode());
-        Geometry voblascGeometry = voblasci.get(o.getTag("name:be", osm));
+        Geometry voblascGeometry = voblasci.get(o.getTag("name:be", osm)).getArea();
         if (voblascGeometry == null) {
             CheckObjects.addError(o, "Невядомая вобласьць для раёну (мо няправільная назва раёну ?)");
             return;

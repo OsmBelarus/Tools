@@ -39,12 +39,20 @@ import com.vividsolutions.jts.geom.Geometry;
 public class Belarus extends MemoryStorage {
     public static final long BELARUS_BORDER_RELATION_ID = 59065;
 
+    public static double MIN_LAT = 51.2575982 - 0.001;
+    public static double MAX_LAT = 56.1722235 + 0.001;
+    public static double MIN_LON = 23.1783874 - 0.001;
+    public static double MAX_LON = 32.7627809 + 0.001;
+
     private ExtendedRelation area;
     private FastArea fastArea;
 
     public Belarus() throws Exception {
-        new O5MReader(this, 51.2575982 - 0.001, 56.1722235 + 0.001, 23.1783874 - 0.001, 32.7627809 + 0.001)
-                .read(new File(Env.readProperty("data.file")));
+        this(Env.readProperty("data.file"));
+    }
+
+    public Belarus(String file) throws Exception {
+        new O5MReader(this, MIN_LAT, MAX_LAT, MIN_LON, MAX_LON).read(new File(file));
         showStat();
 
         if (nodes.size() < 250000 || ways.size() < 1400000 || relations.size() < 10000) {

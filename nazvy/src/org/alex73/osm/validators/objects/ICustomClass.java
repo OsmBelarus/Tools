@@ -21,8 +21,10 @@
 
 package org.alex73.osm.validators.objects;
 
+import org.alex73.osm.utils.Belarus;
+
 public interface ICustomClass {
-    void init() throws Exception;
+    void init(Belarus osm) throws Exception;
 
     void finish() throws Exception;
 }

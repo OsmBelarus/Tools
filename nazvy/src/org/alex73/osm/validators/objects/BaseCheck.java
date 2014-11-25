@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.alex73.osm.utils.Belarus;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
 
@@ -43,7 +44,7 @@ public class BaseCheck {
     private boolean filterNode, filterWay, filterRelation;
     private ICustomClass customCheck;
 
-    public BaseCheck(MemoryStorage osm, BaseFilter base) throws Exception {
+    public BaseCheck(Belarus osm, BaseFilter base) throws Exception {
         this.osm = osm;
         this.filter = base.getFilter();
         filterTags = tagsCompile(filter);
@@ -72,7 +73,7 @@ public class BaseCheck {
 
         if (base.getCustomClass() != null) {
             customCheck = (ICustomClass) Class.forName(base.getCustomClass()).newInstance();
-            customCheck.init();
+            customCheck.init(osm);
         }
     }
 
