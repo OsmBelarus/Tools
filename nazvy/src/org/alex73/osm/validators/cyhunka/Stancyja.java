@@ -25,6 +25,8 @@ public class Stancyja {
     public Double lat;
     @XmlAttribute(name = "lon")
     public Double lon;
+    @XmlAttribute(name = "comment")
+    public String comment;
 
     @Override
     public String toString() {

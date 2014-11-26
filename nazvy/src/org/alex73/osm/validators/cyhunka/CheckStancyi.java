@@ -31,7 +31,6 @@ public class CheckStancyi {
                 Stancyja.class);
 
         osm = new Belarus();
-        System.out.println(osm.getGeometry().getEnvelope());
 
         // шукаем існуючыі станцыі і прыпынкі
         short railwayTag = osm.getTagsPack().getTagCode("railway");
