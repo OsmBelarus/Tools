@@ -17,17 +17,16 @@ public class GitClient {
         repository = Git.open(this.dir).getRepository();
     }
 
-    public void add(String path) throws Exception {
+    public synchronized void add(String path) throws Exception {
         new Git(repository).add().addFilepattern(path).call();
     }
 
-    public void commit(String user, String uid, String commitMessage) throws Exception {
+    public synchronized void commit(String user, String uid, String commitMessage) throws Exception {
         System.out.println(new Date() + " Commit: " + commitMessage);
-        new Git(repository).commit().setAuthor(user, uid + "@osm.org").setMessage(commitMessage)
-                .call();
+        new Git(repository).commit().setAuthor(user, uid + "@osm.org").setMessage(commitMessage).call();
     }
 
-    public boolean hasCommit(String messagePart) throws Exception {
+    public synchronized boolean hasCommit(String messagePart) throws Exception {
         for (RevCommit commit : new Git(repository).log().call()) {
             if (commit.getShortMessage().startsWith(messagePart)) {
                 return true;
@@ -36,25 +35,7 @@ public class GitClient {
         return false;
     }
 
-    public void reset() throws Exception {
+    public synchronized void reset() throws Exception {
         new Git(repository).reset().setMode(ResetType.HARD).call();
-    }
-
-    private void removeFiles(File dir) {
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File f : files) {
-            if (f.getName().startsWith(".git")) {
-                continue;
-            }
-            if (f.isDirectory()) {
-                removeFiles(f);
-                f.delete();
-            } else {
-                f.delete();
-            }
-        }
     }
 }

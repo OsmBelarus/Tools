@@ -88,12 +88,16 @@ public class ExportObjectsByType {
         t.setMonitoring(GranularityType.MIESTA);
         checkTypes.add(new CheckTypeWithFile(osm, t));
 
-        osm.all(o -> osm.contains(o), o -> process(o));
+        processAll();
 
         System.out.println(new Date() + " Write...");
-        for (ExportOutput o : outputs.values()) {
-            o.save(git);
-        }
+        outputs.values().parallelStream().forEach(o -> o.save(git));
+    }
+
+    void processAll() {
+        List<IOsmObject> all = new ArrayList<>();
+        osm.all(o -> all.add(o));
+        all.parallelStream().filter(o -> osm.contains(o)).forEach(o -> process(o));
     }
 
     void process(IOsmObject obj) {
@@ -117,22 +121,15 @@ public class ExportObjectsByType {
     }
 
     boolean store(GranularityType granularity, IExtendedObject ext, String fn) throws Exception {
-        final StoreFound result = new StoreFound();
+        boolean found = false;
 
         for (Borders.Border b : getRehijony(granularity, borders)) {
             if (b.area.covers(ext)) {
-                result.found = true;
+                found = true;
                 storeToQueue(ext.getObject(), b.name + fn);
             }
         }
-        // getRehijony(granularity,
-        // borders).parallelStream().filter(b->b.area.covers(ext)).forEach(b->{result.found = true;
-        // storeToQueue(ext.getObject(), b.name + fn);});
-        return result.found;
-    }
-
-    static class StoreFound {
-        volatile boolean found = false;
+        return found;
     }
 
     static List<Borders.Border> getRehijony(GranularityType granularity, Borders borders) {
@@ -162,7 +159,7 @@ public class ExportObjectsByType {
         return null;
     }
 
-    void storeToQueue(IOsmObject obj, String path) {
+    synchronized void storeToQueue(IOsmObject obj, String path) {
         if (path.startsWith("/")) {
             path = path.substring(1);
         }

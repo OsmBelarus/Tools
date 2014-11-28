@@ -31,6 +31,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.alex73.osm.utils.Env;
@@ -76,29 +78,33 @@ public class ExportOutput {
         queue.add(o);
     }
 
-    void save(GitClient git) throws Exception {
-        if (queue.isEmpty()) {
-            if (file.exists()) {
-                // файл выдалены
-                file.delete();
-                git.add(path);
-            }
-        } else {
-            byte[] data = export();
-            if (!file.exists() || file.length() != data.length) {
-                // файл не існаваў альбо адрозьніваецца памерам
-                FileUtils.writeByteArrayToFile(file, data);
-                git.add(path);
+    void save(GitClient git) {
+        try {
+            if (queue.isEmpty()) {
+                if (file.exists()) {
+                    // файл выдалены
+                    file.delete();
+                    git.add(path);
+                }
             } else {
-                // параўноўваем
-                try (FileChannel fc = new RandomAccessFile(file, "r").getChannel()) {
-                    MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-                    if (buffer.compareTo(ByteBuffer.wrap(data)) != 0) {
-                        FileUtils.writeByteArrayToFile(file, data);
-                        git.add(path);
+                byte[] data = export();
+                if (!file.exists() || file.length() != data.length) {
+                    // файл не існаваў альбо адрозьніваецца памерам
+                    FileUtils.writeByteArrayToFile(file, data);
+                    git.add(path);
+                } else {
+                    // параўноўваем
+                    try (FileChannel fc = new RandomAccessFile(file, "r").getChannel()) {
+                        MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+                        if (buffer.compareTo(ByteBuffer.wrap(data)) != 0) {
+                            FileUtils.writeByteArrayToFile(file, data);
+                            git.add(path);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            throw new RuntimeException();
         }
     }
 
@@ -106,6 +112,16 @@ public class ExportOutput {
      * Экспартуем аб'екты
      */
     byte[] export() throws Exception {
+        Collections.sort(queue, new Comparator<IOsmObject>() {
+            @Override
+            public int compare(IOsmObject o1, IOsmObject o2) {
+                int r = o1.getType() - o2.getType();
+                if (r == 0) {
+                    r = Long.compare(o1.getId(), o2.getId());
+                }
+                return r;
+            }
+        });
         ByteArrayOutputStream out = new ByteArrayOutputStream(1024 * 1024);
         PrintStream wr = new PrintStream(out, false, "UTF-8");
         for (IOsmObject o : queue) {
