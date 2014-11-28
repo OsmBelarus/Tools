@@ -23,11 +23,6 @@ package org.alex73.osm.validators.objects;
 
 import gen.alex73.osm.validators.objects.Type;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmWay;
@@ -44,7 +39,6 @@ public class CheckType extends BaseCheck {
 
     private boolean requiredNode, requiredWay, requiredRelation;
     private TagCodeValues requiredTags, possibleTags;
-    private Set<String> additions;
 
     public CheckType(Belarus osm, Type type) throws Exception {
         super(osm, type);
@@ -74,12 +68,6 @@ public class CheckType extends BaseCheck {
 
         requiredTags = tagsCompile(type.getRequired());
         possibleTags = tagsCompile(type.getAllow());
-
-        if (type.getAdditions() != null) {
-            additions = new HashSet<>(Arrays.asList(type.getAdditions().split(",")));
-        } else {
-            additions = Collections.emptySet();
-        }
     }
 
     public String getId() {
@@ -89,11 +77,6 @@ public class CheckType extends BaseCheck {
     public Type getType() {
         return type;
     }
-
-    public Set<String> getAdditions() {
-        return additions;
-    }
-
 
     public void getErrors(IOsmObject obj) {
         switch (obj.getType()) {

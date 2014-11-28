@@ -107,9 +107,7 @@ public class CheckObjects {
         boolean matches = false;
         for (CheckType ct : knownTypes) {
             if (ct.matches(obj)) {
-                if (ct.getType().isMain()) {
-                    matches = true;
-                }
+                matches = true;
                 otypes.add(ct);
             }
         }
@@ -130,16 +128,6 @@ public class CheckObjects {
         }
 
         incMap(objectsCount, otypes.get(0).getId());
-
-        // магчымыя спалучэньні тыпаў
-        Set<String> allowedTypes = otypes.get(0).getAdditions();
-        for (int i = 1; i < otypes.size(); i++) {
-            String thisAddition = otypes.get(i).getId();
-            if (!allowedTypes.contains(thisAddition)) {
-                otypes.remove(i);
-                i--;
-            }
-        }
 
         // памылкі
         for (CheckType ct : otypes) {

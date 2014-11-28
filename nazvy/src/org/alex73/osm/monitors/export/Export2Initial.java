@@ -74,6 +74,7 @@ public class Export2Initial {
         borders.update(country);
         borders.save();
 
+        System.out.println(new Date() + " Export ...");
         git.reset();
         new ExportObjectsByType().export(country, borders, git);
         git.commit("OSM Robot", "robot", "OSM dump : " + new Date(f1status.initialDate).toGMTString());

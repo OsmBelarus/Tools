@@ -84,7 +84,7 @@ public class ExportOutput {
                 if (file.exists()) {
                     // файл выдалены
                     file.delete();
-                    git.add(path);
+                    git.remove(path);
                 }
             } else {
                 byte[] data = export();

@@ -41,7 +41,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.Lat;
 import org.alex73.osm.validators.objects.CheckType;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.FastArea;
@@ -56,7 +55,7 @@ public class ExportObjectsByType {
     Belarus osm;
     Borders borders;
 
-    List<CheckTypeWithFile> checkTypes;
+    List<CheckType> checkTypes;
     Map<String, ExportOutput> outputs;
 
     public ExportObjectsByType() throws Exception {
@@ -78,15 +77,14 @@ public class ExportObjectsByType {
             outputs.put(eo.path, eo);
         }
         for (Type t : config.getType()) {
-            if (t.isMain()) {
-                checkTypes.add(new CheckTypeWithFile(osm, t));
-            }
+            checkTypes.add(new CheckType(osm, t));
         }
 
         Type t = new Type();
         t.setId("other");
-        t.setMonitoring(GranularityType.MIESTA);
-        checkTypes.add(new CheckTypeWithFile(osm, t));
+        t.setFile("insyja");
+        t.setImportance(GranularityType.MIESTA);
+        checkTypes.add(new CheckType(osm, t));
 
         processAll();
 
@@ -103,10 +101,10 @@ public class ExportObjectsByType {
     void process(IOsmObject obj) {
         try {
             IExtendedObject ext = OsmHelper.extendedFromObject(obj, osm);
-            for (CheckTypeWithFile ct : checkTypes) {
+            for (CheckType ct : checkTypes) {
                 if (ct.matches(obj)) {
-                    GranularityType g = ct.getType().getMonitoring();
-                    while (!store(g, ext, ct.getFilename())) {
+                    GranularityType g = ct.getType().getImportance();
+                    while (!store(g, ext, ct.getType().getFile())) {
                         g = upper(g);
                         if (g == null) {
                             throw new RuntimeException();
@@ -126,7 +124,8 @@ public class ExportObjectsByType {
         for (Borders.Border b : getRehijony(granularity, borders)) {
             if (b.area.covers(ext)) {
                 found = true;
-                storeToQueue(ext.getObject(), b.name + fn);
+                storeToQueue(ext.getObject(), "Where" + b.name + fn);
+                storeToQueue(ext.getObject(), "What/" + fn + b.name);
             }
         }
         return found;
@@ -160,9 +159,10 @@ public class ExportObjectsByType {
     }
 
     synchronized void storeToQueue(IOsmObject obj, String path) {
-        if (path.startsWith("/")) {
-            path = path.substring(1);
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
         }
+        path += ".txt";
         ExportOutput o = outputs.get(path);
         if (o == null) {
             // new file
@@ -170,19 +170,6 @@ public class ExportObjectsByType {
             outputs.put(path, o);
         }
         o.out(obj);
-    }
-
-    class CheckTypeWithFile extends CheckType {
-        String fn;
-
-        public CheckTypeWithFile(Belarus osm, Type type) throws Exception {
-            super(osm, type);
-            fn = Lat.unhac(Lat.lat(getType().getId() + ".txt", false)).replace(' ', '_');
-        }
-
-        public String getFilename() {
-            return fn;
-        }
     }
 
     static class Rehijon {

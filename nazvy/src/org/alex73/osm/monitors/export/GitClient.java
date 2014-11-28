@@ -20,6 +20,9 @@ public class GitClient {
     public synchronized void add(String path) throws Exception {
         new Git(repository).add().addFilepattern(path).call();
     }
+    public synchronized void remove(String path) throws Exception {
+        new Git(repository).rm().addFilepattern(path).call();
+    }
 
     public synchronized void commit(String user, String uid, String commitMessage) throws Exception {
         System.out.println(new Date() + " Commit: " + commitMessage);

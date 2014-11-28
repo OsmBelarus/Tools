@@ -22,9 +22,8 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="allow" type="{}allow" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="id" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="main" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
- *       &lt;attribute name="monitoring" type="{}GranularityType" />
- *       &lt;attribute name="additions" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="importance" type="{}GranularityType" />
+ *       &lt;attribute name="file" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -46,12 +45,10 @@ public class Type
     protected Allow allow;
     @XmlAttribute(name = "id", required = true)
     protected String id;
-    @XmlAttribute(name = "main")
-    protected Boolean main;
-    @XmlAttribute(name = "monitoring")
-    protected GranularityType monitoring;
-    @XmlAttribute(name = "additions")
-    protected String additions;
+    @XmlAttribute(name = "importance")
+    protected GranularityType importance;
+    @XmlAttribute(name = "file")
+    protected String file;
 
     /**
      * Gets the value of the required property.
@@ -126,79 +123,51 @@ public class Type
     }
 
     /**
-     * Gets the value of the main property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public boolean isMain() {
-        if (main == null) {
-            return false;
-        } else {
-            return main;
-        }
-    }
-
-    /**
-     * Sets the value of the main property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMain(Boolean value) {
-        this.main = value;
-    }
-
-    /**
-     * Gets the value of the monitoring property.
+     * Gets the value of the importance property.
      * 
      * @return
      *     possible object is
      *     {@link GranularityType }
      *     
      */
-    public GranularityType getMonitoring() {
-        return monitoring;
+    public GranularityType getImportance() {
+        return importance;
     }
 
     /**
-     * Sets the value of the monitoring property.
+     * Sets the value of the importance property.
      * 
      * @param value
      *     allowed object is
      *     {@link GranularityType }
      *     
      */
-    public void setMonitoring(GranularityType value) {
-        this.monitoring = value;
+    public void setImportance(GranularityType value) {
+        this.importance = value;
     }
 
     /**
-     * Gets the value of the additions property.
+     * Gets the value of the file property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getAdditions() {
-        return additions;
+    public String getFile() {
+        return file;
     }
 
     /**
-     * Sets the value of the additions property.
+     * Sets the value of the file property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setAdditions(String value) {
-        this.additions = value;
+    public void setFile(String value) {
+        this.file = value;
     }
 
 }

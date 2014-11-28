@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <object_types>
 
-    <type id="Краіна" main="true" monitoring="KRAINA" additions="Шматмоўная назва,Афіцыфная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+    <type id="Краіна" importance="KRAINA" file="kraina" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
         <filter osmTypes="node,relation" customMethod="filter">
             <tag name="admin_level" value="2" />
         </filter>
@@ -30,9 +30,15 @@
             <tag name="wikipedia:*" />
             <tag name="capital" value="yes" />
             <tag name="place" value="city" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
         </allow>
     </type>
-    <type id="Вобласьць" main="true" monitoring="KRAINA" additions="Шматмоўная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+    <type id="Вобласьць" importance="KRAINA" file="kraina" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
         <filter osmTypes="node,relation" customMethod="filter">
             <tag name="admin_level" value="4" />
         </filter>
@@ -55,9 +61,15 @@
             <tag name="wikipedia:ru" />
             <tag name="capital" value="yes" />
             <tag name="place" value="city" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
         </allow>
     </type>
-    <type id="Раён" main="true" monitoring="VOBLASC" additions="Шматмоўная назва" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+    <type id="Раён" importance="VOBLASC" file="rajony" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
         <filter osmTypes="node,relation" customMethod="filter">
             <tag name="admin_level" value="6" />
         </filter>
@@ -77,6 +89,12 @@
             <tag name="website" />
             <tag name="wikipedia" />
             <tag name="wikipedia:*" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
         </allow>
     </type>
     <!-- type id="Зьніклая вёска" main="true" monitoring="RAJON" additions="Назва">
@@ -86,10 +104,10 @@
         <required geometryType="POINT" osmTypes="node">
             <tag name="abandoned:place"/>
         </required>
-    </type>
-    <type id="Населены пункт(цэнтр)" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
+    </type-->
+    <type id="Цэнтар горада" importance="RAJON" file="harady">
         <filter osmTypes="node">
-            <tag name="place"/>
+            <tag name="place" value="city|town"/>
         </filter>
         <required geometryType="POINT" osmTypes="node">
             <tag name="addr:country" />
@@ -103,9 +121,9 @@
             <tag name="population:date" />
         </allow>
     </type>
-    <type id="Населены пункт(мяжа)" main="true" monitoring="RAJON" additions="Шматмоўная назва,Афіцыфная назва,web">
+    <type id="Мяжа горада" importance="RAJON" file="harady">
         <filter osmTypes="way,relation">
-            <tag name="place"/>
+            <tag name="place" value="city|town"/>
         </filter>
         <required geometryType="AREA" osmTypes="way" requiredRelationType="border">
             <tag name="addr:country" />
@@ -119,12 +137,45 @@
             <tag name="population" />
             <tag name="population:date" />
         </allow>
-    </type-->
-    <!-- type id="Дом" main="true" additions="Крыніца" monitoring="MIESTA" customClass="org.alex73.osm.validators.objects.CustomCheckHouse">
+    </type>
+    <type id="Цэнтар вёскі" importance="RAJON" file="vioski">
+        <filter osmTypes="node">
+            <tag name="place" value="village|hamlet|isolated|dwelling"/>
+        </filter>
+        <required geometryType="POINT" osmTypes="node">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode"/>
+            <tag name="admin_level" value="8" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+    <type id="Мяжа вёскі" importance="RAJON" file="vioski">
+        <filter osmTypes="way,relation">
+            <tag name="place" value="village|hamlet|isolated|dwelling"/>
+        </filter>
+        <required geometryType="AREA" osmTypes="way" requiredRelationType="border">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode"/>
+            <tag name="admin_level" value="8" />
+            <tag name="boundary" value="administrative" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+    <type id="Дом" importance="MIESTA" file="damy"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse"-->
         <filter osmTypes="way,relation">
             <tag name="building" value="house" />
         </filter>
-        <required geometryType="AREA" osmTypes="way" customMethod="checkSize" />
+        <!-- required geometryType="AREA" osmTypes="way" customMethod="checkSize" /-->
         <allow>
             <tag name="building:levels" />
             <tag name="height" />
@@ -135,7 +186,22 @@
             <tag name="addr:housenumber" />
         </allow>
     </type>
-    <type id="Дадатковы адрас дома" main="true" monitoring="MIESTA" additions="Крыніца">
+    <type id="Будынак" importance="MIESTA" file="budynki"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse"-->
+        <filter osmTypes="way,relation">
+            <tag name="building" value="yes" />
+        </filter>
+        <!-- required geometryType="AREA" osmTypes="way" customMethod="checkSize" /-->
+        <allow>
+            <tag name="building:levels" />
+            <tag name="height" />
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+    <!-- type id="Дадатковы адрас дома" main="true" monitoring="MIESTA" additions="Крыніца">
         <filter osmTypes="node">
             <tag name="building" value="house" />
         </filter>
@@ -148,7 +214,39 @@
             <tag name="addr:housenumber" />
         </allow>
     </type-->
-    <type id="Электрычны слуп" main="true" monitoring="MIESTA" additions="Крыніца,Лямпа на слупе,Гняздо на слупе">
+    
+    <type id="Лес" importance="RAJON" file="lasy"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse"-->
+        <filter osmTypes="way,relation">
+            <tag name="landuse" value="forest" />
+        </filter>
+        <!-- required geometryType="AREA" osmTypes="way" customMethod="checkSize" /-->
+        <allow>
+            <tag name="building:levels" />
+            <tag name="height" />
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+    <type id="Дрэва" importance="MIESTA" file="drevy"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse"-->
+        <filter osmTypes="way,relation">
+            <tag name="natural" value="tree" />
+        </filter>
+    </type>
+    
+    <type id="Электрычная вежа" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="tower" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Электрычны слуп" importance="MIESTA" file="elektrycnyja_sietki">
         <filter>
             <tag name="power" value="pole" />
         </filter>
@@ -158,8 +256,48 @@
             <tag name="ref" />
         </allow>
     </type>
+    <type id="Электрычная лінія мясцовая" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="minor_line" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Электрычная лінія" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="line" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Аўтобусны прыпынак" importance="MIESTA" file="prypynki">
+        <filter>
+            <tag name="highway" value="bus_stop" />
+        </filter>
+    </type>
+    <type id="Сьветлафор" importance="MIESTA" file="svietlafory">
+        <filter>
+            <tag name="highway" value="bus_stop" />
+        </filter>
+    </type>
+    <type id="Скрыжаваньне" importance="MIESTA" file="skryzavanni">
+        <filter>
+            <tag name="highway" value="crossing" />
+        </filter>
+    </type>
+    <type id="Прыбіральня" importance="MIESTA" file="prybiralni">
+        <filter>
+            <tag name="amenity" value="toilets" />
+        </filter>
+    </type>
 
-    <!-- type id="Дарога(motorway)" main="true" monitoring="KRAINA" additions="Крыніца">
+    <type id="Дарога(motorway)" importance="KRAINA" file="darohi_motorway">
         <filter>
             <tag name="highway" value="motorway" />
         </filter>
@@ -179,16 +317,19 @@
             <tag name="layer" />
             <tag name="turn:lanes" />
         </allow>
-    </type-->
-    <!--type id="Дарога" requiredOsmTypes="way" wayType="LINE" additions="name" main="true">
-        <tag name="highway" value="trunk|primary|secondary|tertiary|unclassified|residential"/>
-        <possible name="addr:street" />
     </type>
-    <type id="Дарога(service)" requiredOsmTypes="way" wayType="LINE" main="true">
+    <type id="Дарога(service)" importance="MIESTA" file="darohi_service">
+    <filter>
         <tag name="highway" value="service"/>
-    </type-->
+        </filter>
+    </type>
+    <type id="Дарога" importance="MIESTA" file="darohi">
+    <filter>
+        <tag name="highway" />
+        </filter>
+    </type>
 
-    <type id="Лямпа на слупе">
+    <!-- type id="Лямпа на слупе">
         <filter>
             <tag name="highway" value="street_lamp" />
         </filter>
@@ -205,7 +346,7 @@
         <allow>
             <tag name="image" />
         </allow>
-    </type>
+    </type-->
 
     <!-- type id="Гняздо на даху" osmTypes="node">
     http://wiki.openstreetmap.org/wiki/Uk:Лелеки_2014
@@ -215,41 +356,44 @@
         <possible name="image" />
         <possible name="nest_platform" />
     </type-->
-    <type id="Назва">
-        <allow>
-            <tag name="name" />
-            <tag name="name:be" />
-            <tag name="name:be-tarask" />
-            <tag name="int_name" />
-            <tag name="name:ru" />
-        </allow>
+
+    <type id="Банкаматы" importance="MIESTA" file="bankamaty">
+        <filter osmTypes="node">
+            <tag name="amenity" value="atm" />
+        </filter>
     </type>
-    <type id="Шматмоўная назва">
-        <allow>
-            <tag name="name" />
-            <tag name="name:*" />
-            <tag name="int_name" />
-            <tag name="nat_name" />
-            <tag name="alt_name:*" />
-            <tag name="old_name:*" />
-        </allow>
+
+    <type id="Аптэкі ў існуючых будынках" importance="MIESTA" file="apteki">
+        <filter osmTypes="node">
+            <tag name="amenity" value="pharmacy" />
+        </filter>
     </type>
-    <type id="web">
-        <allow>
-            <tag name="website" />
-            <tag name="wikipedia" />
-            <tag name="wikipedia:*" />
-        </allow>
+    <type id="Кавярні ў існуючых будынках" importance="MIESTA" file="cafe">
+        <filter osmTypes="node">
+            <tag name="amenity" value="cafe" />
+        </filter>
     </type>
-    <type id="Афіцыфная назва">
-        <allow>
-            <tag name="official_name" />
-            <tag name="official_name:*" />
-        </allow>
+    <type id="Бібліятэкі ў існуючых будынках" importance="MIESTA" file="cafe">
+        <filter osmTypes="node">
+            <tag name="amenity" value="library" />
+        </filter>
     </type>
-    <type id="Крыніца">
-        <filter osmTypes="node,way,relation">
-            <tag name="source" />
+
+    <type id="Фэрма" importance="MIESTA" file="ferma">
+        <filter osmTypes="way">
+            <tag name="building" value="farm" />
+        </filter>
+    </type>
+
+    <type id="Газон" importance="MIESTA" file="gazony">
+        <filter osmTypes="way">
+            <tag name="landuse" value="grass" />
+        </filter>
+    </type>
+
+    <type id="Паркоўка" importance="MIESTA" file="parkouki">
+        <filter osmTypes="way">
+            <tag name="amenity" value="parking" />
         </filter>
     </type>
 

@@ -43,6 +43,7 @@ import java.util.zip.GZIPInputStream;
 import javax.xml.bind.JAXBContext;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.Env;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -115,7 +116,16 @@ public class ReadChangesets {
      * Чытае changeset па ID.
      */
     public static byte[] download(Changeset ch) throws Exception {
-        return get("http://www.openstreetmap.org/api/0.6/changeset/" + ch.getId() + "/download");
+        File cache = new File(Env.readProperty("data.cache") + "/changesets/" + ch.getId() + ".xml");
+        byte[] xml;
+        if (cache.exists()) {
+            xml = FileUtils.readFileToByteArray(cache);
+        } else {
+            xml = get("http://www.openstreetmap.org/api/0.6/changeset/" + ch.getId() + "/download");
+            cache.getParentFile().mkdirs();
+            FileUtils.writeByteArrayToFile(cache, xml);
+        }
+        return xml;
     }
 
     static Pattern RE_YAML = Pattern.compile("sequence: ([0-9]+)");
@@ -146,7 +156,7 @@ public class ReadChangesets {
      */
     static List<Changeset> readSeq(long index) throws Exception {
         String s = new DecimalFormat("000000000").format(index);
-        File cache = new File("osmupdate_temp/" + s + ".osm.gz");
+        File cache = new File(Env.readProperty("data.cache") + "/changesets/" + s + ".osm.gz");
         byte[] xml;
         if (cache.exists()) {
             xml = FileUtils.readFileToByteArray(cache);
