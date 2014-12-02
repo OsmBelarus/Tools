@@ -31,12 +31,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
@@ -63,6 +64,7 @@ public class CheckCities3 {
         // Несупадзеньне тэгаў з назвамі у даведніку й аб'екце
         public ResultTable incorrectTags;
         public ResultTable incorrectTagsRehijony;
+        public Errors errors = new Errors();
 
         public ResultTable getIncorrectTags() {
             return incorrectTags;
@@ -95,6 +97,7 @@ public class CheckCities3 {
         findIncorrectTags();
         findRehijony();
 
+        CheckRehijony.check(storage,result.errors);
         System.out.println("Output to " + out + "...");
         Collections.sort(result.nonExistInOsm);
         Collections.sort(result.unusedInDav);

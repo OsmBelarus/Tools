@@ -31,6 +31,7 @@ public class PadzielOsmNas {
     public String rajon;
     public String osmName;
     public String osmNameRu;
+    public String harady;
 
     @Override
     public String toString() {

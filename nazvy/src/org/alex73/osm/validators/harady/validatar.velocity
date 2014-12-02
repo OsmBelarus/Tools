@@ -1,4 +1,4 @@
-#set ( $title = "Валідатар населеных пунктаў" )
+#set ( $title = "Валідатар рэгіёнаў і населеных пунктаў" )
 #parse ("org/alex73/osm/validators/common/header.velocity")
 
 Праверка па зьвестках з https://github.com/OsmBelarus/Databases/blob/master/Daviedniki/Nazvy_nasielenych_punktau.csv <br/>
@@ -12,7 +12,11 @@
 <br/>
 <br/>
 
-<h1 id="p1">Памылкі (${data.nonExistInOsm.size()}):</h1> ID аб'екта ёсьць у даведніку, але няма на мапе
+<h1 id="p1">Памылкі (${data.nonExistInOsm.size()}):</h1>
+#set ( $errors = $data.errors )
+#parse ("org/alex73/osm/validators/common/errors.velocity")
+<br/>
+ID аб'екта ёсьць у даведніку, але няма на мапе
 <ul>
     #foreach ( $str in $data.nonExistInOsm )
         <li>${str}</li>
