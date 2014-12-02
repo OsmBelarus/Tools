@@ -1,3 +1,25 @@
+/**************************************************************************
+ 
+Some tools for OSM.
+
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.monitors.export;
 
 import java.io.BufferedInputStream;
@@ -14,7 +36,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
@@ -29,26 +50,21 @@ import org.alex73.osmemory.geometry.OsmHelper;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+/**
+ * Межы рэгіёнаў для экспарту.
+ */
 public class Borders {
     public List<Border> kraina = new ArrayList<>();
     public List<Border> voblasci = new ArrayList<>();
     public List<Border> rajony = new ArrayList<>();
     public List<Border> miesty = new ArrayList<>();
 
-    public static void main(String[] args) throws Exception {
-        Belarus country = new Belarus("/data/tmp/osm/belarus-latest.o5m");
-        Borders b = new Borders(country);
-        b.kraina.clear();
-        b.voblasci.clear();
-        b.rajony.clear();
-        b.miesty.clear();
-        b.update(country);
-        b.save();
-    }
-
-    public Borders(MemoryStorage osm) throws Exception {
+    /**
+     * Чытае межы з файлу.
+     */
+    public Borders(String file, MemoryStorage osm) throws Exception {
         Properties props = new Properties();
-        try (InputStream in = new BufferedInputStream(new FileInputStream("miezy.properties"))) {
+        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
             props.load(in);
             for (String p : ((Set<String>) (Set) props.keySet())) {
                 FastArea area = new FastArea(GeometryHelper.fromWkt(props.getProperty(p)), osm);
@@ -66,8 +82,11 @@ public class Borders {
         }
     }
 
-    public void save() throws Exception {
-        try (OutputStream out = new BufferedOutputStream(new FileOutputStream("miezy.properties"))) {
+    /**
+     * Запісвае межы ў файл.
+     */
+    public void save(String file) throws Exception {
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
             Properties props = new Properties();
             for (Border b : kraina) {
                 props.put("KRAINA" + b.name, GeometryHelper.toWkt(b.area.getGeometry()));
@@ -85,6 +104,9 @@ public class Borders {
         }
     }
 
+    /**
+     * Абнаўляе межы з мапы.
+     */
     public void update(MemoryStorage osm) throws Exception {
         List<Border> oldkraina = kraina;
         List<Border> oldvoblasci = voblasci;

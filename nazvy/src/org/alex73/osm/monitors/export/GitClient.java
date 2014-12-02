@@ -1,3 +1,25 @@
+/**************************************************************************
+ 
+Some tools for OSM.
+
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.monitors.export;
 
 import java.io.File;
@@ -8,6 +30,9 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+/**
+ * Доступ да git каманд.
+ */
 public class GitClient {
     final File dir;
     final Repository repository;
@@ -17,11 +42,20 @@ public class GitClient {
         repository = Git.open(this.dir).getRepository();
     }
 
-    public synchronized void add(String path) throws Exception {
-        new Git(repository).add().addFilepattern(path).call();
+    public synchronized void add(String path) {
+        try {
+            new Git(repository).add().addFilepattern(path).call();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
-    public synchronized void remove(String path) throws Exception {
-        new Git(repository).rm().addFilepattern(path).call();
+
+    public synchronized void remove(String path) {
+        try {
+            new Git(repository).rm().addFilepattern(path).call();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public synchronized void commit(String user, String uid, String commitMessage) throws Exception {
@@ -31,7 +65,7 @@ public class GitClient {
 
     public synchronized boolean hasCommit(String messagePart) throws Exception {
         for (RevCommit commit : new Git(repository).log().call()) {
-            if (commit.getShortMessage().startsWith(messagePart)) {
+            if (commit.getShortMessage().contains(messagePart)) {
                 return true;
             }
         }

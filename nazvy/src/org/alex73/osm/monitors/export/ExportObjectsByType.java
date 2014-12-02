@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -43,6 +44,8 @@ import javax.xml.validation.SchemaFactory;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.validators.objects.CheckType;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.OsmSimpleNode;
+import org.alex73.osmemory.XMLDriver;
 import org.alex73.osmemory.geometry.FastArea;
 import org.alex73.osmemory.geometry.IExtendedObject;
 import org.alex73.osmemory.geometry.OsmHelper;
@@ -50,32 +53,26 @@ import org.alex73.osmemory.geometry.OsmHelper;
 /**
  * Экспартуе аб'екты па тыпах.
  */
-public class ExportObjectsByType {
+public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
     final ObjectTypes config;
-    Belarus osm;
+    final Belarus osm;
     Borders borders;
 
     List<CheckType> checkTypes;
     Map<String, ExportOutput> outputs;
+    List<IOsmObject> queue = new ArrayList<>();
 
-    public ExportObjectsByType() throws Exception {
+    public ExportObjectsByType(Belarus osm, Borders borders, Set<String> unusedFiles) throws Exception {
+        this.osm = osm;
+        this.borders = borders;
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(new StreamSource(new File("src/object_types.xsd")));
         JAXBContext CTX = JAXBContext.newInstance(ObjectTypes.class);
         Unmarshaller unm = CTX.createUnmarshaller();
         unm.setSchema(schema);
         config = (ObjectTypes) unm.unmarshal(new File("object-types.xml"));
-    }
-
-    public void export(Belarus osm, Borders borders, GitClient git) throws Exception {
-        this.osm = osm;
-        this.borders = borders;
 
         checkTypes = new ArrayList<>();
-        outputs = new HashMap<>();
-        for (ExportOutput eo : ExportOutput.listExist(osm)) {
-            outputs.put(eo.path, eo);
-        }
         for (Type t : config.getType()) {
             checkTypes.add(new CheckType(osm, t));
         }
@@ -86,18 +83,78 @@ public class ExportObjectsByType {
         t.setImportance(GranularityType.MIESTA);
         checkTypes.add(new CheckType(osm, t));
 
-        processAll();
+        outputs = new HashMap<>();
+        for (ExportOutput eo : ExportOutput.list(checkTypes, borders, unusedFiles)) {
+            outputs.put(eo.key(), eo);
+        }
+    }
 
+    /**
+     * Апрацоўвае ўсе аб'екты Беларусі.
+     */
+    public void collectData() throws Exception {
+        System.out.println(new Date() + " Collect data...");
+
+        outputs.values().forEach(o -> o.clear());
+        queue.clear();
+        osm.all(o -> queue.add(o));
+        processQueue();
+    }
+
+    /**
+     * Апрацоўвае толькі аб'екты ў чарзе.
+     */
+    void processQueue() {
+        queue.parallelStream().filter(o -> osm.contains(o)).forEach(o -> process(o));
+        queue.clear();
+        fixOutput();
+    }
+
+    public void beforeUpdateNode(long id) {
+        outputs.values().parallelStream().forEach(o -> o.forgetNode(id));
+    }
+
+    public void afterUpdateNode(long id) {
+        IOsmObject o = osm.getNodeById(id);
+        if (o != null && !(o instanceof OsmSimpleNode)) {
+            queue.add(o);
+        }
+    }
+
+    public void beforeUpdateWay(long id) {
+        outputs.values().parallelStream().forEach(o -> o.forgetWay(id));
+    }
+
+    public void afterUpdateWay(long id) {
+        IOsmObject o = osm.getWayById(id);
+        if (o != null) {
+            queue.add(o);
+        }
+    }
+
+    public void beforeUpdateRelation(long id) {
+        outputs.values().parallelStream().forEach(o -> o.forgetRelation(id));
+    }
+
+    public void afterUpdateRelation(long id) {
+        IOsmObject o = osm.getRelationById(id);
+        if (o != null) {
+            queue.add(o);
+        }
+    }
+
+    public void saveExport(GitClient git) {
         System.out.println(new Date() + " Write...");
-        outputs.values().parallelStream().forEach(o -> o.save(git));
+        outputs.values().parallelStream().forEach(o -> o.save(git, osm));
     }
 
-    void processAll() {
-        List<IOsmObject> all = new ArrayList<>();
-        osm.all(o -> all.add(o));
-        all.parallelStream().filter(o -> osm.contains(o)).forEach(o -> process(o));
+    public void fixOutput() {
+        outputs.values().parallelStream().forEach(o -> o.finishUpdate());
     }
 
+    /**
+     * Апрацоўвае 1 аб'ект.
+     */
     void process(IOsmObject obj) {
         try {
             IExtendedObject ext = OsmHelper.extendedFromObject(obj, osm);
@@ -118,14 +175,13 @@ public class ExportObjectsByType {
         }
     }
 
-    boolean store(GranularityType granularity, IExtendedObject ext, String fn) throws Exception {
+    boolean store(GranularityType granularity, IExtendedObject ext, String typ) throws Exception {
         boolean found = false;
 
         for (Borders.Border b : getRehijony(granularity, borders)) {
             if (b.area.covers(ext)) {
                 found = true;
-                storeToQueue(ext.getObject(), "Where" + b.name + fn);
-                storeToQueue(ext.getObject(), "What/" + fn + b.name);
+                storeToQueue(ext.getObject(), typ, b.name);
             }
         }
         return found;
@@ -158,27 +214,17 @@ public class ExportObjectsByType {
         return null;
     }
 
-    synchronized void storeToQueue(IOsmObject obj, String path) {
-        if (path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-        path += ".txt";
-        ExportOutput o = outputs.get(path);
+    /**
+     * Захоўвае ў адпаведны ExportOutput.
+     */
+    synchronized void storeToQueue(IOsmObject obj, String typ, String rehijon) throws Exception {
+        String key = ExportOutput.key(typ, rehijon);
+        ExportOutput o = outputs.get(key);
         if (o == null) {
             // new file
-            o = new ExportOutput(path, osm);
-            outputs.put(path, o);
+            o = new ExportOutput(typ, rehijon);
+            outputs.put(key, o);
         }
         o.out(obj);
-    }
-
-    static class Rehijon {
-        final String path;
-        final FastArea area;
-
-        public Rehijon(String path, FastArea area) {
-            this.path = path;
-            this.area = area;
-        }
     }
 }

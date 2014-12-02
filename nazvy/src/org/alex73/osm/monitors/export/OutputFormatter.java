@@ -2,7 +2,7 @@
  
 Some tools for OSM.
 
- Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
                Support center: http://groups.yahoo.com/group/OmegaT/
 
@@ -23,8 +23,6 @@ Some tools for OSM.
 package org.alex73.osm.monitors.export;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.alex73.osmemory.IOsmNode;
@@ -35,26 +33,41 @@ import org.alex73.osmemory.MemoryStorage;
 import org.alex73.osmemory.OsmBase;
 
 /**
- * Запісвае экспартаваныя зьвесткі ў файл.
+ * Стварае тэкставы файл.
  */
 public class OutputFormatter {
     final MemoryStorage osm;
+    final StringBuilder out = new StringBuilder(1024 * 1024);
+    short tagName, tagIntName, tagnamebe, tagnamebetarask, tagnameru;
 
     public OutputFormatter(MemoryStorage osm) {
         this.osm = osm;
+        tagName = osm.getTagsPack().getTagCode("name");
+        tagIntName = osm.getTagsPack().getTagCode("int_name");
+        tagnamebe = osm.getTagsPack().getTagCode("name:be");
+        tagnamebetarask = osm.getTagsPack().getTagCode("name:be-tarask");
+        tagnameru = osm.getTagsPack().getTagCode("name:ru");
     }
 
-    String objectName(IOsmObject o) {
-        String name = o.getTag("name", osm);
-        String intname = o.getTag("int_name", osm);
-        String namebe = o.getTag("name:be", osm);
-        String tarask = o.getTag("name:be-tarask", osm);
-        String nameru = o.getTag("name:ru", osm);
+    public String getOutput() {
+        return out.toString();
+    }
+
+    void newLine() {
+        out.append('\n');
+    }
+
+    void objectName(IOsmObject o) {
+        String name = o.getTag(tagName);
+        String intname = o.getTag(tagIntName);
+        String namebe = o.getTag(tagnamebe);
+        String tarask = o.getTag(tagnamebetarask);
+        String nameru = o.getTag(tagnameru);
         if (name == null && intname == null && namebe == null && tarask == null && nameru == null) {
-            return o.getObjectCode();
+            out.append(o.getObjectCode());
+            return;
         }
 
-        StringBuilder out = new StringBuilder(200);
         out.append(o.getObjectCode());
         out.append("  ");
         out.append(namebe);
@@ -71,12 +84,11 @@ public class OutputFormatter {
             out.append(" / ");
             out.append(nameru);
         }
-        return out.toString();
     }
 
-    String otherNames(IOsmObject o) {
-        StringBuilder out = new StringBuilder(200);
+    void otherNames(IOsmObject o) {
         Map<String, String> tags = o.extractTags(osm);
+        boolean first = true;
         for (String t : tags.keySet()) {
             switch (t) {
             case "name":
@@ -87,7 +99,12 @@ public class OutputFormatter {
                 break;
             default:
                 if (t.startsWith("name:")) {
-                    out.append(" | ");
+                    if (first) {
+                        out.append("  other names: ");
+                        first = false;
+                    } else {
+                        out.append(" | ");
+                    }
                     out.append(t);
                     out.append('=');
                     out.append(tags.get(t));
@@ -95,44 +112,50 @@ public class OutputFormatter {
                 break;
             }
         }
-        return out.length() > 0 ? out.substring(3) : null;
+        if (!first) {
+            out.append('\n');
+        }
     }
 
-    String otherTags(IOsmObject o) {
-        StringBuilder out = new StringBuilder(200);
+    void otherTags(IOsmObject o) {
+        out.append("  other tags : ");
         Map<String, String> tags = o.extractTags(osm);
+        boolean first = true;
         for (String t : tags.keySet()) {
             if (t.equals("name") || t.startsWith("name:") || t.startsWith("int_name")) {
                 continue;
             }
-            out.append(" | ");
+            if (first) {
+                first = false;
+            } else {
+                out.append(" | ");
+            }
             out.append(t);
             out.append('=');
             out.append(tags.get(t));
         }
-        return out.length() > 0 ? out.substring(3) : "";
+        out.append('\n');
     }
 
-    String getGeometry(IOsmNode n) {
-        StringBuilder out = new StringBuilder(200);
-        addCoord(n, out);
-        return out.toString();
+    void getGeometry(IOsmNode n) {
+        out.append("    geometry : ");
+        addCoord(n);
+        out.append('\n');
     }
 
-    String getGeometry(IOsmWay w) {
-        StringBuilder out = new StringBuilder(200);
+    void getGeometry(IOsmWay w) {
+        out.append("    geometry :");
         for (long nid : w.getNodeIds()) {
             out.append(' ');
             out.append(IOsmObject.getNodeCode(nid));
-            addCoord(osm.getNodeById(nid), out);
+            addCoord(osm.getNodeById(nid));
         }
-        return out.toString();
+        out.append('\n');
     }
 
-    List<String> getGeometry(IOsmRelation r) {
-        List<String> result = new ArrayList<String>();
+    void getGeometry(IOsmRelation r) {
         for (int i = 0; i < r.getMembersCount(); i++) {
-            StringBuilder out = new StringBuilder(200);
+            out.append("    geometry : ");
             out.append('<');
             out.append(r.getMemberRole(osm, i));
             out.append('>');
@@ -144,10 +167,10 @@ public class OutputFormatter {
             case IOsmObject.TYPE_NODE:
                 out.append(IOsmObject.getNodeCode(mid));
                 IOsmNode n = osm.getNodeById(mid);
-                addCoord(n, out);
+                addCoord(n);
                 if (n != null) {
                     out.append(" : ");
-                    out.append(objectName(n));
+                    objectName(n);
                 }
                 break;
             case IOsmObject.TYPE_WAY:
@@ -159,10 +182,10 @@ public class OutputFormatter {
                     for (long nid : w.getNodeIds()) {
                         out.append(' ');
                         out.append(IOsmObject.getNodeCode(nid));
-                        addCoord(osm.getNodeById(nid), out);
+                        addCoord(osm.getNodeById(nid));
                     }
                     out.append(" : ");
-                    out.append(objectName(w));
+                    objectName(w);
                 } else {
                     out.append(" [???]");
                 }
@@ -189,29 +212,30 @@ public class OutputFormatter {
                         out.append(", ");
                     }
                     out.append("] : ");
-                    out.append(objectName(r2));
+                    objectName(r2);
                 } else {
                     out.append(" [???]");
                 }
                 break;
             }
 
-            result.add(out.toString());
+            out.append('\n');
         }
-        return result;
     }
 
     static DecimalFormat COORD_FORMAT = new DecimalFormat("##0.00######");
 
-    void addCoord(IOsmNode n, StringBuilder str) {
+    void addCoord(IOsmNode n) {
         if (n != null) {
-            str.append('[');
-            str.append(COORD_FORMAT.format(n.getLatitude()));
-            str.append(',');
-            str.append(COORD_FORMAT.format(n.getLongitude()));
-            str.append(']');
+            out.append('[');
+            String lat = Integer.toString(n.getLat());
+            out.append(lat, 0, 2).append('.').append(lat, 2, lat.length());
+            out.append(',');
+            String lon = Integer.toString(n.getLon());
+            out.append(lon, 0, 2).append('.').append(lon, 2, lon.length());
+            out.append(']');
         } else {
-            str.append("[???]");
+            out.append("[???]");
         }
     }
 }

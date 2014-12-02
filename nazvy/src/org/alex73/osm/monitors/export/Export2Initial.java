@@ -2,7 +2,7 @@
  
 Some tools for OSM.
 
- Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
                Home page: http://www.omegat.org/
                Support center: http://groups.yahoo.com/group/OmegaT/
 
@@ -23,16 +23,15 @@ Some tools for OSM.
 package org.alex73.osm.monitors.export;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.O5MDriver;
-import org.alex73.osmemory.O5MReader;
 import org.alex73.osmemory.XMLDriver;
 import org.alex73.osmemory.XMLReader;
 
@@ -45,10 +44,12 @@ import osm.xmldatatypes.Tag;
 public class Export2Initial {
     static Borders borders;
     static GitClient git;
+    static String borderFile;
 
     public static void main(String[] args) throws Exception {
         Locale.setDefault(new Locale("en", "US"));
         git = new GitClient(Env.readProperty("monitoring.gitdir"));
+        borderFile = Env.readProperty("monitoring.gitdir") + "/miezy.properties";
 
         if (args.length == 1) {
             justDump(args[0]);
@@ -62,42 +63,36 @@ public class Export2Initial {
         }
     }
 
+    /**
+     * Экспартуе толькі o5m файл.
+     */
     static void justDump(String file) throws Exception {
         System.out.println("Захоўваем " + file + " у git");
         // чытаем timestamp першага файлаў
-        DataFileStatus f1status = getFileStatus(file);
+        DataFileStatus f1status = new DataFileStatus(file);
         f1status.dump();
+
+        git.reset();
 
         // чытаем першы файл
         Belarus country = new Belarus(file);
-        borders = new Borders(country);
+        borders = new Borders(borderFile, country);
         borders.update(country);
-        borders.save();
+        borders.save(borderFile);
+        git.add("miezy.properties");
 
+        Set<String> unusedFiles = new HashSet<>();
+        ExportObjectsByType export = new ExportObjectsByType(country, borders, unusedFiles);
+        removeFiles(unusedFiles);
         System.out.println(new Date() + " Export ...");
-        git.reset();
-        new ExportObjectsByType().export(country, borders, git);
+        export.collectData();
+        export.saveExport(git);
         git.commit("OSM Robot", "robot", "OSM dump : " + new Date(f1status.initialDate).toGMTString());
     }
 
-    static void dumpAfter(String file) throws Exception {
-        System.out.println("Захоўваем усе changeset'ы пасьля " + file + " у git");
-
-        // чытаем timestamp першага файлаў
-        DataFileStatus f1status = getFileStatus(file);
-        f1status.dump();
-
-        // чытаем першы файл
-        Belarus country = new Belarus(file);
-        borders = new Borders(country);
-        borders.update(country);
-        borders.save();
-
-        // атрымліваем сьпіс changesets паміж файламі
-        List<Changeset> changesets = ReadChangesets.retrieve(f1status.knownChangesets, null);
-        dumpChangesets(country, changesets);
-    }
-
+    /**
+     * Экспартуе changeset'ы паміж двума o5m файламі.
+     */
     static void dumpBetween(String file1, String file2) throws Exception {
         if (file2 != null) {
             System.out.println("Захоўваем усе changeset'ы пасьля " + file1 + " да " + file2 + " у git");
@@ -106,11 +101,11 @@ public class Export2Initial {
         }
 
         // чытаем timestamp першага файлаў
-        DataFileStatus f1status = getFileStatus(file1);
+        DataFileStatus f1status = new DataFileStatus(file1);
         f1status.dump();
         DataFileStatus f2status;
         if (file2 != null) {
-            f2status = getFileStatus(file2);
+            f2status = new DataFileStatus(file2);
             f2status.dump();
         } else {
             f2status = null;
@@ -118,40 +113,48 @@ public class Export2Initial {
 
         // чытаем першы файл
         Belarus country = new Belarus(file1);
-        borders = new Borders(country);
-        borders.update(country);
-        borders.save();
+        borders = new Borders(borderFile, country);
 
+        git.reset();
         // атрымліваем сьпіс changesets паміж файламі
         List<Changeset> changesets = ReadChangesets.retrieve(f1status.knownChangesets,
                 f2status != null ? f2status.knownChangesets : null);
-        dumpChangesets(country, changesets);
-    }
-
-    static void dumpChangesets(Belarus country, List<Changeset> changesets) throws Exception {
-        git.reset();
-        ExportObjectsByType export = new ExportObjectsByType();
+        Set<String> unusedFiles = new HashSet<>();
+        ExportObjectsByType export = new ExportObjectsByType(country, borders, unusedFiles);
+        removeFiles(unusedFiles);
+        export.collectData();
 
         changesets.forEach(ch -> System.out.println(ch.getId() + " " + ch.getUser() + " "
                 + ch.getNumChanges()));
+        int c = 0;
         for (Changeset ch : changesets) {
+            c++;
             // дадаем changeset і экспартуем у git
-            boolean needExport = apply(country, ReadChangesets.download(ch));
+            boolean needExport = apply(country, ReadChangesets.download(ch), export);
+            export.fixOutput();
             if (!needExport) {
                 System.out.println("Skip #" + ch.getId() + " because it outside Belarus");
                 continue;
             }
-            String chMark = "#" + ch.getId() + " ";
-            boolean gitContains = git.hasCommit(chMark);
+            boolean gitContains = git.hasCommit("#" + ch.getId() + " ");
             if (gitContains) {
                 System.out.println("Skip #" + ch.getId() + " because it already committed");
                 continue;
             }
 
-            System.out.println(new Date() + " Export #" + ch.getId());
-            export.export(country, borders, git);
+            System.out.println(new Date() + " Export #" + ch.getId() + " [" + c + "/" + changesets.size()
+                    + "]");
+            export.processQueue();
+            export.saveExport(git);
             git.commit(ch.getUser(), Long.toString(ch.getUid()), changesetDescriptionForCommit(ch));
         }
+    }
+
+    /**
+     * Выдаляе непатрэбныя файлы з git. Такое можа быць калі зьмяніліся назвы файлаў у тыпах.
+     */
+    static void removeFiles(Set<String> unusedFiles) throws Exception {
+        unusedFiles.forEach(f -> git.remove(f));
     }
 
     /**
@@ -176,7 +179,10 @@ public class Export2Initial {
 
     static boolean inside;
 
-    static boolean apply(Belarus country, byte[] changes) throws Exception {
+    /**
+     * Чытае changeset, высьвятляе ці ён па-за межамі Беларусі, і перадае зьвесткі ў ExportObjectByType.
+     */
+    static boolean apply(Belarus country, byte[] changes, XMLDriver.IApplyChangeCallback cb) throws Exception {
         inside = false;
         XMLReader reader = new XMLReader(country, Belarus.MIN_LAT, Belarus.MAX_LAT, Belarus.MIN_LON,
                 Belarus.MAX_LON);
@@ -191,6 +197,7 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.beforeUpdateNode(id);
                     }
 
                     @Override
@@ -201,6 +208,7 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.beforeUpdateWay(id);
                     }
 
                     @Override
@@ -211,6 +219,7 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.beforeUpdateRelation(id);
                     }
 
                     @Override
@@ -221,6 +230,7 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.afterUpdateNode(id);
                     }
 
                     @Override
@@ -231,6 +241,7 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.afterUpdateWay(id);
                     }
 
                     @Override
@@ -241,39 +252,9 @@ public class Export2Initial {
                                 inside = country.contains(obj);
                             }
                         }
+                        cb.afterUpdateRelation(id);
                     }
                 });
         return inside;
-    }
-
-    static DataFileStatus getFileStatus(String file) throws Exception {
-
-        final DataFileStatus status = new DataFileStatus();
-
-        // collect changesets
-        new O5MDriver(new O5MReader() {
-            @Override
-            protected void fileTimestamp(long timestamp) {
-                status.initialDate = timestamp;
-            }
-
-            @Override
-            protected void createNode(O5MDriver driver, long id, int lat, int lon, String user) {
-                status.knownChangesets.add(driver.getCurrentChangeset());
-            }
-
-            @Override
-            protected void createWay(O5MDriver driver, long id, long[] nodes, String user) {
-                status.knownChangesets.add(driver.getCurrentChangeset());
-            }
-
-            @Override
-            protected void createRelation(O5MDriver driver, long id, long[] memberIds, byte[] memberTypes,
-                    String user) {
-                status.knownChangesets.add(driver.getCurrentChangeset());
-            }
-        }).read(new File(file));
-
-        return status;
     }
 }
