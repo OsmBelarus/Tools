@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+    <type id="Прыбіральня" importance="MIESTA" file="prybiralni">
+        <filter>
+            <tag name="amenity" value="toilets" />
+        </filter>
+    </type>
+    <type id="Банкамат" importance="MIESTA" file="bankamaty">
+        <filter osmTypes="node">
+            <tag name="amenity" value="atm" />
+        </filter>
+    </type>
+    <type id="Аптэка ў існуючых будынках" importance="MIESTA" file="apteki">
+        <filter osmTypes="node">
+            <tag name="amenity" value="pharmacy" />
+        </filter>
+    </type>
+    <type id="Кавярня ў існуючых будынках" importance="MIESTA" file="kafe">
+        <filter osmTypes="node">
+            <tag name="amenity" value="cafe" />
+        </filter>
+    </type>
+    <type id="Шынок ў існуючых будынках" importance="MIESTA" file="kafe">
+        <filter osmTypes="node">
+            <tag name="amenity" value="pub" />
+        </filter>
+    </type>
+    <type id="Рэстаран ў існуючых будынках" importance="MIESTA" file="kafe">
+        <filter osmTypes="node">
+            <tag name="amenity" value="restaurant" />
+        </filter>
+    </type>
+    <type id="fast_food" importance="MIESTA" file="kafe">
+        <filter>
+            <tag name="amenity" value="fast_food" />
+        </filter>
+    </type>
+    <type id="Бібліятэка ў існуючых будынках" importance="MIESTA" file="biblijateki">
+        <filter osmTypes="node">
+            <tag name="amenity" value="library" />
+        </filter>
+    </type>
+    <type id="Школа" importance="MIESTA" file="skoly">
+        <filter osmTypes="node,way,relation">
+            <tag name="amenity" value="school" />
+        </filter>
+        <required requiredRelationType="multipolygon">
+        </required>
+    </type>
+    <type id="Дзіцячы садок" importance="MIESTA" file="dziciacyja_sadki">
+        <filter osmTypes="node,way,relation">
+            <tag name="amenity" value="kindergarten" />
+        </filter>
+        <required requiredRelationType="multipolygon">
+        </required>
+    </type>
+    <type id="Паркоўка" importance="MIESTA" file="parkouki">
+        <filter osmTypes="way">
+            <tag name="amenity" value="parking" />
+        </filter>
+    </type>
+    <type id="Кінатэатр" importance="MIESTA" file="kino">
+        <filter>
+            <tag name="amenity" value="cinema" />
+        </filter>
+    </type>
+    
+    <type id="Банк" importance="MIESTA" file="banki">
+        <filter>
+            <tag name="amenity" value="bank" />
+        </filter>
+    </type>
+    <type id="Пошта" importance="MIESTA" file="posta">
+        <filter>
+            <tag name="amenity" value="post_office" />
+        </filter>
+    </type>
+    
+    <type id="Царква ці касьцёл" importance="MIESTA" file="klastar">
+        <filter>
+            <tag name="amenity" value="place_of_worship" />
+        </filter>
+    </type>
+    
+    <type id="Запраўка" importance="MIESTA" file="paliva">
+        <filter>
+            <tag name="amenity" value="fuel" />
+        </filter>
+    </type>
+</object_types>

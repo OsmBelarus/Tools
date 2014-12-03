@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+
+    <type id="Лес" importance="RAJON" file="drevy">
+        <filter osmTypes="node,way,relation">
+            <tag name="landuse" value="forest" />
+        </filter>
+        <required osmTypes="way" />
+    </type>
+    <type id="Парк" importance="RAJON" file="drevy">
+        <filter osmTypes="node,way,relation">
+            <tag name="leisure" value="park" />
+        </filter>
+        <required osmTypes="way" />
+    </type>
+    <type id="Дрэва" importance="MIESTA" file="drevy">
+        <filter osmTypes="node,way,relation">
+            <tag name="natural" value="tree" />
+        </filter>
+        <required osmTypes="node" />
+    </type>
+    <type id="Плот" importance="MIESTA" file="platy">
+        <filter osmTypes="node,way,relation">
+            <tag name="barrier" value="fence" />
+        </filter>
+        <required osmTypes="way" />
+    </type>
+    <type id="Калітка" importance="MIESTA" file="platy">
+        <filter>
+            <tag name="barrier" value="gate" />
+        </filter>
+        <required osmTypes="node" />
+    </type>
+
+
+    <!-- type id="Гняздо на даху" osmTypes="node">
+    http://wiki.openstreetmap.org/wiki/Uk:Лелеки_2014
+        <filter name="natural" value="birds_nest" />
+        <required name="birds_nest" />
+        <required name="nest_mount" value="roof" />
+        <possible name="image" />
+        <possible name="nest_platform" />
+    </type-->
+
+    <type id="Стадыён" importance="MIESTA" file="stadyjony">
+        <filter osmTypes="node,way,relation">
+            <tag name="leisure" value="stadium" />
+        </filter>
+        <required osmTypes="way">
+        </required>
+    </type>
+
+
+
+    <type id="Газон" importance="MIESTA" file="gazony">
+        <filter osmTypes="way">
+            <tag name="landuse" value="grass" />
+        </filter>
+    </type>
+
+</object_types>

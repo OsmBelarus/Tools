@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+
+    <type id="Электрычная вежа" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="tower" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Электрычны слуп" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="pole" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Электрычная лінія мясцовая" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="minor_line" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Электрычная лінія" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="line" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+        <allow>
+            <tag name="material" />
+            <tag name="ref" />
+        </allow>
+    </type>
+    <type id="Трансфарматарная будка" importance="MIESTA" file="elektrycnyja_sietki">
+        <filter>
+            <tag name="power" value="substantion" />
+        </filter>
+        <required osmTypes="way"  />
+    </type>
+   
+    <!-- type id="Лямпа на слупе">
+        <filter>
+            <tag name="highway" value="street_lamp" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT" />
+    </type>
+    <type id="Гняздо на слупе">
+        <filter>
+            <tag name="natural" value="birds_nest" />
+        </filter>
+        <required osmTypes="node" geometryType="POINT">
+            <tag name="birds_nest" />
+            <tag name="nest_mount" value="pole" />
+        </required>
+        <allow>
+            <tag name="image" />
+        </allow>
+    </type-->
+    </object_types>

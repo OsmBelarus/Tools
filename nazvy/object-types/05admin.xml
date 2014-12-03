@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+    <type id="Краіна" importance="KRAINA" file="kraina" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="2" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkKraina">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population:date" />
+            <tag name="ISO3166-1" value="BY" />
+            <tag name="ISO3166-1:alpha2" value="BY" />
+            <tag name="ISO3166-1:alpha3" value="BLR" />
+            <tag name="ISO3166-1:numeric" value="112" />
+            <tag name="addr:country" />
+            <tag name="flag" />
+            <tag name="int_ref" />
+            <tag name="timezone" />
+            <tag name="wikidata" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:*" />
+            <tag name="capital" value="yes" />
+            <tag name="place" value="city" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
+        </allow>
+    </type>
+    <type id="Вобласьць" importance="KRAINA" file="kraina" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="4" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkVoblasc">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population:date" />
+            <tag name="iso3166-2" />
+            <tag name="addr:country" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:de" />
+            <tag name="wikipedia:ru" />
+            <tag name="capital" value="yes" />
+            <tag name="place" value="city" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
+        </allow>
+    </type>
+    <type id="Раён" importance="VOBLASC" file="rajony" customClass="org.alex73.osm.validators.objects.CustomCheckRehijony">
+        <filter osmTypes="node,relation" customMethod="filter">
+            <tag name="admin_level" value="6" />
+        </filter>
+        <required geometryType="AREA" osmTypes="relation" customMethod="checkRajon">
+            <tag name="type" value="boundary" />
+            <tag name="boundary" value="administrative" />
+            <tag name="name" />
+            <tag name="int_name" />
+            <tag name="name:be" />
+            <tag name="name:ru" />
+            <tag name="population" />
+            <tag name="population:date" />
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+        </required>
+        <allow>
+            <tag name="website" />
+            <tag name="wikipedia" />
+            <tag name="wikipedia:*" />
+            <tag name="name" />
+            <tag name="name:*" />
+            <tag name="int_name" />
+            <tag name="nat_name" />
+            <tag name="alt_name:*" />
+            <tag name="old_name:*" />
+        </allow>
+    </type>
+    <!-- type id="Зьніклая вёска" main="true" monitoring="RAJON" additions="Назва"> <filter> <tag name="place" value="locality"/> 
+        </filter> <required geometryType="POINT" osmTypes="node"> <tag name="abandoned:place"/> </required> </type -->
+    <type id="Цэнтар горада" importance="RAJON" file="harady">
+        <filter osmTypes="node">
+            <tag name="place" value="city|town" />
+        </filter>
+        <required geometryType="POINT" osmTypes="node">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode" />
+            <tag name="admin_level" value="8" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+    <type id="Мяжа горада" importance="RAJON" file="harady">
+        <filter osmTypes="way,relation">
+            <tag name="place" value="city|town" />
+        </filter>
+        <required geometryType="AREA" osmTypes="way" requiredRelationType="border">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode" />
+            <tag name="admin_level" value="8" />
+            <tag name="boundary" value="administrative" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+    <type id="Цэнтар вёскі" importance="RAJON" file="vioski">
+        <filter osmTypes="node">
+            <tag name="place" value="village|hamlet|isolated|dwelling" />
+        </filter>
+        <required geometryType="POINT" osmTypes="node">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode" />
+            <tag name="admin_level" value="8" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+    <type id="Мяжа вёскі" importance="RAJON" file="vioski">
+        <filter osmTypes="way,relation">
+            <tag name="place" value="village|hamlet|isolated|dwelling" />
+        </filter>
+        <required geometryType="AREA" osmTypes="way" requiredRelationType="border">
+            <tag name="addr:country" />
+            <tag name="addr:region" />
+            <tag name="addr:district" />
+        </required>
+        <allow>
+            <tag name="addr:postcode" />
+            <tag name="admin_level" value="8" />
+            <tag name="boundary" value="administrative" />
+            <tag name="population" />
+            <tag name="population:date" />
+        </allow>
+    </type>
+</object_types>

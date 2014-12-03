@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+    <type id="Крама ў існуючых будынках" importance="MIESTA" file="kramy">
+        <filter osmTypes="node">
+            <tag name="shop" />
+        </filter>
+    </type>
+</object_types>

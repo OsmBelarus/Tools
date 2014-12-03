@@ -251,7 +251,7 @@ public class ExportOutput {
         // выдаляем аднолькавыя якія могуць быць пасьля changeset
         for (int i = 1; i < queue.size(); i++) {
             IOsmObject prev = queue.get(i - 1);
-            IOsmObject curr = queue.get(i - 1);
+            IOsmObject curr = queue.get(i);
             if (prev.getType() == curr.getType() && prev.getId() == curr.getId()) {
                 queue.remove(i);
                 i--;

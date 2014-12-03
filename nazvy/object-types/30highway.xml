@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+
+    <type id="Штучная няроўнасць" importance="MIESTA" file="cross">
+        <filter osmTypes="node">
+            <tag name="traffic_calming" value="bump" />
+        </filter>
+    </type>
+
+    <type id="Сьветлафор" importance="MIESTA" file="svietlafory">
+        <filter>
+            <tag name="highway" value="bus_stop" />
+        </filter>
+    </type>
+    <type id="Скрыжаваньне" importance="MIESTA" file="skryzavanni">
+        <filter>
+            <tag name="highway" value="crossing" />
+        </filter>
+    </type>
+
+
+    <type id="Абмежаванне дарог" importance="MIESTA" file="abmiezavanni">
+        <filter osmTypes="relation">
+            <tag name="type" value="restriction" />
+        </filter>
+    </type>
+
+    <type id="Рух па палосах" importance="MIESTA" file="abmiezavanni">
+        <filter osmTypes="relation">
+            <tag name="type" value="turnlanes\:[a-z]+" />
+        </filter>
+    </type>
+
+    <type id="Дарога(motorway)" importance="KRAINA" file="darohi_motorway">
+        <filter>
+            <tag name="highway" value="motorway" />
+        </filter>
+        <required osmTypes="way" geometryType="LINE">
+            <tag name="ref" />
+            <tag name="lanes" />
+            <tag name="maxspeed" />
+        </required>
+        <allow>
+            <tag name="embankment" value="yes" />
+            <tag name="oneway" value="yes" />
+            <tag name="bridge" value="yes" />
+            <tag name="toll" value="yes" />
+            <tag name="maxspeed:hgv" />
+            <tag name="int_ref" />
+            <tag name="surface" />
+            <tag name="layer" />
+            <tag name="turn:lanes" />
+        </allow>
+    </type>
+    <type id="Дарога(service)" importance="MIESTA" file="darohi_service">
+        <filter>
+            <tag name="highway" value="service" />
+        </filter>
+    </type>
+    <type id="Дарога" importance="MIESTA" file="darohi">
+        <filter>
+            <tag name="highway" />
+        </filter>
+    </type>
+</object_types>

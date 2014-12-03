@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+    <type id="Уваход у мэтро" importance="MIESTA" file="metro">
+        <filter osmTypes="node">
+            <tag name="railway" value="subway_entrance" />
+        </filter>
+    </type>
+    <type id="Станцыя мэтро" importance="MIESTA" file="metro">
+        <filter osmTypes="node">
+            <tag name="station" value="subway" />
+        </filter>
+    </type>
+    <type id="Аўтобусны прыпынак" importance="MIESTA" file="prypynki">
+        <filter>
+            <tag name="highway" value="bus_stop" />
+        </filter>
+    </type>
+    <type id="Аўтобусная станцыя" importance="MIESTA" file="prypynki">
+        <filter>
+            <tag name="amenity" value="bus_station" />
+        </filter>
+    </type>
+
+    <type id="Маршрут" importance="MIESTA" file="marsruty">
+        <filter osmTypes="relation">
+            <tag name="type" value="route" />
+        </filter>
+    </type>
+    
+     <type id="Чыгуначны прыпынак" importance="RAJON" file="cyhunka">
+        <filter>
+            <tag name="railway" value="halt" />
+        </filter>
+    </type>
+    
+    <type id="Трамвайны прыпынак" importance="MIESTA" file="prypynki">
+        <filter>
+            <tag name="railway" value="tram_stop" />
+        </filter>
+    </type>
+</object_types>

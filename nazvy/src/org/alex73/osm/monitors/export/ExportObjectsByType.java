@@ -28,6 +28,7 @@ import gen.alex73.osm.validators.objects.Type;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +47,6 @@ import org.alex73.osm.validators.objects.CheckType;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.OsmSimpleNode;
 import org.alex73.osmemory.XMLDriver;
-import org.alex73.osmemory.geometry.FastArea;
 import org.alex73.osmemory.geometry.IExtendedObject;
 import org.alex73.osmemory.geometry.OsmHelper;
 
@@ -54,7 +54,6 @@ import org.alex73.osmemory.geometry.OsmHelper;
  * Экспартуе аб'екты па тыпах.
  */
 public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
-    final ObjectTypes config;
     final Belarus osm;
     Borders borders;
 
@@ -70,11 +69,16 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
         JAXBContext CTX = JAXBContext.newInstance(ObjectTypes.class);
         Unmarshaller unm = CTX.createUnmarshaller();
         unm.setSchema(schema);
-        config = (ObjectTypes) unm.unmarshal(new File("object-types.xml"));
 
         checkTypes = new ArrayList<>();
-        for (Type t : config.getType()) {
-            checkTypes.add(new CheckType(osm, t));
+
+        File[] configs = new File("object-types").listFiles();
+        Arrays.sort(configs);
+        for (File f : configs) {
+            ObjectTypes config = (ObjectTypes) unm.unmarshal(f);
+            for (Type t : config.getType()) {
+                checkTypes.add(new CheckType(osm, t));
+            }
         }
 
         Type t = new Type();
@@ -105,7 +109,8 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
      * Апрацоўвае толькі аб'екты ў чарзе.
      */
     void processQueue() {
-        queue.parallelStream().filter(o -> osm.contains(o)).forEach(o -> process(o));
+        queue.parallelStream().filter(o -> o.getTags().length > 0 && osm.contains(o))
+                .forEach(o -> process(o));
         queue.clear();
         fixOutput();
     }

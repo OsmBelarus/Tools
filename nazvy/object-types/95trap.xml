@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+    <trap message="highway=platform трэба зьмяніць на public_transport=platform">
+        <filter>
+            <tag name="highway" value="platform" />
+        </filter>
+    </trap>
+    <trap message="Старая сыстэма адрасоў з type=address">
+        <filter>
+            <tag name="type" value="address" />
+        </filter>
+    </trap>
+    <trap message="Старая сыстэма адрасоў з address:type">
+        <filter>
+            <tag name="address:type" />
+        </filter>
+    </trap>
+
+    <trap message="Птушынае гняздо невядомага тыпу">
+        <filter>
+            <tag name="nest_mount" />
+        </filter>
+    </trap>
+
+    <trap message="building(way) маюць няправильную геамэтрыю">
+        <filter osmTypes="way">
+            <tag name="building" />
+        </filter>
+        <required geometryType="AREA" />
+    </trap>
+    <trap message="building(relation) маюць няправильную геамэтрыю">
+        <filter osmTypes="relation">
+            <tag name="building" />
+        </filter>
+        <required geometryType="AREA" />
+    </trap>
+    
+    <trap message="admin_level=8">
+        <filter>
+            <tag name="admin_level" value="8" />
+        </filter>
+    </trap>
+    <trap message="admin_level=?">
+        <filter>
+            <tag name="admin_level" />
+        </filter>
+    </trap>
+    <trap message="boundary без admin_level">
+        <filter>
+            <tag name="boundary" />
+        </filter>
+    </trap>
+    <trap message="relation без type" customClass="org.alex73.osm.validators.objects.CustomCheckRelations">
+        <filter osmTypes="relation" customMethod="checkNoType" />
+    </trap>
+</object_types>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object_types>
+
+
+    <type id="Дом" importance="MIESTA" file="damy"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse" -->
+        <filter>
+            <tag name="building" value="house" />
+        </filter>
+        <!-- required geometryType="AREA" osmTypes="way" customMethod="checkSize" / -->
+        <allow>
+            <tag name="building:levels" />
+            <tag name="height" />
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+
+    <type id="Будынак" importance="MIESTA" file="budynki"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse" -->
+        <filter>
+            <tag name="building" value="yes" />
+        </filter>
+        <!-- required geometryType="AREA" osmTypes="way" customMethod="checkSize" / -->
+        <allow>
+            <tag name="building:levels" />
+            <tag name="height" />
+            <tag name="addr:country" />
+            <tag name="addr:postcode" />
+            <tag name="addr:city" />
+            <tag name="addr:street" />
+            <tag name="addr:housenumber" />
+        </allow>
+    </type>
+
+    <!-- type id="Дадатковы адрас дома" main="true" monitoring="MIESTA" additions="Крыніца"> <filter osmTypes="node"> <tag 
+        name="building" value="house" /> </filter> <required geometryType="POINT" /> <allow> <tag name="addr:country" /> <tag name="addr:postcode" 
+        /> <tag name="addr:city" /> <tag name="addr:street" /> <tag name="addr:housenumber" /> </allow> </type -->
+
+    <type id="Гараж" importance="MIESTA" file="harazy">
+        <filter>
+            <tag name="building" value="garages" />
+        </filter>
+        <required osmTypes="way" />
+    </type>
+    <type id="Фэрма" importance="MIESTA" file="ferma">
+        <filter>
+            <tag name="building" value="farm" />
+        </filter>
+    </type>
+
+    <type id="Уваход" importance="MIESTA" file="budynki">
+        <filter>
+            <tag name="entrance" value="yes" />
+        </filter>
+    </type>
+</object_types>
