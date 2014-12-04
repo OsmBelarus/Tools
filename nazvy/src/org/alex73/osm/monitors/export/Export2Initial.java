@@ -132,6 +132,7 @@ public class Export2Initial {
             // дадаем changeset і экспартуем у git
             boolean needExport = apply(country, ReadChangesets.download(ch), export);
             export.fixOutput();
+            export.processQueue();
             if (!needExport) {
                 System.out.println("Skip #" + ch.getId() + " because it outside Belarus");
                 continue;
@@ -144,7 +145,6 @@ public class Export2Initial {
 
             System.out.println(new Date() + " Export #" + ch.getId() + " [" + c + "/" + changesets.size()
                     + "]");
-            export.processQueue();
             export.saveExport(git);
             git.commit(ch.getUser(), Long.toString(ch.getUid()), changesetDescriptionForCommit(ch));
         }
