@@ -39,4 +39,10 @@
             <tag name="railway" value="tram_stop" />
         </filter>
     </type>
+    
+    <type id="Сеткі дарог" importance="KRAINA" file="marsruty">
+        <filter>
+            <tag name="type" value="network"/>
+        </filter>
+    </type>
 </object_types>

@@ -59,4 +59,15 @@
         </filter>
     </type>
 
+    <type id="Рака" importance="VOBLASC" file="vada">
+        <filter>
+            <tag name="waterway" />
+        </filter>
+    </type>
+    <type id="Рака ці возера" importance="VOBLASC" file="vada">
+        <filter>
+            <tag name="water" />
+        </filter>
+    </type>
+
 </object_types>

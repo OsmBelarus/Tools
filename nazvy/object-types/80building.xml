@@ -17,6 +17,17 @@
             <tag name="addr:housenumber" />
         </allow>
     </type>
+    <type id="Дом" importance="MIESTA" file="damy">
+        <filter>
+            <tag name="building" value="residential" />
+        </filter>
+    </type>
+
+    <type id="Шматкватэрны дом" importance="MIESTA" file="damy">
+        <filter>
+            <tag name="building" value="apartments" />
+        </filter>
+    </type>
 
     <type id="Будынак" importance="MIESTA" file="budynki"> <!-- customClass="org.alex73.osm.validators.objects.CustomCheckHouse" -->
         <filter>
@@ -40,6 +51,12 @@
 
     <type id="Гараж" importance="MIESTA" file="harazy">
         <filter>
+            <tag name="building" value="garage" />
+        </filter>
+        <required osmTypes="way" />
+    </type>
+    <type id="Гаражы" importance="MIESTA" file="harazy">
+        <filter>
             <tag name="building" value="garages" />
         </filter>
         <required osmTypes="way" />
@@ -55,4 +72,11 @@
             <tag name="entrance" value="yes" />
         </filter>
     </type>
+    
+        <type id="Частка дому" importance="MIESTA" file="damy_castki">
+        <filter>
+            <tag name="building:part" />
+        </filter>
+    </type>
+    
 </object_types>
