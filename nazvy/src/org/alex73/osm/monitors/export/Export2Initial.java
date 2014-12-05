@@ -27,13 +27,18 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.Env;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.XMLDriver;
 import org.alex73.osmemory.XMLReader;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 import osm.xmldatatypes.Changeset;
 import osm.xmldatatypes.Tag;
@@ -87,7 +92,8 @@ public class Export2Initial {
         System.out.println(new Date() + " Export ...");
         export.collectData();
         export.saveExport(git);
-        git.commit("OSM Robot", "robot", "OSM dump : " + new Date(f1status.initialDate).toGMTString());
+        git.commit("OSM Robot", "robot@osm.org",
+                "OSM dump : " + new Date(f1status.initialDate).toGMTString(), false);
     }
 
     /**
@@ -146,35 +152,62 @@ public class Export2Initial {
             System.out.println(new Date() + " Export #" + ch.getId() + " [" + c + "/" + changesets.size()
                     + "]");
             export.saveExport(git);
-            git.commit(ch.getUser(), Long.toString(ch.getUid()), changesetDescriptionForCommit(ch));
+            commitChangeSet(ch);
         }
     }
+
+    /**
+     * Ствараем апісаньне й калі аўтар і камэнтар такі самы як папярэдні каміт - робім amend, а так - дадаем
+     * новы.
+     */
+    static void commitChangeSet(Changeset ch) throws Exception {
+        boolean amend = false;
+        String desc = "";
+
+        int chCount = ch.getNumChanges();
+        String chUser = ch.getUser();
+        String chEmail = ch.getUid() + "@osm.org";
+        Map<String, String> chTags = new TreeMap<>();
+        for (Tag t : ch.getTag()) {
+            chTags.put(t.getK(), t.getV());
+        }
+        String chComment = chTags.remove("comment");
+        if (chComment == null) {
+            chComment = "";
+        }
+
+        RevCommit prev = git.getPrevCommit();
+        if (prev != null) {
+            if (prev.getAuthorIdent().getName().equals(chUser)
+                    && prev.getAuthorIdent().getEmailAddress().equals(chEmail)) {
+                String c = prev.getFullMessage();
+                Matcher m = RE_FIRSTLINE_COMMENT.matcher(c);
+                if (m.matches()) {
+                    String prevComment = m.group(1);
+                    if (prevComment.equals(chComment)) {
+                        chCount += Integer.parseInt(m.group(2));
+                        amend = true;
+                        desc = m.group(3);
+                    }
+                }
+            }
+        }
+        desc = chComment + " [" + chCount + "]" + "\n" + desc;
+        desc += "  #" + ch.getId() + " [" + ch.getNumChanges() + "] at " + ch.getClosedAt().toXMLFormat()
+                + "\n";
+        for (Map.Entry<String, String> tag : chTags.entrySet()) {
+            desc += "    " + tag.getKey() + ": " + tag.getValue() + "\n";
+        }
+        git.commit(chUser, chEmail, desc, amend);
+    }
+
+    static final Pattern RE_FIRSTLINE_COMMENT = Pattern.compile("([^\n]*) \\[([0-9]+)\\]\n(.+)",Pattern.DOTALL);
 
     /**
      * Выдаляе непатрэбныя файлы з git. Такое можа быць калі зьмяніліся назвы файлаў у тыпах.
      */
     static void removeFiles(Set<String> unusedFiles) throws Exception {
         unusedFiles.forEach(f -> git.remove(f));
-    }
-
-    /**
-     * Стварае апісаньне каміта для changeset.
-     */
-    static String changesetDescriptionForCommit(Changeset ch) {
-        String o = "#" + ch.getId() + " [" + ch.getNumChanges() + "]";
-        for (Tag t : ch.getTag()) {
-            if ("comment".equals(t.getK())) {
-                o += ": " + t.getV();
-            }
-        }
-        o += '\n';
-        for (Tag t : ch.getTag()) {
-            if (!"comment".equals(t.getK())) {
-                o += "  " + t.getK() + ": " + t.getV() + "\n";
-            }
-        }
-        o += "at " + ch.getClosedAt().toXMLFormat();
-        return o;
     }
 
     static boolean inside;

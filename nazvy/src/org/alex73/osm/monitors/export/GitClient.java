@@ -58,9 +58,10 @@ public class GitClient {
         }
     }
 
-    public synchronized void commit(String user, String uid, String commitMessage) throws Exception {
+    public synchronized void commit(String user, String email, String commitMessage, boolean amend)
+            throws Exception {
         System.out.println(new Date() + " Commit: " + commitMessage);
-        new Git(repository).commit().setAuthor(user, uid + "@osm.org").setMessage(commitMessage).call();
+        new Git(repository).commit().setAuthor(user, email).setMessage(commitMessage).setAmend(amend).call();
     }
 
     public synchronized boolean hasCommit(String messagePart) throws Exception {
@@ -70,6 +71,13 @@ public class GitClient {
             }
         }
         return false;
+    }
+
+    public synchronized RevCommit getPrevCommit() throws Exception {
+        for (RevCommit commit : new Git(repository).log().call()) {
+            return commit;
+        }
+        return null;
     }
 
     public synchronized void reset() throws Exception {
