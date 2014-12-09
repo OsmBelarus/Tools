@@ -137,8 +137,7 @@ public class Export2Initial {
             c++;
             // дадаем changeset і экспартуем у git
             boolean needExport = apply(country, ReadChangesets.download(ch), export);
-            export.fixOutput();
-            export.processQueue();
+            export.afterChangeset();
             if (!needExport) {
                 System.out.println("Skip #" + ch.getId() + " because it outside Belarus");
                 continue;

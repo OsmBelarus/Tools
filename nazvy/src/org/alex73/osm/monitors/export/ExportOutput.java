@@ -40,6 +40,7 @@ import org.alex73.osm.utils.Lat;
 import org.alex73.osm.validators.objects.CheckType;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmObjectID;
 import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.IOsmWay;
 import org.alex73.osmemory.MemoryStorage;
@@ -167,7 +168,9 @@ public class ExportOutput {
     /**
      * Выдаляе аб'ект. Для абнаўленьня па changeset.
      */
-    void forgetInQueue(int type, long id) {
+    public void forgetInQueue(IOsmObjectID objID) {
+        int type = objID.getType();
+        long id = objID.getId();
         int low = 0;
         int high = queue.size() - 1;
 
@@ -189,18 +192,6 @@ public class ExportOutput {
                 break;
             }
         }
-    }
-
-    public void forgetNode(long id) {
-        forgetInQueue(IOsmObject.TYPE_NODE, id);
-    }
-
-    public void forgetWay(long id) {
-        forgetInQueue(IOsmObject.TYPE_WAY, id);
-    }
-
-    public void forgetRelation(long id) {
-        forgetInQueue(IOsmObject.TYPE_RELATION, id);
     }
 
     /**
@@ -248,15 +239,6 @@ public class ExportOutput {
                 return r;
             }
         });
-        // выдаляем аднолькавыя якія могуць быць пасьля changeset
-        for (int i = 1; i < queue.size(); i++) {
-            IOsmObject prev = queue.get(i - 1);
-            IOsmObject curr = queue.get(i);
-            if (prev.getType() == curr.getType() && prev.getId() == curr.getId()) {
-                queue.remove(i);
-                i--;
-            }
-        }
     }
 
     private static final Charset OUT_CHARSET = Charset.forName("UTF-8");

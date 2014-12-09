@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,8 @@ import javax.xml.validation.SchemaFactory;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.validators.objects.CheckType;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmObjectID;
+import org.alex73.osmemory.OsmObjectID;
 import org.alex73.osmemory.OsmSimpleNode;
 import org.alex73.osmemory.XMLDriver;
 import org.alex73.osmemory.geometry.IExtendedObject;
@@ -59,7 +62,7 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
 
     List<CheckType> checkTypes;
     Map<String, ExportOutput> outputs;
-    List<IOsmObject> queue = new ArrayList<>();
+    Set<IOsmObjectID> queueObjects = new HashSet<>();
 
     public ExportObjectsByType(Belarus osm, Borders borders, Set<String> unusedFiles) throws Exception {
         this.osm = osm;
@@ -100,52 +103,32 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
         System.out.println(new Date() + " Collect data...");
 
         outputs.values().forEach(o -> o.clear());
-        queue.clear();
-        osm.all(o -> queue.add(o));
-        processQueue();
-    }
 
-    /**
-     * Апрацоўвае толькі аб'екты ў чарзе.
-     */
-    void processQueue() {
+        List<IOsmObject> queue = new ArrayList<>();
+        osm.all(o -> queue.add(o));
+
         queue.parallelStream().filter(o -> o.getTags().length > 0 && osm.contains(o))
                 .forEach(o -> process(o));
-        queue.clear();
-        fixOutput();
+        outputs.values().parallelStream().forEach(o -> o.finishUpdate());
     }
 
-    public void beforeUpdateNode(long id) {
-        outputs.values().parallelStream().forEach(o -> o.forgetNode(id));
-    }
+    public void afterChangeset() {
+        outputs.values().parallelStream()
+                .forEach(out -> queueObjects.stream().forEach(obj -> out.forgetInQueue(obj)));
 
-    public void afterUpdateNode(long id) {
-        IOsmObject o = osm.getNodeById(id);
-        if (o != null && !(o instanceof OsmSimpleNode)) {
-            queue.add(o);
+        List<IOsmObject> queue = new ArrayList<>();
+        for (IOsmObjectID objID : queueObjects) {
+            IOsmObject obj = osm.getObject(objID);
+            if (obj == null || obj instanceof OsmSimpleNode) {
+                continue;
+            }
+            queue.add(obj);
         }
-    }
+        queueObjects.clear();
 
-    public void beforeUpdateWay(long id) {
-        outputs.values().parallelStream().forEach(o -> o.forgetWay(id));
-    }
-
-    public void afterUpdateWay(long id) {
-        IOsmObject o = osm.getWayById(id);
-        if (o != null) {
-            queue.add(o);
-        }
-    }
-
-    public void beforeUpdateRelation(long id) {
-        outputs.values().parallelStream().forEach(o -> o.forgetRelation(id));
-    }
-
-    public void afterUpdateRelation(long id) {
-        IOsmObject o = osm.getRelationById(id);
-        if (o != null) {
-            queue.add(o);
-        }
+        queue.parallelStream().filter(o -> o.getTags().length > 0 && osm.contains(o))
+                .forEach(o -> process(o));
+        outputs.values().parallelStream().forEach(o -> o.finishUpdate());
     }
 
     public void saveExport(GitClient git) {
@@ -153,8 +136,25 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
         outputs.values().parallelStream().forEach(o -> o.save(git, osm));
     }
 
-    public void fixOutput() {
-        outputs.values().parallelStream().forEach(o -> o.finishUpdate());
+    public void beforeUpdateNode(long id) {
+    }
+
+    public void afterUpdateNode(long id) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_NODE, id));
+    }
+
+    public void beforeUpdateWay(long id) {
+    }
+
+    public void afterUpdateWay(long id) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_WAY, id));
+    }
+
+    public void beforeUpdateRelation(long id) {
+    }
+
+    public void afterUpdateRelation(long id) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_RELATION, id));
     }
 
     /**
