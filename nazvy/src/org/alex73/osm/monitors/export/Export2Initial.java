@@ -164,6 +164,7 @@ public class Export2Initial {
         String desc = "";
 
         int chCount = ch.getNumChanges();
+        int chNum = 1;
         String chUser = ch.getUser();
         String chEmail = ch.getUid() + "@osm.org";
         Map<String, String> chTags = new TreeMap<>();
@@ -185,13 +186,14 @@ public class Export2Initial {
                     String prevComment = m.group(1);
                     if (prevComment.equals(chComment)) {
                         chCount += Integer.parseInt(m.group(2));
+                        chNum += Integer.parseInt(m.group(3));
                         amend = true;
-                        desc = m.group(3);
+                        desc = m.group(4);
                     }
                 }
             }
         }
-        desc = chComment + " [" + chCount + "]" + "\n" + desc;
+        desc = chComment + " [" + chCount + "/" + chNum + "]" + "\n" + desc;
         desc += "  #" + ch.getId() + " [" + ch.getNumChanges() + "] at " + ch.getClosedAt().toXMLFormat()
                 + "\n";
         for (Map.Entry<String, String> tag : chTags.entrySet()) {
@@ -200,7 +202,8 @@ public class Export2Initial {
         git.commit(chUser, chEmail, desc, amend);
     }
 
-    static final Pattern RE_FIRSTLINE_COMMENT = Pattern.compile("([^\n]*) \\[([0-9]+)\\]\n(.+)",Pattern.DOTALL);
+    static final Pattern RE_FIRSTLINE_COMMENT = Pattern.compile("([^\n]*) \\[([0-9]+)/([0-9]+)\\]\n(.+)",
+            Pattern.DOTALL);
 
     /**
      * Выдаляе непатрэбныя файлы з git. Такое можа быць калі зьмяніліся назвы файлаў у тыпах.
