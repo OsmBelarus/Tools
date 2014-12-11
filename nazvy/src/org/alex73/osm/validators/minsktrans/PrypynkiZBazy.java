@@ -9,13 +9,11 @@ import java.util.Map;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
-import org.alex73.osm.utils.GeoUtils;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
 import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
 import org.alex73.osmemory.IOsmNode;
-import org.alex73.osmemory.geometry.OsmHelper;
 import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
@@ -95,14 +93,14 @@ public class PrypynkiZBazy {
     }
 
     static double distanceKm(IOsmNode node, MinsktransStop mt) {
-        return GeoUtils.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat, mt.lon);
+        return osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat, mt.lon);
     }
 
     static String formatDistanceKm(IOsmNode node, MinsktransStop mt) {
         if (mt.lat == 0) {
             return "???";
         }
-        double d = GeoUtils.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat, mt.lon);
+        double d = osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat, mt.lon);
         return new DecimalFormat("#.###").format(d);
     }
 

@@ -39,6 +39,9 @@ import com.vividsolutions.jts.geom.Geometry;
 public class Belarus extends MemoryStorage {
     public static final long BELARUS_BORDER_RELATION_ID = 59065;
 
+    public static double LATITUDE_SIZE = 111.321;
+    public static double LONGTITUDE_BELARUS_SIZE = 67.138;
+
     public static double MIN_LAT = 51.2575982 - 0.001;
     public static double MAX_LAT = 56.1722235 + 0.001;
     public static double MIN_LON = 23.1783874 - 0.001;
@@ -78,5 +81,11 @@ public class Belarus extends MemoryStorage {
 
     public Geometry getGeometry() {
         return area.getArea();
+    }
+
+    public double distanceKm(double lat1, double lon1, double lat2, double lon2) {
+        double dx = Math.abs(lon1 - lon2) * LONGTITUDE_BELARUS_SIZE;
+        double dy = Math.abs(lat1 - lat2) * LATITUDE_SIZE;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 }
