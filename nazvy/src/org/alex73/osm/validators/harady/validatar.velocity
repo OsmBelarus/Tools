@@ -24,7 +24,6 @@ ID аб'екта ёсьць у даведніку, але няма на мапе
 </ul>
 
 <h1 id="p2">Няправільныя назвы рэгіёнаў (${data.incorrectTagsRehijony.rows.size()}):</h1>
-Часова выключана да выпраўленьня памылак
 #set ( $table = $data.incorrectTagsRehijony )
 #parse ("org/alex73/osm/validators/common/result_table.velocity")
 

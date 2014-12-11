@@ -259,6 +259,9 @@ public class CheckCities3 {
             w.setAttr("name:be", o.getTag(nameBeTag), name);
             w.setAttr("name:ru", o.getTag(nameRuTag), nameru);
             w.setAttr("int_name", o.getTag(intNameTag), Lat.lat(name, false));
+            if (p.rajon == null && p.voblasc == null) {
+                w.setAttr("int_name", o.getTag(intNameTag), "Belarus");
+            }
             w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
             w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
             w.setAttr("iso3166-2", o.getTag(isoTag), p.iso_3166_2);
