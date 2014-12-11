@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.alex73.osm.utils.velocity;
+package org.alex73.osm.utils;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -39,12 +39,12 @@ import org.apache.velocity.util.introspection.VelPropertySet;
  * @author <a href="mailto:shinobu@ieee.org">Shinobu Kawai</a>
  * @version $Id: $
  */
-public class PublicFieldUberspect extends UberspectImpl {
+public class VelocityPublicFieldUberspect extends UberspectImpl {
 
     /**
      * Default constructor.
      */
-    public PublicFieldUberspect() {
+    public VelocityPublicFieldUberspect() {
     }
 
     /**
