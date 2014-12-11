@@ -1,3 +1,24 @@
+/**************************************************************************
+ Some tools for OSM.
+
+ Copyright (C) 2014 Aleś Bułojčyk <alex73mail@gmail.com>
+               Home page: http://www.omegat.org/
+               Support center: http://groups.yahoo.com/group/OmegaT/
+
+ This is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **************************************************************************/
+
 package org.alex73.osm.validators.minsktrans;
 
 import java.text.DecimalFormat;
@@ -14,6 +35,9 @@ import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 
+/**
+ * Пошук бліжэйшых прыпынкаў - толькі для стварэньня пачатковай табліцы.
+ */
 public class PrypynkiPosukBlizejsych {
 
     static Belarus osm;
@@ -126,8 +150,7 @@ public class PrypynkiPosukBlizejsych {
     }
 
     static double distanceKm(IOsmNode node, MinsktransStop mt) {
-        return osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat / 100000.0,
-                mt.lon / 100000.0);
+        return osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat / 100000.0, mt.lon / 100000.0);
     }
 
     static class Pair {
