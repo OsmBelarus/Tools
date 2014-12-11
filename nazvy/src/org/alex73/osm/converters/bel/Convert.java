@@ -22,11 +22,6 @@ Some tools for OSM.
 
 package org.alex73.osm.converters.bel;
 
-import gen.alex73.osm.xmldatatypes.Node;
-import gen.alex73.osm.xmldatatypes.Relation;
-import gen.alex73.osm.xmldatatypes.Tag;
-import gen.alex73.osm.xmldatatypes.Way;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -51,6 +46,11 @@ import javax.xml.stream.events.XMLEvent;
 
 import org.alex73.osm.utils.Lat;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
+import osm.xmldatatypes.Node;
+import osm.xmldatatypes.Relation;
+import osm.xmldatatypes.Tag;
+import osm.xmldatatypes.Way;
 
 /**
  * Пераносіць беларускія назвы ў стандартныя каб стварыць мапу для OsmAnd.
