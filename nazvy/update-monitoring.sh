@@ -48,6 +48,7 @@ if [ $? -ne 0 ]; then
 fi
 
 pushd ../../OsmBelarus-Monitoring/ || exit 1
+git gc
 git push
 if [ $? -ne 0 ]; then
   echo "Impossible to push" > $DIR/stop

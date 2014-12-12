@@ -41,7 +41,10 @@ import org.alex73.osmemory.XMLReader;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import osm.xmldatatypes.Changeset;
+import osm.xmldatatypes.Node;
+import osm.xmldatatypes.Relation;
 import osm.xmldatatypes.Tag;
+import osm.xmldatatypes.Way;
 
 /**
  * Экспартуе changesets паміж дзьвюма файламі o5m і потым апошні файл o5m цалкам.
@@ -225,69 +228,69 @@ public class Export2Initial {
                 new XMLDriver.IApplyChangeCallback() {
 
                     @Override
-                    public void beforeUpdateNode(long id) {
+                    public void beforeUpdateNode(XMLReader.UPDATE_MODE mode, Node node) {
                         if (!inside) {
-                            IOsmObject obj = country.getNodeById(id);
+                            IOsmObject obj = country.getNodeById(node.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.beforeUpdateNode(id);
+                        cb.beforeUpdateNode(mode, node);
                     }
 
                     @Override
-                    public void beforeUpdateWay(long id) {
+                    public void beforeUpdateWay(XMLReader.UPDATE_MODE mode, Way way) {
                         if (!inside) {
-                            IOsmObject obj = country.getWayById(id);
+                            IOsmObject obj = country.getWayById(way.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.beforeUpdateWay(id);
+                        cb.beforeUpdateWay(mode, way);
                     }
 
                     @Override
-                    public void beforeUpdateRelation(long id) {
+                    public void beforeUpdateRelation(XMLReader.UPDATE_MODE mode, Relation relation) {
                         if (!inside) {
-                            IOsmObject obj = country.getRelationById(id);
+                            IOsmObject obj = country.getRelationById(relation.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.beforeUpdateRelation(id);
+                        cb.beforeUpdateRelation(mode, relation);
                     }
 
                     @Override
-                    public void afterUpdateNode(long id) {
+                    public void afterUpdateNode(XMLReader.UPDATE_MODE mode, Node node) {
                         if (!inside) {
-                            IOsmObject obj = country.getNodeById(id);
+                            IOsmObject obj = country.getNodeById(node.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.afterUpdateNode(id);
+                        cb.afterUpdateNode(mode, node);
                     }
 
                     @Override
-                    public void afterUpdateWay(long id) {
+                    public void afterUpdateWay(XMLReader.UPDATE_MODE mode, Way way) {
                         if (!inside) {
-                            IOsmObject obj = country.getWayById(id);
+                            IOsmObject obj = country.getWayById(way.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.afterUpdateWay(id);
+                        cb.afterUpdateWay(mode, way);
                     }
 
                     @Override
-                    public void afterUpdateRelation(long id) {
+                    public void afterUpdateRelation(XMLReader.UPDATE_MODE mode, Relation relation) {
                         if (!inside) {
-                            IOsmObject obj = country.getRelationById(id);
+                            IOsmObject obj = country.getRelationById(relation.getId());
                             if (obj != null) {
                                 inside = country.contains(obj);
                             }
                         }
-                        cb.afterUpdateRelation(id);
+                        cb.afterUpdateRelation(mode, relation);
                     }
                 });
         return inside;

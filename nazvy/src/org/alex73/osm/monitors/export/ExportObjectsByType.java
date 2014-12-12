@@ -50,8 +50,13 @@ import org.alex73.osmemory.IOsmObjectID;
 import org.alex73.osmemory.OsmObjectID;
 import org.alex73.osmemory.OsmSimpleNode;
 import org.alex73.osmemory.XMLDriver;
+import org.alex73.osmemory.XMLReader.UPDATE_MODE;
 import org.alex73.osmemory.geometry.IExtendedObject;
 import org.alex73.osmemory.geometry.OsmHelper;
+
+import osm.xmldatatypes.Node;
+import osm.xmldatatypes.Relation;
+import osm.xmldatatypes.Way;
 
 /**
  * Экспартуе аб'екты па тыпах.
@@ -136,25 +141,31 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
         outputs.values().parallelStream().forEach(o -> o.save(git, osm));
     }
 
-    public void beforeUpdateNode(long id) {
+    @Override
+    public void beforeUpdateNode(UPDATE_MODE mode, Node node) {
     }
 
-    public void afterUpdateNode(long id) {
-        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_NODE, id));
+    @Override
+    public void afterUpdateNode(UPDATE_MODE mode, Node node) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_NODE, node.getId()));
     }
 
-    public void beforeUpdateWay(long id) {
+    @Override
+    public void beforeUpdateWay(UPDATE_MODE mode, Way way) {
     }
 
-    public void afterUpdateWay(long id) {
-        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_WAY, id));
+    @Override
+    public void afterUpdateWay(UPDATE_MODE mode, Way way) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_WAY, way.getId()));
     }
 
-    public void beforeUpdateRelation(long id) {
+    @Override
+    public void beforeUpdateRelation(UPDATE_MODE mode, Relation relation) {
     }
 
-    public void afterUpdateRelation(long id) {
-        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_RELATION, id));
+    @Override
+    public void afterUpdateRelation(UPDATE_MODE mode, Relation relation) {
+        queueObjects.add(new OsmObjectID(IOsmObject.TYPE_RELATION, relation.getId()));
     }
 
     /**
