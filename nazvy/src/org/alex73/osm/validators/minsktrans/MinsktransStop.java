@@ -53,4 +53,9 @@ public class MinsktransStop {
     public String osmNameRu;
     @XmlAttribute(name = "osm:name:be")
     public String osmNameBe;
+
+    @Override
+    public String toString() {
+        return "ID=" + id + "/" + name;
+    }
 }

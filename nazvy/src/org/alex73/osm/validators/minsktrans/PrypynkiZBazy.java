@@ -60,7 +60,7 @@ public class PrypynkiZBazy {
 
         readMap();
 
-        table = new ResultTable("name", "name:be");
+        table = new ResultTable("name");
         compare();
         none();
 
@@ -71,7 +71,7 @@ public class PrypynkiZBazy {
 
     static void compare() {
         short nameTag = osm.getTagsPack().getTagCode("name");
-        short namebeTag = osm.getTagsPack().getTagCode("name:be");
+        // short namebeTag = osm.getTagsPack().getTagCode("name:be");
         for (MinsktransStop mt : new ArrayList<>(minsktrans)) {
             if (mt.osmNodeId == null) {
                 if (mt.lat == 0) {
@@ -94,8 +94,10 @@ public class PrypynkiZBazy {
             String d = formatDistanceKm(node, mt);
             ResultTableRow row = table.new ResultTableRow(node.getObjectCode(), mt.name + " (" + d + ")");
             row.setAttr("name", node.getTag(nameTag), mt.osmNameRu);
-            row.setAttr("name:be", node.getTag(namebeTag), mt.osmNameBe);
-            table.rows.add(row);
+            // row.setAttr("name:be", node.getTag(namebeTag), mt.osmNameBe);
+            if (row.needChange()) {
+                table.rows.add(row);
+            }
         }
     }
 
