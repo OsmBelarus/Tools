@@ -22,13 +22,7 @@ Some tools for OSM.
 
 package org.alex73.osm.monitors.export;
 
-import gen.alex73.osm.validators.objects.GranularityType;
-import gen.alex73.osm.validators.objects.ObjectTypes;
-import gen.alex73.osm.validators.objects.Type;
-
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,23 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.validators.objects.CheckType;
+import org.alex73.osm.utils.RehijonTypeSeparator;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmObjectID;
 import org.alex73.osmemory.OsmObjectID;
 import org.alex73.osmemory.OsmSimpleNode;
 import org.alex73.osmemory.XMLDriver;
 import org.alex73.osmemory.XMLReader.UPDATE_MODE;
-import org.alex73.osmemory.geometry.IExtendedObject;
-import org.alex73.osmemory.geometry.OsmHelper;
 
 import osm.xmldatatypes.Node;
 import osm.xmldatatypes.Relation;
@@ -61,39 +46,13 @@ import osm.xmldatatypes.Way;
 /**
  * Экспартуе аб'екты па тыпах.
  */
-public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
-    final Belarus osm;
-    Borders borders;
-
-    List<CheckType> checkTypes;
+public class ExportObjectsByType extends RehijonTypeSeparator implements XMLDriver.IApplyChangeCallback {
+    
     Map<String, ExportOutput> outputs;
     Set<IOsmObjectID> queueObjects = new HashSet<>();
 
     public ExportObjectsByType(Belarus osm, Borders borders, Set<String> unusedFiles) throws Exception {
-        this.osm = osm;
-        this.borders = borders;
-        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(new StreamSource(new File("src/object_types.xsd")));
-        JAXBContext CTX = JAXBContext.newInstance(ObjectTypes.class);
-        Unmarshaller unm = CTX.createUnmarshaller();
-        unm.setSchema(schema);
-
-        checkTypes = new ArrayList<>();
-
-        File[] configs = new File("object-types").listFiles();
-        Arrays.sort(configs);
-        for (File f : configs) {
-            ObjectTypes config = (ObjectTypes) unm.unmarshal(f);
-            for (Type t : config.getType()) {
-                checkTypes.add(new CheckType(osm, t));
-            }
-        }
-
-        Type t = new Type();
-        t.setId("other");
-        t.setFile("insyja");
-        t.setImportance(GranularityType.MIESTA);
-        checkTypes.add(new CheckType(osm, t));
+        super(osm,borders);
 
         outputs = new HashMap<>();
         for (ExportOutput eo : ExportOutput.list(checkTypes, borders, unusedFiles)) {
@@ -169,71 +128,10 @@ public class ExportObjectsByType implements XMLDriver.IApplyChangeCallback {
     }
 
     /**
-     * Апрацоўвае 1 аб'ект.
-     */
-    void process(IOsmObject obj) {
-        try {
-            IExtendedObject ext = OsmHelper.extendedFromObject(obj, osm);
-            for (CheckType ct : checkTypes) {
-                if (ct.matches(obj)) {
-                    GranularityType g = ct.getType().getImportance();
-                    while (!store(g, ext, ct.getType().getFile())) {
-                        g = upper(g);
-                        if (g == null) {
-                            throw new RuntimeException();
-                        }
-                    }
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    boolean store(GranularityType granularity, IExtendedObject ext, String typ) throws Exception {
-        boolean found = false;
-
-        for (Borders.Border b : getRehijony(granularity, borders)) {
-            if (b.area.covers(ext)) {
-                found = true;
-                storeToQueue(ext.getObject(), typ, b.name);
-            }
-        }
-        return found;
-    }
-
-    static List<Borders.Border> getRehijony(GranularityType granularity, Borders borders) {
-        switch (granularity) {
-        case KRAINA:
-            return borders.kraina;
-        case VOBLASC:
-            return borders.voblasci;
-        case RAJON:
-            return borders.rajony;
-        case MIESTA:
-            return borders.miesty;
-        default:
-            throw new RuntimeException();
-        }
-    }
-
-    static GranularityType upper(GranularityType g) {
-        switch (g) {
-        case MIESTA:
-            return GranularityType.RAJON;
-        case RAJON:
-            return GranularityType.VOBLASC;
-        case VOBLASC:
-            return GranularityType.KRAINA;
-        }
-        return null;
-    }
-
-    /**
      * Захоўвае ў адпаведны ExportOutput.
      */
-    synchronized void storeToQueue(IOsmObject obj, String typ, String rehijon) throws Exception {
+    @Override
+    synchronized protected void storeToOutput(IOsmObject obj, String typ, String rehijon) throws Exception {
         String key = ExportOutput.key(typ, rehijon);
         ExportOutput o = outputs.get(key);
         if (o == null) {

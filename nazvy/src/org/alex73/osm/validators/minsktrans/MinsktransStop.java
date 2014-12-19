@@ -37,9 +37,9 @@ public class MinsktransStop {
     @XmlAttribute(name = "Info")
     public String info;
     @XmlAttribute(name = "Lng")
-    public double lon;
+    public Double lon;
     @XmlAttribute(name = "Lat")
-    public double lat;
+    public Double lat;
     @XmlAttribute(name = "Stops")
     public String stops;
     @XmlAttribute(name = "StopNum")
@@ -51,8 +51,6 @@ public class MinsktransStop {
     public Long osmNodeId;
     @XmlAttribute(name = "osm:name:ru")
     public String osmNameRu;
-    @XmlAttribute(name = "osm:name:be")
-    public String osmNameBe;
 
     @Override
     public String toString() {

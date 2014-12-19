@@ -57,6 +57,9 @@ public class CSV {
             for (T obj : data) {
                 for (int i = 0; i < fields.length; i++) {
                     Object v = fields[i].get(obj);
+                    if (v != null && (v instanceof Double) && ((Double) v) == 0) {
+                        v = 0; // каб не выпраўлялася пасьля Libreffice
+                    }
                     fn[i] = v != null ? v.toString() : "";
                 }
                 out.write(print(fn));

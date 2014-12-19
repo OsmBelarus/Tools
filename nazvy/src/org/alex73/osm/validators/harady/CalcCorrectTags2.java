@@ -54,6 +54,7 @@ public class CalcCorrectTags2 {
             }
             break;
         case "г.п.":
+        case "мяст.":
         case "г. п.":
         case "к. п.":
             typ = "village";

@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="lib/velocity-1.6.3.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.jgit-3.5.2.201411120430-r.jar"/>
 	<classpathentry kind="lib" path="lib/osmemory-1.9.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.3.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

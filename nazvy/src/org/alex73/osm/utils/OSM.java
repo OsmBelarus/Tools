@@ -55,6 +55,11 @@ public class OSM {
                 + "</a>";
     }
 
+    public static String coord(double lat, double lon) {
+        return "<a href='https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=18/" + lat
+                + "/" + lon + "'>[" + lat + "/" + lon + "]</a>";
+    }
+
     public static String josmIcon(Set<String> codes) {
         if (codes.isEmpty()) {
             return "";

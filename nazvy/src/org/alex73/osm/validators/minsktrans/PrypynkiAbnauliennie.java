@@ -32,6 +32,7 @@ import java.util.Set;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
+import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.ResultTable;
@@ -71,9 +72,16 @@ public class PrypynkiAbnauliennie {
         for (MinsktransStop stop : daviednik.values()) {
             MinsktransStop stopOrig = minsktrans.get(stop.id);
             if (stopOrig == null) {
-                errors.addError("WARNING: Ёсьць у даведніку, але ўжо няма ў Мінсктрансе прыпынку '" + stop
-                        + "'. Трэба прыбраць з даведніку");
+                errors.addError("ERROR: Ёсьць у даведніку, але ўжо няма ў Мінсктрансе прыпынку '" + stop
+                        + "'. Прыбрана ў 0list-new.csv");
+                daviednikSave.remove(stop);
                 continue;
+            }
+            if (stop.lat == null) {
+                stop.lat = stopOrig.lat;
+            }
+            if (stop.lon == null) {
+                stop.lon = stopOrig.lon;
             }
             stop.city = stopOrig.city;
             stop.area = stopOrig.area;
@@ -83,30 +91,28 @@ public class PrypynkiAbnauliennie {
             stop.stopNum = stopOrig.stopNum;
             stop.pikas = stopOrig.pikas;
 
+            stopOrig.name = stopOrig.name.trim().replace("  ", " ").replace("  ", " ");
             if (!StringUtils.equals(stop.name, stopOrig.name)) {
-                errors.addError("WARNING: Зьмянілася назва прыпынку ID=" + stop.id + ": '" + stop.name
-                        + "' -> '" + stopOrig.name + "'. Трэба выправіць у даведніку.");
+                errors.addError("WARNING: Зьмянілася назва прыпынку " + stop + " " + coord(stop) + " -> '"
+                        + stopOrig.name + "'. Трэба выправіць у даведніку.");
             }
-            double solat = stopOrig.lat / 100000;
-            double solon = stopOrig.lon / 100000;
-            if (stop.lat != solat || stop.lon != solon) {
-                errors.addError("ERROR: Зьмянілася месца прыпынку '" + stop + "': [" + stop.lat + " "
-                        + stop.lon + "] -> [" + solat + " " + solon + "]");
+            if (stop.lat.doubleValue() != stopOrig.lat.doubleValue()
+                    || stop.lon.doubleValue() != stopOrig.lon.doubleValue()) {
+                errors.addError("ERROR: Зьмянілася месца прыпынку '" + stop + "': " + coord(stop) + " -> "
+                        + OSM.coord(stopOrig.lat, stopOrig.lon));
             }
             if (stop.osmNodeId != null) {
                 IOsmNode node = prypynkiBielarusi.get(stop.osmNodeId);
                 if (node == null) {
-                    errors.addError(
-                            "ERROR: Прыпынак n"
-                                    + stop.osmNodeId
-                                    + " што пазначаны ў даведніку, не існуе на мапе. Трэба выправіць мапу ці даведнік.",
-                            "n" + stop.osmNodeId);
+                    errors.addError("ERROR: Прыпынак n" + stop.osmNodeId + " што пазначаны ў даведніку для "
+                            + stop + " " + coord(stop)
+                            + ", не існуе на мапе. Трэба выправіць мапу ці даведнік.", "n" + stop.osmNodeId);
                     continue;
                 }
                 // супадаюць
                 String d = formatDistanceKm(node, stop);
                 ResultTableRow row = tableNames.new ResultTableRow(node.getObjectCode(), stop.name + " (" + d
-                        + ")");
+                        + ") " + coord(stop));
                 row.setAttr("name", node.getTag(nameTag), stop.osmNameRu);
                 // row.setAttr("name:be", node.getTag(namebeTag), mt.osmNameBe);
                 if (row.needChange()) {
@@ -118,7 +124,8 @@ public class PrypynkiAbnauliennie {
         for (MinsktransStop stopOrig : minsktrans.values()) {
             if (!daviednik.containsKey(stopOrig.id)) {
                 errors.addError("WARNING: Ужо ёсьць у Мінсктрансе, але няма ў даведніку прыпынаку '"
-                        + stopOrig + "'. Трэба дадаць у даведнік.");
+                        + stopOrig + "'. Дададзена ў 0list-new.csv");
+                daviednikSave.add(copy(stopOrig));
             }
         }
 
@@ -137,8 +144,8 @@ public class PrypynkiAbnauliennie {
         // паказваем тыя што толькі ў даведніку але не на мапе
         for (MinsktransStop stop : daviednik.values()) {
             if (stop.lat == 0 || stop.lon == 0) {
-                errors.addError("WARNING: Няма прыпынку '" + stop
-                        + "' на мапе. Трэба знайсьці і выправіць osm:NodeID у даведніку");
+                errors.addError("WARNING: Няма прыпынку '" + stop + "' " + coord(stop)
+                        + " на мапе. Трэба знайсьці і выправіць osm:NodeID у даведніку");
             } else {
                 // шукаем на мапе побач
                 found = null;
@@ -148,21 +155,13 @@ public class PrypynkiAbnauliennie {
                 findNearest(0.08, stop);
                 findNearest(0.1, stop);
                 if (found != null) {
-                    errors.addError("WARNING: Няма прыпынку '"
-                            + stop
-                            + "' на <a href='https://www.openstreetmap.org/#map=18/"
-                            + stop.lat
-                            / 100000.0
-                            + "/"
-                            + stop.lon
-                            / 100000.0
-                            + "'>мапе</a>. Трэба знайсьці і выправіць osm:NodeID у даведніку. Магчыма гэта osm:NodeID="
-                            + found.getId() + " (адлегласьць: " + distanceKm(found, stop) + ")");
+                    errors.addError("WARNING: Няма прыпынку '" + stop + "' " + coord(stop)
+                            + " на мапе. Трэба знайсьці і выправіць osm:NodeID у даведніку. Магчыма гэта "
+                            + OSM.browse("n" + found.getId()) + " (адлегласьць: " + distanceKm(found, stop)
+                            + ")");
                 } else {
-                    errors.addError("WARNING: Няма прыпынку '" + stop
-                            + "' на <a href='https://www.openstreetmap.org/#map=18/" + stop.lat / 100000.0
-                            + "/" + stop.lon / 100000.0
-                            + "'>мапе</a>. Трэба знайсьці і выправіць osm:NodeID у даведніку.");
+                    errors.addError("WARNING: Няма прыпынку '" + stop + "' " + coord(stop)
+                            + " на мапе. Трэба знайсьці і выправіць osm:NodeID у даведніку.");
                 }
             }
         }
@@ -170,9 +169,13 @@ public class PrypynkiAbnauliennie {
         // паказваем тыя што на мапе але не ў даведніку
         for (IOsmNode p : prypynkiMiensku) {
             if (!osmNodesUsed.contains(p.getId())) {
-                errors.addError("WARNING: Прыпынак "
-                        + p.getObjectCode()
-                        + " ёсьць у Менску на мапе, але няма ў даведніку Мінсктранса. Трэба знайсьці і выправіць osm:NodeID у даведнка.");
+                errors.addError(
+                        "WARNING: Прыпынак "
+                                + p
+                                + "/"
+                                + p.getTag("name", osm)
+                                + " ёсьць у Менску на мапе, але няма ў даведніку Мінсктранса. Трэба знайсьці і выправіць osm:NodeID у даведніку.",
+                        p);
             }
         }
 
@@ -181,6 +184,10 @@ public class PrypynkiAbnauliennie {
         String out = Env.readProperty("out.dir") + "/prypynkiMiensk.html";
         VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out, "table",
                 tableNames, "errors", errors);
+    }
+
+    static String coord(MinsktransStop stop) {
+        return OSM.coord(stop.lat, stop.lon);
     }
 
     static void read() throws Exception {
@@ -196,6 +203,8 @@ public class PrypynkiAbnauliennie {
             } else {
                 prevName = stop.name;
             }
+            stop.lat /= 100000.0;
+            stop.lon /= 100000.0;
             if (minsktrans.containsKey(stop.id)) {
                 errors.addError("ERROR: Больш за 1 прыпынак з ID=" + stop.id
                         + " у файле Мінсктрансу. Трэба спраўдзіцб файл Мінсктранса.");
@@ -239,6 +248,22 @@ public class PrypynkiAbnauliennie {
                 o -> prypynkiBielarusi.put(o.getId(), (IOsmNode) o));
     }
 
+    static MinsktransStop copy(MinsktransStop o) {
+        MinsktransStop r = new MinsktransStop();
+        r.id = o.id;
+        r.city = o.city;
+        r.area = o.area;
+        r.street = o.street;
+        r.name = o.name;
+        r.info = o.info;
+        r.lon = o.lon;
+        r.lat = o.lat;
+        r.stops = o.stops;
+        r.stopNum = o.stopNum;
+        r.pikas = o.pikas;
+        return r;
+    }
+
     /**
      * Шукаем бліжэйшы прыпынак.
      */
@@ -264,7 +289,7 @@ public class PrypynkiAbnauliennie {
      * Адлегласьць прыпынку ў даведніку ад прыпынку на мапе.
      */
     static double distanceKm(IOsmNode node, MinsktransStop mt) {
-        return osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat / 100000.0, mt.lon / 100000.0);
+        return osm.distanceKm(node.getLatitude(), node.getLongitude(), mt.lat, mt.lon);
     }
 
     /**
