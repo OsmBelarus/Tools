@@ -129,7 +129,7 @@ public class PrypynkiAbnauliennie {
             }
         }
 
-        // шукаем дубликаты OsmModeID
+        // шукаем дублікаты OsmModeID
         for (MinsktransStop stop : daviednik.values()) {
             if (stop.osmNodeId != null) {
                 if (osmNodesUsed.contains(stop.osmNodeId)) {
@@ -143,6 +143,9 @@ public class PrypynkiAbnauliennie {
 
         // паказваем тыя што толькі ў даведніку але не на мапе
         for (MinsktransStop stop : daviednik.values()) {
+            if (stop.osmNodeId != null) {
+                continue;
+            }
             if (stop.lat == 0 || stop.lon == 0) {
                 errors.addError("WARNING: Няма прыпынку '" + stop + "' " + coord(stop)
                         + " на мапе. Трэба знайсьці і выправіць osm:NodeID у даведніку");

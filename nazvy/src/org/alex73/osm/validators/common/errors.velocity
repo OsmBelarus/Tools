@@ -6,7 +6,7 @@
 #foreach ( $err in $OSM.sort($errors.errors.keySet()))
 #set ( $objects = $errors.errors.get($err) )
   <tr>
-    <td class="err">$err ${OSM.josmIcon($objects)}</td>
+    <td class="err">$err</td>
     <td>
       #foreach ($n in $objects)
         ${OSM.histIcon($n)} ${OSM.josmIcon($n)} &nbsp;&nbsp;

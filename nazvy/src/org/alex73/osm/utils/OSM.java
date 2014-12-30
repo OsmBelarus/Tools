@@ -57,7 +57,10 @@ public class OSM {
 
     public static String coord(double lat, double lon) {
         return "<a href='https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lon + "#map=18/" + lat
-                + "/" + lon + "'>[" + lat + "/" + lon + "]</a>";
+                + "/" + lon + "'>[" + lat + "/" + lon
+                + "]</a> <a href='javascript:void(0)' onclick='javascript:send(\"load_and_zoom?left="
+                + (lon - 0.001) + "&right=" + (lon + 0.001) + "&bottom=" + (lat - 0.001) + "&top=" + (lat + 0.001)
+                + "\")'>" + ICON_JOSM + "</a>";
     }
 
     public static String josmIcon(Set<String> codes) {
