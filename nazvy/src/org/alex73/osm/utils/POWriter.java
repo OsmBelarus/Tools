@@ -75,7 +75,8 @@ public class POWriter {
             wr.write("# name:be: " + i.translations + "\n");
             wr.write("msgid \"" + u + "\"\n");
             if (i.translations.size() == 1) {
-                wr.write("msgstr \"" + i.translations.iterator().next() + "\"");
+                //wr.write("msgstr \"" + i.translations.iterator().next() + "\"");
+                wr.write("msgstr \"\"");
             } else {
                 wr.write("msgstr \"\"");
             }

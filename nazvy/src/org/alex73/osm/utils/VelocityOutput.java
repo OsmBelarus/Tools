@@ -45,7 +45,7 @@ import org.apache.velocity.app.Velocity;
  * Запісвае зьвесткі па шаблёну velocity.
  */
 public class VelocityOutput {
-    public static void output(String template, String file, Object... args) throws Exception {
+    public static void output(String template, String file, Object... args) {
         VelocityContext context = new VelocityContext();
         for (int i = 0; i < args.length; i += 2) {
             context.put((String) args[i], args[i + 1]);
@@ -55,24 +55,28 @@ public class VelocityOutput {
         format.setTimeZone(TimeZone.getTimeZone("Europe/Minsk"));
         context.put("currentDateTime", format.format(new Date()));
 
-        GregorianCalendar c = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        XMLGregorianCalendar xmlc = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        context.put("currentDateTimeXML", xmlc.toXMLFormat());
-
-        context.put("OSM", OSM.class);
-
-        Properties props = new Properties();
-        InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
         try {
-            props.load(in);
-        } finally {
-            in.close();
+            GregorianCalendar c = (GregorianCalendar) Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+            XMLGregorianCalendar xmlc = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+            context.put("currentDateTimeXML", xmlc.toXMLFormat());
+
+            context.put("OSM", OSM.class);
+
+            Properties props = new Properties();
+            InputStream in = VelocityOutput.class.getResourceAsStream("velocity.properties");
+            try {
+                props.load(in);
+            } finally {
+                in.close();
+            }
+            Velocity.init(props);
+            Template t = Velocity.getTemplate(template);
+            new File(file).getParentFile().mkdirs();
+            Writer wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+            t.merge(context, wr);
+            wr.close();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-        Velocity.init(props);
-        Template t = Velocity.getTemplate(template);
-        new File(file).getParentFile().mkdirs();
-        Writer wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-        t.merge(context, wr);
-        wr.close();
     }
 }

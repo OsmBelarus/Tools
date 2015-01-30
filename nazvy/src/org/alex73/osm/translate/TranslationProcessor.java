@@ -14,23 +14,31 @@ import java.util.Map;
 import org.alex73.osm.monitors.export.Borders;
 import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
-import org.alex73.osm.utils.POReader;
+import org.alex73.osm.utils.Env;
+import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POWriter;
 import org.alex73.osm.utils.RehijonTypeSeparator;
+import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osm.validators.common.ResultTable2.ResultTableRow;
 import org.alex73.osmemory.IOsmObject;
 import org.apache.commons.lang.StringUtils;
+import org.omegat.util.Language;
+import org.omegat.util.TMXReader2;
+import org.omegat.util.TMXReader2.ParsedTu;
+import org.omegat.util.TMXReader2.ParsedTuv;
 
 public class TranslationProcessor extends RehijonTypeSeparator {
-    Map<String, TypReh> trs = new HashMap<>();
-    short nameTag, nameBeTag;
-    Map<String, ResultTable2> tables = new HashMap<>();
+
+    Map<String, Typ> ts = new HashMap<>();
+    short nameTag, nameBeTag, nameRuTag, nameIntTag;
 
     public TranslationProcessor(Belarus osm, Borders borders) throws Exception {
         super(osm, borders);
         nameTag = osm.getTagsPack().getTagCode("name");
+        nameRuTag = osm.getTagsPack().getTagCode("name:ru");
         nameBeTag = osm.getTagsPack().getTagCode("name:be");
+        nameIntTag = osm.getTagsPack().getTagCode("int_name");
     }
 
     @Override
@@ -40,59 +48,45 @@ public class TranslationProcessor extends RehijonTypeSeparator {
             return;
         }
 
-        TypReh tr = getTypeReh(typ, rehijon);
-        tr.add(obj);
+        Typ t = getTyp(typ);
+        t.add(obj, typ, rehijon);
     }
 
     synchronized void save() throws Exception {
-        trs.values().forEach(tr -> tr.write());
-        tables.values().forEach(v -> v.sort());
-        tables.forEach((k, v) -> v.writeJS("/tmp/tr/" + k + ".js"));
+        ts.values().forEach(t -> t.trs.values().forEach(tr -> tr.write()));
+        ts.values().forEach(t -> t.write());
+        ts.values().forEach(t -> t.table.sort());
+        ts.values().forEach(
+                t -> t.table.writeJS(Env.readProperty("out.dir") + "/pieraklad/" + t.typ + ".js", "table"));
+        ts.values().forEach(
+                t -> VelocityOutput.output("org/alex73/osm/translate/out.velocity",
+                        Env.readProperty("out.dir") + "/pieraklad/" + t.typ + ".html", "typ", t.typ));
     }
 
-    synchronized TypReh getTypeReh(String typ, String rehijon) throws Exception {
-        String key = getKey(typ, rehijon);
-        TypReh tr = trs.get(key);
-        if (tr == null) {
-
-            ResultTable2 table = tables.get(typ);
-            if (table == null) {
-                table = new ResultTable2("name", "name:be");
-                tables.put(typ, table);
-            }
-            tr = new TypReh(typ, rehijon, table);
-            trs.put(key, tr);
-
+    Typ getTyp(String typ) throws Exception {
+        Typ t = ts.get(typ);
+        if (t == null) {
+            t = new Typ(typ);
+            ts.put(typ, t);
         }
-        return tr;
+        return t;
     }
 
-    public class TypReh {
+    public class Typ {
         String typ;
-        String rehijon;
         ResultTable2 table;
-
-        POReader translated;
         Map<String, String> fixes;
+        Map<String, TypReh> trs = new HashMap<>();
+        Map<String, String> translation;
 
-        POWriter output = new POWriter();
-
-        public TypReh(String typ, String rehijon, ResultTable2 table) throws Exception {
+        public Typ(String typ) throws Exception {
             this.typ = typ;
-            this.rehijon = rehijon;
-            this.table = table;
-
-            // чытаем пераклады
-            File f = new File("/tmp/tr/target/" + getFile() + ".po");
-            if (f.exists()) {
-                translated = new POReader(f.getPath());
-            }
-
+            this.table = new ResultTable2("name", "name:ru", "name:be", "int_name");
             // чытаем мэпінг выпраўленьняў
             fixes = new HashMap<>();
             try {
-                List<Replace> replaces = new CSV('\t').readCSV("/tmp/tr/source/" + getFile() + ".csv",
-                        Replace.class);
+                List<Replace> replaces = new CSV('\t').readCSV(Env.readProperty("translations.dir")
+                        + "/changes/" + getFile() + ".csv", Replace.class);
                 for (Replace r : replaces) {
                     if (!r.from.equals(r.to)) {// толькі тыя што не супадаюць
                         fixes.put(r.from, r.to);
@@ -100,33 +94,37 @@ public class TranslationProcessor extends RehijonTypeSeparator {
                 }
             } catch (FileNotFoundException ex) {
             }
+
+            translation = new HashMap<>();
+            try {
+                new TMXReader2().readTMX(new File(Env.readProperty("translations.dir") + "/translations/"
+                        + typ + ".tmx"), new Language("ru"), new Language("be"), false, false, true, false,
+                        new TMXReader2.LoadCallback() {
+                            @Override
+                            public boolean onEntry(ParsedTu tu, ParsedTuv tuvSource, ParsedTuv tuvTarget,
+                                    boolean isParagraphSegtype) {
+                                translation.put(tuvSource.text, tuvTarget.text);
+                                return true;
+                            }
+                        });
+            } catch (FileNotFoundException ex) {
+            }
         }
 
-        void add(IOsmObject obj) {
+        void add(IOsmObject obj, String typ, String rehijon) throws Exception {
             String name = obj.getTag(nameTag);
-            String namebe = obj.getTag(nameBeTag);
-
             String namechanged = fixes.get(name);
             if (namechanged == null) {
-                fixes.put(name, name);
                 namechanged = name;
             }
 
-            output.add(namechanged, namebe, obj.getObjectCode());
-
-            ResultTableRow row = table.new ResultTableRow(rehijon, obj.getObjectCode(), name);
-            row.setAttr("name", name, namechanged);
-            row.setAttr("name:be", namebe, translated.getOrDefault(namechanged, namebe));
-            row.addChanged();
+            TypReh tr = getTypeReh(typ, rehijon);
+            tr.add(obj, namechanged);
         }
 
         public void write() {
-            System.out.println("Save translation  " + typ + " " + rehijon);
+            System.out.println("Save translation  " + typ);
             try {
-                // запісваем для перакладу
-                File f = new File("/tmp/tr/source/" + getFile() + ".po");
-                output.write(f.getPath());
-
                 // запісваем ў csv
                 List<Replace> names = new ArrayList<>();
                 for (Map.Entry<String, String> en : fixes.entrySet()) {
@@ -144,18 +142,73 @@ public class TranslationProcessor extends RehijonTypeSeparator {
                         return RUC.compare(o1.from, o2.from);
                     }
                 });
-                new CSV('\t').saveCSV("/tmp/tr/source/" + getFile() + ".csv", Replace.class, names);
+                new CSV('\t').saveCSV(
+                        Env.readProperty("translations.dir") + "/changes/" + getFile() + ".csv",
+                        Replace.class, names);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         }
 
         String getFile() {
-            return typ.replaceAll("^/+", "") + "/" + rehijon.replaceAll("/+$", "");
+            return typ.replaceAll("^/+", "");
+        }
+
+        TypReh getTypeReh(String typ, String rehijon) throws Exception {
+            TypReh tr = trs.get(rehijon);
+            if (tr == null) {
+                tr = new TypReh(this, rehijon, table);
+                trs.put(rehijon, tr);
+            }
+            return tr;
         }
     }
 
-    static String getKey(String typ, String rehijon) {
-        return typ + "|" + rehijon;
+    public class TypReh {
+        Typ typ;
+        String rehijon;
+        ResultTable2 table;
+
+        POWriter output = new POWriter();
+
+        public TypReh(Typ typ, String rehijon, ResultTable2 table) throws Exception {
+            this.typ = typ;
+            this.rehijon = rehijon;
+            this.table = table;
+        }
+
+        void add(IOsmObject obj, String namechanged) {
+            String name = obj.getTag(nameTag);
+            String nameru = obj.getTag(nameRuTag);
+            String namebe = obj.getTag(nameBeTag);
+            String nameint = obj.getTag(nameIntTag);
+
+            output.add(namechanged, namebe, obj.getObjectCode());
+
+            if (typ.translation != null) {
+                ResultTableRow row = table.new ResultTableRow(rehijon, obj.getObjectCode(), name);
+                row.setAttr("name", name, namechanged);
+                row.setAttr("name:ru", nameru, namechanged);
+                row.setAttr("name:be", namebe, typ.translation.getOrDefault(namechanged, namebe));
+                row.setAttr("int_name", nameint,
+                        Lat.lat(typ.translation.getOrDefault(namechanged, namebe), false));
+                row.addChanged();
+            }
+        }
+
+        public void write() {
+            System.out.println("Save translation  " + typ.typ + " " + rehijon);
+            try {
+                // запісваем для перакладу
+                File f = new File(Env.readProperty("translations.dir") + "/sources/" + getFile() + ".po");
+                output.write(f.getPath());
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        String getFile() {
+            return typ.typ.replaceAll("^/+", "") + "/" + rehijon.replaceAll("/+$", "");
+        }
     }
 }

@@ -45,9 +45,10 @@ public class ResultTable2 {
     public static Collator BEL = Collator.getInstance(BE);
 
     public final List<String> attributes;
-    public final Map<String, List<ResultTableRow>> rows;
+    public final List<Region> regions = new ArrayList<>();
+    public int rowsCount;
 
-    int rowsCount;
+    public transient final Map<String, Region> regionsByName = new HashMap<>();
 
     public ResultTable2(String... attributes) {
         this(Arrays.asList(attributes));
@@ -55,17 +56,16 @@ public class ResultTable2 {
 
     public ResultTable2(List<String> attributes) {
         this.attributes = Collections.unmodifiableList(attributes);
-        rows = new HashMap<>();
     }
 
-    public void add(ResultTableRow row) {
-        rowsCount++;
-        List<ResultTableRow> list = rows.get(row.rehijon);
-        if (list == null) {
-            list = new ArrayList<>();
-            rows.put(row.rehijon, list);
+    private Region getRegion(String region) {
+        Region r = regionsByName.get(region);
+        if (r == null) {
+            r = new Region(region);
+            regions.add(r);
+            regionsByName.put(region, r);
         }
-        list.add(row);
+        return r;
     }
 
     public int getObjectsCount() {
@@ -73,8 +73,14 @@ public class ResultTable2 {
     }
 
     public void sort() {
-        for (List<ResultTableRow> list : rows.values()) {
-            Collections.sort(list, new Comparator<ResultTableRow>() {
+        Collections.sort(regions, new Comparator<Region>() {
+            @Override
+            public int compare(Region o1, Region o2) {
+                return BEL.compare(o1.name, o2.name);
+            }
+        });
+        for (Region r : regions) {
+            Collections.sort(r.rows, new Comparator<ResultTableRow>() {
                 @Override
                 public int compare(ResultTableRow o1, ResultTableRow o2) {
                     int r = BEL.compare(o1.name, o2.name);
@@ -87,48 +93,32 @@ public class ResultTable2 {
         }
     }
 
-    public void writeJS(String file) {
-        OutTable o = new OutTable();
-        for (Map.Entry<String, List<ResultTableRow>> en : rows.entrySet()) {
-            OutRehijon or = new OutRehijon();
-            or.rehijonName = en.getKey();
-            for (ResultTableRow row : en.getValue()) {
-                OutRow orr = new OutRow();
-                orr.name = row.name;
-                or.rows.add(orr);
-            }
-            o.rehijony.add(or);
-        }
-
+    public void writeJS(String file, String var) {
         Gson gson = new Gson();
-        String json = gson.toJson(o);
+        String json = gson.toJson(this);
         try {
-            FileUtils.writeStringToFile(new File(file), json, "UTF-8");
+            FileUtils.writeStringToFile(new File(file), var + "=" + json + ";", "UTF-8");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public static class OutTable {
-        public List<OutRehijon> rehijony = new ArrayList<>();
-    }
+    public class Region {
+        public final String name;
+        public final List<ResultTableRow> rows = new ArrayList<>();
 
-    public static class OutRehijon {
-        public String rehijonName;
-        public List<OutRow> rows = new ArrayList<>();
-    }
-
-    public static class OutRow {
-        public String name;
-        public String[] v;
+        public Region(String name) {
+            this.name = name;
+        }
     }
 
     public class ResultTableRow {
-        public final String rehijon, id, name;
+        private final transient String region;
+        public final String id, name;
         public TagInfo[] tags;
 
-        public ResultTableRow(String rehijon, String id, String name) {
-            this.rehijon = rehijon;
+        public ResultTableRow(String region, String id, String name) {
+            this.region = region;
             this.id = id;
             this.name = name;
             tags = new TagInfo[attributes.size()];
@@ -139,12 +129,12 @@ public class ResultTable2 {
             if (pos < 0) {
                 throw new RuntimeException("Няма атрыбута '" + attrName + "' у табліцы");
             }
-            tags[pos] = new TagInfo(attrName, oldValue, newValue);
+            tags[pos] = new TagInfo(oldValue, newValue);
         }
 
         public boolean needChange() {
             for (TagInfo ti : tags) {
-                if (ti != null && !StringUtils.equals(ti.oldValue, ti.newValue)) {
+                if (ti != null && !StringUtils.equals(ti.ov, ti.nv)) {
                     return true;
                 }
             }
@@ -153,18 +143,19 @@ public class ResultTable2 {
 
         public void addChanged() {
             if (needChange()) {
-                add(this);
+                rowsCount++;
+                getRegion(region).rows.add(this);
             }
         }
     }
 
     public static class TagInfo {
-        public final String attrName, oldValue, newValue;
+        public final String ov;
+        public final String nv;
 
-        public TagInfo(String attrName, String oldValue, String newValue) {
-            this.attrName = attrName;
-            this.oldValue = oldValue;
-            this.newValue = newValue;
+        public TagInfo(String oldValue, String newValue) {
+            this.ov = oldValue == null ? "" : oldValue;
+            this.nv = newValue == null ? "" : newValue;
         }
     }
 }
