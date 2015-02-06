@@ -86,7 +86,7 @@ public class TranslationProcessor extends RehijonTypeSeparator {
             fixes = new HashMap<>();
             try {
                 List<Replace> replaces = new CSV('\t').readCSV(Env.readProperty("translations.dir")
-                        + "/changes/" + getFile() + ".csv", Replace.class);
+                        + "/vypraulenni/" + getFile() + ".csv", Replace.class);
                 for (Replace r : replaces) {
                     if (!r.from.equals(r.to)) {// толькі тыя што не супадаюць
                         fixes.put(r.from, r.to);
@@ -97,7 +97,7 @@ public class TranslationProcessor extends RehijonTypeSeparator {
 
             translation = new HashMap<>();
             try {
-                new TMXReader2().readTMX(new File(Env.readProperty("translations.dir") + "/translations/"
+                new TMXReader2().readTMX(new File(Env.readProperty("translations.dir") + "/pieraklady/"
                         + typ + ".tmx"), new Language("ru"), new Language("be"), false, false, true, false,
                         new TMXReader2.LoadCallback() {
                             @Override
@@ -143,7 +143,7 @@ public class TranslationProcessor extends RehijonTypeSeparator {
                     }
                 });
                 new CSV('\t').saveCSV(
-                        Env.readProperty("translations.dir") + "/changes/" + getFile() + ".csv",
+                        Env.readProperty("translations.dir") + "/vypraulenni/" + getFile() + ".csv",
                         Replace.class, names);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -200,7 +200,7 @@ public class TranslationProcessor extends RehijonTypeSeparator {
             System.out.println("Save translation  " + typ.typ + " " + rehijon);
             try {
                 // запісваем для перакладу
-                File f = new File(Env.readProperty("translations.dir") + "/sources/" + getFile() + ".po");
+                File f = new File(Env.readProperty("translations.dir") + "/zychodniki/" + getFile() + ".po");
                 output.write(f.getPath());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);

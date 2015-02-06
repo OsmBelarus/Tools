@@ -159,12 +159,16 @@ public class ReadChangesets {
         File cache = new File(Env.readProperty("data.cache") + "/changesets/" + s + ".osm.gz");
         byte[] xml;
         if (cache.exists()) {
+            System.out.println("Read from cache " + cache);
             xml = FileUtils.readFileToByteArray(cache);
         } else {
             xml = get("http://planet.openstreetmap.org/replication/changesets/" + s.substring(0, 3) + "/"
                     + s.substring(3, 6) + "/" + s.substring(6) + ".osm.gz");
             cache.getParentFile().mkdirs();
             FileUtils.writeByteArrayToFile(cache, xml);
+        }
+        if (xml.length == 0) {
+            return new ArrayList<>();
         }
         Osm result = (Osm) CONTEXT.createUnmarshaller().unmarshal(
                 new GZIPInputStream(new ByteArrayInputStream(xml)));

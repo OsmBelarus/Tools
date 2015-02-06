@@ -4,21 +4,19 @@ cd `dirname $0`
 PATH=../osmutils:$PATH
 DIR=/data/tmp/osm-monitor
 
-if [ -f $DIR/stop ]; then
-  cat $DIR/stop
-  exit 1
+if [ ! -f $DIR/stop ]; then
+  rm -rf /data/tmp/osm-cache
+  rm $DIR/belarus-prev.o5m
+  mv $DIR/belarus-latest.o5m $DIR/belarus-prev.o5m
+  if [ $? -ne 0 ]; then
+    echo "Impossible to move to prev" > $DIR/stop
+    exit 1
+  fi
 fi
 
-rm -rf /data/tmp/osm-cache
-rm $DIR/belarus-prev.o5m
-mv $DIR/belarus-latest.o5m $DIR/belarus-prev.o5m
-if [ $? -ne 0 ]; then
-  echo "Impossible to move to prev" > $DIR/stop
-  exit 1
-fi
 
 ## Агульная мапа Беларусі на пачатак дня
-rm $DIR/belarus-latest.osm.pbf
+rm $DIR/belarus-latest.osm.pbf $DIR/stop
 #wget -nv -O $TMP/belarus-latest.osm.pbf http://download.geofabrik.de/europe/belarus-latest.osm.pbf || exit 1
 wget -nv -O $DIR/belarus-latest.osm.pbf http://be.gis-lab.info/data/osm_dump/dump/latest/BY.osm.pbf
 if [ $? -ne 0 ]; then
