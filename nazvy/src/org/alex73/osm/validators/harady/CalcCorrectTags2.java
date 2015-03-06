@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.alex73.osm.utils.Lat;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.MemoryStorage;
 
@@ -95,7 +96,6 @@ public class CalcCorrectTags2 {
         List<String> variantsBel = splitVariants(m.varyjantyBel);
         variantsBel.remove(name_be);
         String variants_be = variantsToString(variantsBel);
-        String int_name = m.translit;
 
         String name_ru = m.osmForceNameRu != null ? m.osmForceNameRu : m.ras;
         List<String> vru = new ArrayList<>();
@@ -109,7 +109,7 @@ public class CalcCorrectTags2 {
         result.name = name_ru;
         result.name_ru = name_ru;
         result.name_be = name_be;
-        result.int_name = int_name;
+        result.int_name = Lat.lat(name_be, false);
         result.name_be_tarask = name_be_tarask;
         result.place = typ;
         result.abandonedPlace = abandoned;
