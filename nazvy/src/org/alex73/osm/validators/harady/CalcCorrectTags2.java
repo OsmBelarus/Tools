@@ -79,10 +79,14 @@ public class CalcCorrectTags2 {
             throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
         }
 
-        boolean abandoned = false;
-        if (m.osmForceTyp != null && m.osmForceTyp.equals("abandoned")) {
-            abandoned = true;
-        } else if (m.osmForceTyp != null) {
+        String abandoned=null;
+        String nodePlace = node.getTag("place", storage);
+        if ("locality".equals(nodePlace)||"suburb".equals(nodePlace)||"neighbourhood".equals(nodePlace)) {
+            abandoned = typ;
+            typ=nodePlace;
+        }
+
+        if (m.osmForceTyp != null) {
             typ = m.osmForceTyp;
         }
 
@@ -107,14 +111,8 @@ public class CalcCorrectTags2 {
         result.name_be = name_be;
         result.int_name = int_name;
         result.name_be_tarask = name_be_tarask;
-        if (typ != null) {
-            if (abandoned) {
-                result.abandonedPlace = typ;
-                result.place = "locality";
-            } else {
-                result.place = typ;
-            }
-        }
+        result.place = typ;
+        result.abandonedPlace = abandoned;
         result.alt_name_ru = variants_ru;
         result.alt_name_be = variants_be;
         result.alt_name = null;

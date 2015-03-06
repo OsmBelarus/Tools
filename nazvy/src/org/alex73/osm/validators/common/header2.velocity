@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="be" ng-app="validatorApp">
+<head>
+    <meta charset="UTF-8">
+    
+    <script type = "text/javascript" src = "${js}"></script>
+    <script type = "text/javascript" src = "http://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script type = "text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular.min.js"></script>
+    <script type = "text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular-sanitize.min.js"></script>
+        
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+            font-size: 80%;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td, th {
+            border: 1px solid black;
+        }
+    </style>
+    <title>${title}</title>
+</head>
+<body ng-controller="Page">
+
+<b><u>Вынікі ад {{data.currentTimestamp}}</u></b> <br/><br/>
+
+<div style="position: fixed; right: 50px; top: 25px; background-color: white; border-style: solid; border-color: red">
+Спачатку дашліце некалькі аб'ектаў каб пазначыць "Accept All Tags"<br/>
+<button onClick="javascript: sendAll();">Даслаць у JOSM</button>
+</div>
+
+#set ( $quo = "$")
+
+<script language="javascript">
+  var validatorApp = angular.module('validatorApp', ['ngSanitize']);
+  var scope;
+  var josmTables = new Array();
+  
+  validatorApp.controller('Page', function (${quo}scope, ${quo}sce) {
+      scope = ${quo}scope;
+      scope.errorsOpenType = 'osm';
+      scope.data = data;
+  
+      scope.styleForCell = function(table, rowIndex,colIndex) {
+        if (table.checked[rowIndex][colIndex]) {
+          return "background: #80FFFF";
+        }
+        var tag=table.rows[rowIndex].tags[colIndex];
+        if (tag.ov == tag.nv) {
+          return '';
+        } else if (tag.ov == '') {
+          return "background: #FFFF80";
+        } else if (tag.nv == '') {
+          return "background: #FF2020";
+        } else {
+          return "background: #FF8080";
+        }
+      };
+      scope.setSelectedCol = function(table, col, val) {
+        for(i=0; i<table.rows.length; i++) {
+          var tag=table.rows[i].tags[col];
+          if (tag.ov != tag.nv) {
+            table.checked[i][col] = val;
+          }
+        }
+      };
+      scope.setSelectedRow = function(table, row, val) {
+        for(j=0; j<table.attributes.length; j++) {
+          var tag=table.rows[row].tags[j];
+          if (tag.ov != tag.nv) {
+            table.checked[row][j] = val;
+          }
+        }
+      };
+      scope.id2image = function(id) {
+        if (id.charAt(0)=='w') {
+          return "https://wiki.openstreetmap.org/w/images/6/6a/Mf_way.png";
+        } else if (id.charAt(0)=='r') {
+          return "https://wiki.openstreetmap.org/w/images/5/59/Relation.png";
+        } else {
+          return "https://wiki.openstreetmap.org/w/images/b/b5/Mf_node.png";
+        }
+      };
+      scope.id2link = function(id) {
+          var p = id.replace('n','node/').replace('w','way/').replace('r','relation/');
+          return "https://www.openstreetmap.org/"+p+"/history";
+      };
+      scope.renderHtml = function(html) {
+        return ${quo}sce.trustAsHtml(html);
+      };
+      scope.josmOpenObjects = function(objects) {
+          var o="";
+          for(i=0; i<objects.length; i++) {
+            o+=','+objects[i];
+          }
+          ${quo}.ajax({
+            url: "http://127.0.0.1:8111/load_object?objects="+o.substring(1),
+                  async: false
+          }).fail(function(jq,status,error) {
+            alert("Памылка запыту JOSM:\n\n"+error);
+          });
+      };
+    });
+
+    function send(command) {
+      ${quo}.ajax("http://127.0.0.1:8111/"+command,{
+        async: false
+      }).fail(function(jq,status,error) {
+        alert("Памылка запыту вэрсіі JOSM. Можа ён не стартаваны ці не дазволены Remote Control ?\n\n "+error);
+      });
+    }
+    function sendAll() {
+      ${quo}.ajax("http://127.0.0.1:8111/version",{
+        async: false
+      }).done(function( data ) {
+        if (data.protocolversion.major<2 && data.protocolversion.minor<7) {
+          alert("У вас занадта стары JOSM. Карыстайцеся вэрсіяй не менш за 7680");
+        } else {
+          sendAllChecked();
+        }
+      }).fail(function(jq,status,error) {
+        alert("Памылка запыту вэрсіі JOSM. Можа ён не стартаваны ці не дазволены Remote Control ?\n\n "+error);
+      });
+    }
+    function sendAllChecked() {
+        for(t=0;t<josmTables.length;t++) {
+          var table=josmTables[t];
+          for(i=0; i<table.rows.length; i++) {
+            var send="";
+            for(j=0; j<table.attributes.length; j++) {
+              if (table.checked[i][j]) {
+                send += '|' + table.attributes[j] + '=' + table.rows[i].tags[j].nv;
+                table.checked[i][j] = false;
+              }
+            }
+            if (send) {
+              ${quo}.ajax({
+                  url: "http://127.0.0.1:8111/load_object?objects="+table.rows[i].id+"&addtags="+send.substring(1),
+                  async: false
+                  }).done(function( data ) {
+                    scope.${quo}apply(function() {
+                      for(j=0; j<table.attributes.length; j++) {
+                        table.checked[i][j] = false;
+                      }
+                    });
+                  }).fail(function(jq,status,error) {
+                    alert("Памылка запыту JOSM:\n\n"+error);
+                    i = 999999999;
+                    t = 999999999;
+                  });
+            }
+          }
+        }
+    }
+    ${quo}( document ).ready(function() {
+      ${quo}("h2").each(function(index) {
+        ${quo}(this).attr('id','list-'+index);
+        ${quo}('#list').append(${quo}('<a href="#list-'+index+'">'+${quo}(this).text()+'</a><br/>'));
+      });
+    });
+</script>
+
+<div id="list">
+</div>
+<br/>

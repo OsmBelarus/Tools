@@ -19,6 +19,7 @@ import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POWriter;
 import org.alex73.osm.utils.RehijonTypeSeparator;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osm.validators.common.ResultTable2.ResultTableRow;
 import org.alex73.osmemory.IOsmObject;
@@ -56,11 +57,19 @@ public class TranslationProcessor extends RehijonTypeSeparator {
         ts.values().forEach(t -> t.trs.values().forEach(tr -> tr.write()));
         ts.values().forEach(t -> t.write());
         ts.values().forEach(t -> t.table.sort());
-        ts.values().forEach(
-                t -> t.table.writeJS(Env.readProperty("out.dir") + "/pieraklad/" + t.typ + ".js", "table"));
+        ts.values().forEach(t -> wr(Env.readProperty("out.dir") + "/pieraklad/" + t.typ + ".js", t.table));
         ts.values().forEach(
                 t -> VelocityOutput.output("org/alex73/osm/translate/out.velocity",
                         Env.readProperty("out.dir") + "/pieraklad/" + t.typ + ".html", "typ", t.typ));
+    }
+
+    void wr(String file, ResultTable2 table) {
+        try {
+            JS js = new JS(file);
+            js.add("table", table.getJS());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     Typ getTyp(String typ) throws Exception {

@@ -21,22 +21,24 @@
 
 package org.alex73.osm.validators.cyhunka;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.alex73.osm.utils.Belarus;
+import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.Errors;
-import org.alex73.osm.validators.common.ResultTable;
-import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
+import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.GeometryHelper;
+import org.apache.commons.io.FileUtils;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
@@ -66,9 +68,9 @@ public class CheckStancyi {
 
         Errors errors = new Errors();
 
-        ResultTable table = new ResultTable("name", "name:ru", "name:be", "int_name", "esr:user", "railway");
+        ResultTable2 table = new ResultTable2("name", "name:ru", "name:be", "int_name", "esr:user", "railway");
         for (Stancyja st : stansyji) {
-            if (st.nodeID == null) {
+            if (st.nodeID == null || st.nodeID == 0) {
                 errors.addError("Невядомы аб'ект OSM для станцыі " + st);
                 continue;
             }
@@ -107,7 +109,7 @@ public class CheckStancyi {
                 distance = "";
                 dist = 0;
             }
-            ResultTableRow row = table.new ResultTableRow(obj.getObjectCode(), distance);
+            ResultTable2.ResultTableRow row = table.new ResultTableRow("", obj.getObjectCode(), distance);
 
             row.setAttr("name", obj.getTag("name", osm), name);
             row.setAttr("name:ru", obj.getTag("name:ru", osm), name);
@@ -115,18 +117,19 @@ public class CheckStancyi {
             row.setAttr("int_name", obj.getTag("int_name", osm), Lat.lat(st.nameBe, false));
             row.setAttr("esr:user", obj.getTag("esr:user", osm), "" + st.esr);
             row.setAttr("railway", obj.getTag("railway", osm), "ст".equals(st.typ) ? "station" : "halt");
-            if (row.needChange()) {
-                table.rows.add(row);
-            }
+            row.addChanged();
         }
         for (IOsmObject obj : stations.values()) {
             errors.addError("Невядомая станцыя ў OSM : " + obj.getTag("name", osm) + " / " + obj.getId(), obj);
         }
 
         String out = Env.readProperty("out.dir") + "/cyhunka.html";
+        String outJS = Env.readProperty("out.dir") + "/cyhunka.js";
         VelocityOutput.output("org/alex73/osm/validators/cyhunka/cyhunka.velocity", out, "table", table,
                 "errors", errors);
-
+        JS js = new JS(outJS);
+        js.add("errors", errors.getJS());
+        js.add("table", table.getJS());
     }
 
     static double distanceKm(Coordinate p1, Coordinate p2) {

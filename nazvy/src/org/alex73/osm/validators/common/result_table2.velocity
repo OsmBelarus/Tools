@@ -1,0 +1,70 @@
+<h2>${title} ({{::data.${table}.rowsCount}})</h2>
+#if ( $desc )
+<div>
+  $desc
+</div>
+#end
+
+<script language="javascript">
+  data.${table}.listRegions = new Array();
+  data.${table}.listRegions.push({id: -1, name: "Усе - "+data.${table}.rowsCount});
+  for(i=0; i<data.${table}.regions.length; i++) {
+    data.${table}.listRegions.push({id: i, name: data.${table}.regions[i].name+" - "+data.${table}.regions[i].rows.length});
+  }
+  
+  data.${table}.updateRegion = function() {
+    var prepared;
+    if (data.${table}.selectedRegionIndex == -1) {
+      prepared = new Array();
+      for(i=0; i<data.${table}.regions.length; i++) {
+        var a=data.${table}.regions[i].rows;
+        for(j=0;j<a.length;j++) {
+          prepared.push(a[j]);
+        }
+      }
+    } else {
+      prepared = data.${table}.regions[data.${table}.selectedRegionIndex].rows;
+    }
+    data.${table}.rows = prepared;
+    data.${table}.checked = new Array();
+    for(i=0; i<data.${table}.rows.length; i++) {
+      data.${table}.checked[i]=new Array();
+    }
+  };
+  if (data.${table}.regions.length == 0) {
+    data.${table}.selectedRegionIndex = -1;
+    data.${table}.updateRegion();
+  } else if (data.${table}.regions.length == 1) {
+    data.${table}.selectedRegionIndex = 0;
+    data.${table}.updateRegion();
+  }
+  josmTables.push(data.${table});
+</script>
+
+<select ng-if="data.${table}.regions.length > 1" ng-model="data.${table}.selectedRegionIndex" ng-change="data.${table}.updateRegion()" ng-options="item.id as item.name for item in data.${table}.listRegions"></select>
+
+<table>
+  <thead>
+    <th>Назва</td>
+    <th ng-repeat="attr in data.${table}.attributes">
+      {{attr}}
+      <a href="" ng-click="setSelectedCol(data.${table}, ${quo}index, true)">+</a>
+      <a href="" ng-click="setSelectedCol(data.${table}, ${quo}index, false)">-</a>
+    </td>
+  </thead>
+  <tr ng-repeat="row in data.${table}.rows" ng-init="rowIndex = ${quo}index">
+    <td>
+      <a href="{{::id2link(row.id)}}" target="_blank">o</a>
+      <span ng-bind-html="::renderHtml(row.name)"></span>
+      <a href="" ng-click="setSelectedRow(data.${table}, rowIndex, true)">+</a>
+      <a href="" ng-click="setSelectedRow(data.${table}, rowIndex, false)">-</a>
+    </td>
+    <td ng-init="colIndex = ${quo}index; tag = row.tags[${quo}index]" ng-repeat="attr in data.${table}.attributes" style="{{styleForCell(data.${table},rowIndex,colIndex)}}">
+      <span ng-if="tag.ov == tag.nv">{{::tag.ov}}</span>
+      <span ng-if="tag.ov != tag.nv">
+        <input type="checkbox" ng-model="data.${table}.checked[rowIndex][colIndex]"></input>
+        {{::row.tags[colIndex].ov}} -> {{::row.tags[colIndex].nv}}
+      </span>
+    </td>
+  </tr>
+</table>

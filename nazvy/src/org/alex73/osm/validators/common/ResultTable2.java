@@ -21,7 +21,6 @@
 
 package org.alex73.osm.validators.common;
 
-import java.io.File;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,10 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-
-import com.google.gson.Gson;
 
 /**
  * Выніковая табліца для angular з пераключэньнем рэгіёнаў.
@@ -44,11 +40,11 @@ public class ResultTable2 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
 
-    public final List<String> attributes;
-    public final List<Region> regions = new ArrayList<>();
-    public int rowsCount;
+    private final List<String> attributes;
+    private final List<Region> regions = new ArrayList<>();
+    private int rowsCount;
 
-    public transient final Map<String, Region> regionsByName = new HashMap<>();
+    private transient final Map<String, Region> regionsByName = new HashMap<>();
 
     public ResultTable2(String... attributes) {
         this(Arrays.asList(attributes));
@@ -66,10 +62,6 @@ public class ResultTable2 {
             regionsByName.put(region, r);
         }
         return r;
-    }
-
-    public int getObjectsCount() {
-        return rowsCount;
     }
 
     public void sort() {
@@ -92,15 +84,13 @@ public class ResultTable2 {
             });
         }
     }
+    
+    public int getRowsCount() {
+        return rowsCount;
+    }
 
-    public void writeJS(String file, String var) {
-        Gson gson = new Gson();
-        String json = gson.toJson(this);
-        try {
-            FileUtils.writeStringToFile(new File(file), var + "=" + json + ";", "UTF-8");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+    public Object getJS() {
+        return this;
     }
 
     public class Region {

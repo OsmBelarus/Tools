@@ -4,23 +4,25 @@
 
 #parse ("org/alex73/osm/validators/common/errors.velocity")
 
+<br/><br/>
 
-<ul>
-	#foreach ( $c in $cities )
-	    <li><a href="vulicy-${c.fn}.html">${c.nazva}</a> - 
-		  #if (${streetErrorsCount.get($c)} > 0)
-		    <span class="err">памылак : ${streetErrorsCount.get($c)}</span>,
-		  #else
-		    няма памылак,
-		  #end
-		  #if (${houseErrorsCount.get($c)} > 0)
-		    <span class="err"><a href="damy-${c.fn}.html">памылак дамоў: ${houseErrorsCount.get($c)}</a></span>
-		  #else
-		    няма памылак дамоў
-		  #end
-	    </li>
-	#end
-</ul>
+<table>
+#foreach ( $c in $cities )
+<tr>
+  <td><a href="vulicy-${c.fn}.html">${c.nazva}</a></td>
+  <td>
+	  #if (${streetErrorsCount.get($c)} > 0)
+	    ${streetErrorsCount.get($c)}
+	  #end
+  </td>
+  <td>
+	  #if (${houseErrorsCount.get($c)} > 0)
+	    ${houseErrorsCount.get($c)}
+	  #end
+  </td>
+</tr>
+#end
+</table>
 
 </body>
 </html>

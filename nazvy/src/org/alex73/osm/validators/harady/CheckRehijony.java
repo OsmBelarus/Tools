@@ -48,9 +48,9 @@ public class CheckRehijony {
         osm = new Belarus();
         errors = new Errors();
         check(osm, errors);
-        errors.errors.keySet().forEach(o -> System.out.println(o));
+      //  errors.errors.keySet().forEach(o -> System.out.println(o));
     }
-
+//TODO
     static void check(Belarus posm, Errors perrors) throws Exception {
         osm = posm;
         errors = perrors;
@@ -74,11 +74,11 @@ public class CheckRehijony {
         check("Аб'екты з admin_level=4: ", level4, voblasci(padziely));
         check("Аб'екты з admin_level=6: ", level6, rajony(padziely));
 
-        if (errors.errors.isEmpty()) {
-            // правяраем ці ствараюць вобласьці й раёны такую самую геамэтрыю як краіна
-            checkGeometry("Вобласьці ў межах краіны: ", osm.getGeometry(), level4);
-            checkGeometry("Раёны ў межах краіны: ", osm.getGeometry(), level6);
-        }
+//        if (errors.errors.isEmpty()) {
+//            // правяраем ці ствараюць вобласьці й раёны такую самую геамэтрыю як краіна
+//            checkGeometry("Вобласьці ў межах краіны: ", osm.getGeometry(), level4);
+//            checkGeometry("Раёны ў межах краіны: ", osm.getGeometry(), level6);
+//        }
     }
 
     static List<PadzielOsmNas> kraina(List<PadzielOsmNas> padziely) {

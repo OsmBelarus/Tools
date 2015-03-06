@@ -20,6 +20,7 @@
  **************************************************************************/
 package org.alex73.osm.validators.vulicy;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +31,12 @@ import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.LettersCheck;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
+import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.Errors;
-import org.alex73.osm.validators.common.ResultTable;
-import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
+import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.IExtendedObject;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -69,13 +71,12 @@ public class CheckStreets3 extends StreetsParse3 {
     @Override
     void end(City c) throws Exception {
         houseErrorsCount.put(c, cityResult.pamylkiDamou.getObjectsCount());
-        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount() + cityResult.vulicy.rows.size());
+        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount() + cityResult.vulicy.getRowsCount());
 
         System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
+        cityResult.writeJS(outDir + "/vulicy-" + c.fn + ".js");
         VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-"
-                + c.fn + ".html", "horad", c.nazva, "data", cityResult);
-        VelocityOutput.output("org/alex73/osm/validators/vulicy/damyHorada.velocity", outDir + "/damy-"
-                + c.fn + ".html", "horad", c.nazva, "data", cityResult);
+                + c.fn + ".html", "file", c.fn.substring(c.fn.indexOf('/')+1), "horad", c.nazva, "data", cityResult);
     }
 
     void end() throws Exception {
@@ -158,7 +159,7 @@ public class CheckStreets3 extends StreetsParse3 {
             throw new Exception("Невядомы прэфікс у перакладзе: " + c.po.get(orig.name));
         }
 
-        ResultTableRow row = (cityResult.vulicy).new ResultTableRow(obj.getObjectCode(), "");
+        ResultTable2.ResultTableRow row = (cityResult.vulicy).new ResultTableRow("", obj.getObjectCode(), "");
         if ("skip".equals(Env.readProperty("nazvy_vulic.name"))) {
             row.setAttr("name", null, null);
         } else {
@@ -189,10 +190,7 @@ public class CheckStreets3 extends StreetsParse3 {
         } else {
             row.setAttr("name:by", obj.getTag("name:by", storage), null);
         }
-
-        if (row.needChange()) {
-            cityResult.vulicy.rows.add(row);
-        }
+        row.addChanged();
     }
 
     static void checkName(String orig, String trans) throws Exception {
@@ -291,11 +289,17 @@ public class CheckStreets3 extends StreetsParse3 {
     }
 
     public static class Result {
-        public ResultTable vulicy = new ResultTable("name", "name:ru", "name:be", "name:en", "int_name",
-                "name:en", "name:by");
+        public ResultTable2 vulicy = new ResultTable2("name", "name:ru", "name:be", "name:en", "int_name", "name:by");
 
         public Errors pamylkiVulic = new Errors();
 
         public Errors pamylkiDamou = new Errors();
+
+        public void writeJS(String file) throws Exception {
+            JS js = new JS(file);
+            js.add("pamylkiVulic", pamylkiVulic.getJS());
+            js.add("pamylkiDamou", pamylkiDamou.getJS());
+            js.add("vulicy", vulicy.getJS());
+        }
     }
 }

@@ -1,0 +1,26 @@
+<h2>${title} ({{::data.${errors}.objectsCount}})</h2>
+#if ( $desc )
+<div>
+  $desc
+</div>
+#end
+
+<table>
+  <tr>
+    <td>Памылка</td>
+    <td>osm</td>
+  </tr>
+  <tr ng-repeat="err in ::data.${errors}.errors">
+    <td class="err">
+      <span ng-bind-html="::renderHtml(err.name)"></span>
+      <a ng-if="err.objects.length > 0" href="" ng-click="josmOpenObjects(err.objects)">
+        <img src="https://wiki.openstreetmap.org/w/images/6/6a/JOSM-Icon_Daten_download.jpg"/>
+      </a>
+    </td>
+    <td>
+      <span ng-repeat="obj in ::err.objects">
+        <a href="{{::id2link(obj)}}" target="_blank"><img ng-src="{{::id2image(obj)}}"/></a>
+      </span>
+    </td>
+  </tr>
+</table>

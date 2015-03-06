@@ -1,19 +1,19 @@
 #set ( $title = "Валідатар чыгуначных станцый" )
-#parse ("org/alex73/osm/validators/common/header.velocity")
+#set ( $js = "cyhunka.js" )
+#parse ("org/alex73/osm/validators/common/header2.velocity")
 
 Праверка па зьвестках з https://github.com/OsmBelarus/Databases/blob/master/Daviedniki/Cyhunka.csv <br/>
 
-<a href="#p1">Памылкі</a><br/>
-<a href="#p2">Няправільныя назвы і тэгі</a><br/>
-<br/>
 
-<h1 id="p1">Памылкі:</h1>
-#parse ("org/alex73/osm/validators/common/errors.velocity")
+#set ( $errors = 'errors' )
+#set ( $title = 'Памылкі' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/errors2.velocity")
 
-<h1 id="p2">Няправільныя назвы і тэгі:</h1>
-Назва ўтрымлівае прыблізную адлегласьць каардынат у табліцы ад сапраўдных каардынат у OSM.
-#parse ("org/alex73/osm/validators/common/result_table.velocity")
-
+#set ( $table = 'table' )
+#set ( $title = 'Няправільныя назвы і тэгі' )
+#set ( $desc = 'Назва ўтрымлівае прыблізную адлегласьць каардынат у табліцы ад сапраўдных каардынат у OSM.' )
+#parse ("org/alex73/osm/validators/common/result_table2.velocity")
 
 </body>
 </html>

@@ -1,16 +1,23 @@
 #set ( $title = "Вуліцы горада : ${horad}" )
-#parse ("org/alex73/osm/validators/common/header.velocity")
+#set ( $js = "${file}.js" )
+#parse ("org/alex73/osm/validators/common/header2.velocity")
 
 <h1>${horad}</h1>
-<br/>
 
-<h2>Агульныя памылкі (${data.pamylkiVulic.objectsCount})</h2>
-#set ( $errors = $data.pamylkiVulic )
-#parse ("org/alex73/osm/validators/common/errors.velocity")
+#set ( $errors = 'pamylkiVulic' )
+#set ( $title = 'Агульныя памылкі' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/errors2.velocity")
 
-<h2>Памылкі вуліц (${data.vulicy.objectsCount})</h2>
-#set ( $table = $data.vulicy )
-#parse ("org/alex73/osm/validators/common/result_table.velocity")
+#set ( $table = 'vulicy' )
+#set ( $title = 'Памылкі вуліц' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/result_table2.velocity")
+
+#set ( $errors = 'pamylkiDamou' )
+#set ( $title = 'Памылкі дамоў' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/errors2.velocity")
 
 </body>
 </html>

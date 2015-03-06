@@ -21,10 +21,16 @@
 
 package org.alex73.osm.validators.common;
 
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.alex73.osmemory.IOsmObject;
 
@@ -32,7 +38,13 @@ import org.alex73.osmemory.IOsmObject;
  * Памылкі з кодамі аб'ектаў.
  */
 public class Errors {
-    public Map<String, Set<String>> errors = new HashMap<>();
+    public static Locale BE = new Locale("be");
+    public static Collator BEL = Collator.getInstance(BE);
+
+    transient private Map<String, Err> index = new HashMap<>();
+    public List<Err> errors = new ArrayList<>();
+    private int rowsCount;
+    private int objectsCount;
 
     public void addError(String text) {
         addError(text, (String) null);
@@ -43,21 +55,41 @@ public class Errors {
     }
 
     public void addError(String text, String code) {
-        Set<String> objects = errors.get(text);
-        if (objects == null) {
-            objects = new HashSet<>();
-            errors.put(text, objects);
+        Err err = index.get(text);
+        if (err == null) {
+            err = new Err();
+            err.name = text;
+            errors.add(err);
+            index.put(text, err);
         }
         if (code != null) {
-            objects.add(code);
+            err.objects.add(code);
+            objectsCount++;
         }
     }
 
     public int getObjectsCount() {
-        int r = 0;
-        for (Set<String> os : errors.values()) {
-            r += os.size();
-        }
-        return r;
+        return objectsCount;
+    }
+
+    public int getRowsCount() {
+        return errors.size();
+    }
+
+    public Object getJS() {
+        Collections.sort(errors, new Comparator<Err>() {
+            @Override
+            public int compare(Err o1, Err o2) {
+                return BEL.compare(o1.name, o2.name);
+            }
+        });
+        rowsCount = errors.size();
+
+        return this;
+    }
+
+    public static class Err {
+        public String name;
+        public Set<String> objects = new TreeSet<>();
     }
 }

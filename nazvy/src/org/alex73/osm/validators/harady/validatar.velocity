@@ -1,42 +1,30 @@
 #set ( $title = "Валідатар рэгіёнаў і населеных пунктаў" )
-#parse ("org/alex73/osm/validators/common/header.velocity")
+#set ( $js = "nazvy.js" )
+#parse ("org/alex73/osm/validators/common/header2.velocity")
 
 Праверка па зьвестках з https://github.com/OsmBelarus/Databases/blob/master/Daviedniki/Nazvy_nasielenych_punktau.csv <br/>
 
-<a href="#p1">Памылкі (${data.nonExistInOsm.size()})</a><br/>
-<a href="#p2">Няправільныя назвы рэгіёнаў (${data.incorrectTagsRehijony.rows.size()})</a><br/>
-<a href="#p3">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()})</a><br/>
-<a href="#p4">Няма ў даведніку (${data.unusedInDav.size()})</a><br/>
-
-<br/>
-<br/>
 <br/>
 
-<h1 id="p1">Памылкі (${data.nonExistInOsm.size()}):</h1>
-#set ( $errors = $data.errors )
-#parse ("org/alex73/osm/validators/common/errors.velocity")
-<br/>
-ID аб'екта ёсьць у даведніку, але няма на мапе
-<ul>
-    #foreach ( $str in $data.nonExistInOsm )
-        <li>${str}</li>
-    #end
-</ul>
+#set ( $errors = 'errors' )
+#set ( $title = 'Памылкі' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/errors2.velocity")
 
-<h1 id="p2">Няправільныя назвы рэгіёнаў (${data.incorrectTagsRehijony.rows.size()}):</h1>
-#set ( $table = $data.incorrectTagsRehijony )
-#parse ("org/alex73/osm/validators/common/result_table.velocity")
+#set ( $table = 'incorrectTagsRehijony' )
+#set ( $title = 'Няправільныя назвы рэгіёнаў' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/result_table2.velocity")
 
-<h1 id="p3">Няправільныя назвы і тэгі (${data.incorrectTags.rows.size()}):</h1>
-#set ( $table = $data.incorrectTags )
-#parse ("org/alex73/osm/validators/common/result_table.velocity")
+#set ( $table = 'incorrectTags' )
+#set ( $title = 'Няправільныя назвы і тэгі' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/result_table2.velocity")
 
-<h1 id="p4">Няма ў даведніку (${data.unusedInDav.size()}):</h1> аб'екты мапы на якіх няма спасылак у даведніку
-<ul>
-    #foreach ( $str in $data.unusedInDav )
-        <li>${str}</li>
-    #end
-</ul>
+#set ( $errors = 'unusedInDav' )
+#set ( $title = 'Няма ў даведніку' )
+#set ( $desc = '' )
+#parse ("org/alex73/osm/validators/common/errors2.velocity")
 
 </body>
 </html>

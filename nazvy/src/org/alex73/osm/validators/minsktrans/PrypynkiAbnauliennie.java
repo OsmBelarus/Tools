@@ -35,8 +35,8 @@ import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.OSM;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
-import org.alex73.osm.validators.common.ResultTable;
-import org.alex73.osm.validators.common.ResultTable.ResultTableRow;
+import org.alex73.osm.validators.common.JS;
+import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
@@ -56,7 +56,7 @@ public class PrypynkiAbnauliennie {
     static Set<Long> osmNodesUsed = new HashSet<>();
     static IOsmNode found;
 
-    static ResultTable tableNames;
+    static ResultTable2 tableNames;
     static Errors errors = new Errors();
 
     public static void main(String[] a) throws Exception {
@@ -65,7 +65,7 @@ public class PrypynkiAbnauliennie {
 
         read();
         readMap();
-        tableNames = new ResultTable("name");
+        tableNames = new ResultTable2("name");
         short nameTag = osm.getTagsPack().getTagCode("name");
 
         // шукаем зьмененыя і выдаленыя
@@ -104,20 +104,18 @@ public class PrypynkiAbnauliennie {
             if (stop.osmNodeId != null) {
                 IOsmNode node = prypynkiBielarusi.get(stop.osmNodeId);
                 if (node == null) {
-                    errors.addError("ERROR: Прыпынак n" + stop.osmNodeId + " што пазначаны ў даведніку для "
+                    errors.addError("ERROR: Прыпынак што пазначаны ў даведніку для "
                             + stop + " " + coord(stop)
                             + ", не існуе на мапе. Трэба выправіць мапу ці даведнік.", "n" + stop.osmNodeId);
                     continue;
                 }
                 // супадаюць
                 String d = formatDistanceKm(node, stop);
-                ResultTableRow row = tableNames.new ResultTableRow(node.getObjectCode(), stop.name + " (" + d
+                ResultTable2.ResultTableRow row = tableNames.new ResultTableRow("", node.getObjectCode(), stop.name + " (" + d
                         + ") " + coord(stop));
                 row.setAttr("name", node.getTag(nameTag), stop.osmNameRu);
                 // row.setAttr("name:be", node.getTag(namebeTag), mt.osmNameBe);
-                if (row.needChange()) {
-                    tableNames.rows.add(row);
-                }
+                row.addChanged();
             }
         }
         // шукаем новыя
@@ -174,8 +172,6 @@ public class PrypynkiAbnauliennie {
             if (!osmNodesUsed.contains(p.getId())) {
                 errors.addError(
                         "WARNING: Прыпынак "
-                                + p
-                                + "/"
                                 + p.getTag("name", osm)
                                 + " ёсьць у Менску на мапе, але няма ў даведніку Мінсктранса. Трэба знайсьці і выправіць osm:NodeID у даведніку.",
                         p);
@@ -185,8 +181,11 @@ public class PrypynkiAbnauliennie {
         write();
 
         String out = Env.readProperty("out.dir") + "/prypynkiMiensk.html";
-        VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out, "table",
-                tableNames, "errors", errors);
+        String outJS = Env.readProperty("out.dir") + "/prypynkiMiensk.js";
+        VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out);
+        JS js=new JS(outJS);
+        js.add("errors", errors.getJS());
+        js.add("table", tableNames.getJS());
     }
 
     static String coord(MinsktransStop stop) {
