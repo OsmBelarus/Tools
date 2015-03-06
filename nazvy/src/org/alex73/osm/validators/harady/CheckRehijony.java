@@ -22,8 +22,10 @@
 package org.alex73.osm.validators.harady;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
@@ -49,6 +51,32 @@ public class CheckRehijony {
         errors = new Errors();
         check(osm, errors);
       //  errors.errors.keySet().forEach(o -> System.out.println(o));
+    }
+    static Map<String, String> load() throws Exception {
+        Map<String, String> result=new HashMap<>();
+        
+        List<PadzielOsmNas> padziely = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
+                PadzielOsmNas.class);
+        for (PadzielOsmNas p : padziely) {
+            if (p.voblasc == null && p.rajon == null) {
+                // краіна
+            } else if (p.voblasc != null && p.rajon == null) {
+                // вобласьць
+                result.put(p.voblasc + " вобласць", p.osmNameRu + " область");
+                if (p.osmName != null) {
+                    result.put(p.osmName + " вобласць", p.osmNameRu + " область");
+                }
+            } else if (p.voblasc != null && p.rajon != null) {
+                // раён
+                result.put(p.rajon + " раён", p.osmNameRu + " район");
+                if (p.osmName != null) {
+                    result.put(p.osmName + " раён", p.osmNameRu + " район");
+                }
+            } else {
+                throw new RuntimeException("Няправильны фармат у Rehijony.csv");
+            }
+        }
+        return result;
     }
 //TODO
     static void check(Belarus posm, Errors perrors) throws Exception {

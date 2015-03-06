@@ -87,7 +87,7 @@ public class CheckCities3 {
         loadData();
 
         System.out.println("Checking...");
-        loadAdminLevels();
+        adminLevelsBelToRus = CheckRehijony.load();
         findNonExistInOsm();
         findUnusedInDav();
         findIncorrectTags();
@@ -109,39 +109,22 @@ public class CheckCities3 {
         System.out.println("Find places...");
         // шукаем цэнтры гарадоў
         dbPlaces = new HashMap<>();
-        storage.byTag("place", o -> storage.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
+        short placeTag = storage.getTagsPack().getTagCode("place");
+        storage.byTag("place", o -> ciMiesta(o.getTag(placeTag)) && storage.contains(o),
+                o -> dbPlaces.put(o.getObjectCode(), o));
         storage.byTag("abandoned:place", o -> storage.contains(o), o -> dbPlaces.put(o.getObjectCode(), o));
     }
 
-    static void loadAdminLevels() {
-        adminLevelsBelToRus = new HashMap<>();
-
-        storage.byTag("admin_level", o -> isAdminPartOfBelarus(o), o -> storeAdminPart(o));
-    }
-
-    static boolean isAdminPartOfBelarus(IOsmObject obj) {
-        String admin_level = obj.getTag("admin_level", storage);
-        switch (admin_level) {
-        case "2":
-        case "4":
-        case "6":
-            break;
+    static boolean ciMiesta(String placeTagValue) {
+        switch (placeTagValue) {
+        case "city":
+        case "town":
+        case "village":
+        case "hamlet":
+        case "isolated_dwelling":
+            return true;
         default:
             return false;
-        }
-        if (!"boundary".equals(obj.getTag("type", storage))) {
-            return false;
-        }
-        return true;
-    }
-
-    static void storeAdminPart(IOsmObject obj) {
-        String name = obj.getTag("name", storage);
-        String name_be = obj.getTag("name:be", storage);
-        if (name_be != null && name != null) {
-            if (name_be.endsWith(" раён") || name_be.endsWith(" вобласць")) {
-                adminLevelsBelToRus.put(name_be, name);
-            }
         }
     }
 
@@ -216,7 +199,7 @@ public class CheckCities3 {
 
     static void findRehijony() throws Exception {
         result.incorrectTagsRehijony = new ResultTable2("name", "name:be", "name:ru", "int_name",
-                "addr:country", "addr:region", "iso3166-2");
+                "addr:country", "addr:region", "admin_level", "iso3166-2");
         short nameTag = storage.getTagsPack().getTagCode("name");
         short nameBeTag = storage.getTagsPack().getTagCode("name:be");
         short nameRuTag = storage.getTagsPack().getTagCode("name:ru");
@@ -224,6 +207,7 @@ public class CheckCities3 {
         short addrCountryTag = storage.getTagsPack().getTagCode("addr:country");
         short addrRegionTag = storage.getTagsPack().getTagCode("addr:region");
         short isoTag = storage.getTagsPack().getTagCode("iso3166-2");
+        short adminLevelTag = storage.getTagsPack().getTagCode("admin_level");
 
         List<PadzielOsmNas> padziel = new CSV('\t').readCSV(davDirectory + "/Rehijony.csv",
                 PadzielOsmNas.class);
@@ -238,16 +222,20 @@ public class CheckCities3 {
                 codes.put(p.voblasc, p.iso_3166_2);
                 voblasciBelToRus.put(p.voblasc, p.osmNameRu);
             }
+            String admin_level;
             if (p.rajon != null) {
                 name = (p.osmName != null ? p.osmName : p.rajon) + " раён";
                 nameru = p.osmNameRu + " район";
                 reg = voblasciBelToRus.get(p.voblasc) + " область";
+                admin_level = "6";
             } else if (p.voblasc != null) {
                 name = (p.osmName != null ? p.osmName : p.voblasc) + " вобласць";
                 nameru = p.osmNameRu + " область";
+                admin_level = "4";
             } else {
                 name = "Беларусь";
                 nameru = "Беларусь";
+                admin_level = "2";
             }
 
             w.setAttr("name", o.getTag(nameTag), nameru);
@@ -260,6 +248,7 @@ public class CheckCities3 {
             w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
             w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
             w.setAttr("iso3166-2", o.getTag(isoTag), p.iso_3166_2);
+            w.setAttr("admin_level", o.getTag(adminLevelTag), admin_level);
             w.addChanged();
         }
     }
@@ -279,13 +268,14 @@ public class CheckCities3 {
         addColumnIfAllowed("addr:country", attrs);
         addColumnIfAllowed("addr:region", attrs);
         addColumnIfAllowed("addr:district", attrs);
+        addColumnIfAllowed("admin_level", attrs);
         result.incorrectTags = new ResultTable2(attrs);
 
         for (Miesta m : daviednik) {
             for (final String code : getUsedCodes(m)) {
                 // final WrongTags w = new WrongTags();
-                ResultTable2.ResultTableRow w = result.incorrectTags.new ResultTableRow("", code, m.rajon + '|'
-                        + m.sielsaviet + '|' + m.nazva);
+                ResultTable2.ResultTableRow w = result.incorrectTags.new ResultTableRow(m.voblasc + '|'
+                        + m.rajon, code, m.rajon + '|' + m.sielsaviet + '|' + m.nazva);
                 IOsmObject p = dbPlaces.get(code);
                 Map<String, String> tags = p.extractTags(storage);
                 IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
@@ -307,10 +297,31 @@ public class CheckCities3 {
                 setAttrIfAllowed(w, "alt_name", tags.get("alt_name"), null);
 
                 setAttrIfAllowed(w, "addr:country", tags.get("addr:country"), "BY");
-                setAttrIfAllowed(w, "addr:region", tags.get("addr:region"),
-                        adminLevelsBelToRus.get(m.voblasc + " вобласць"));
-                setAttrIfAllowed(w, "addr:district", tags.get("addr:district"),
-                        adminLevelsBelToRus.get(m.rajon + " раён"));
+                String voblasc = adminLevelsBelToRus.get(m.voblasc + " вобласць");
+                String rajon = adminLevelsBelToRus.get(m.rajon + " раён");
+                if ("<краіна>".equals(m.rajon)) {
+                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"), null);
+                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), null);
+                    setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), "4");
+                } else if ("<вобласць>".equals(m.rajon)) {
+                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"), voblasc != null ? voblasc
+                            : "???");
+                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), null);
+                    setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), "6");
+                } else if ("<раён>".equals(m.rajon)) {
+                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"), voblasc != null ? voblasc
+                            : "???");
+                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), rajon != null ? rajon
+                            : "???");
+                    setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), "8");
+                } else {
+                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"), voblasc != null ? voblasc
+                            : "???");
+                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), rajon != null ? rajon
+                            : "???");
+                    setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), null);
+                }
+
                 w.addChanged();
             }
         }
