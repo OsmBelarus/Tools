@@ -66,7 +66,7 @@ public class POWriter {
         File poFile = new File(filename);
         poFile.getParentFile().mkdirs();
 
-        BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
+        BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile), "UTF-8"));
         List<String> list = new ArrayList<>(data.keySet());
         Collections.sort(list, COMPARATOR);
         for (String u : list) {

@@ -21,7 +21,6 @@
 
 package org.alex73.osm.validators.cyhunka;
 
-import java.io.File;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -32,13 +31,12 @@ import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.VelocityOutput;
-import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.Errors;
+import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.GeometryHelper;
-import org.apache.commons.io.FileUtils;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
@@ -51,6 +49,7 @@ public class CheckStancyi {
 
     static Belarus osm;
     static Map<String, IOsmObject> stations = new HashMap<>();
+    static Map<String, IOsmObject> esrs = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         List<Stancyja> stansyji = new CSV('\t').readCSV(Env.readProperty("dav") + "/Cyhunka.csv",
@@ -61,10 +60,12 @@ public class CheckStancyi {
         // шукаем існуючыі станцыі і прыпынкі
         short railwayTag = osm.getTagsPack().getTagCode("railway");
         short stationTag = osm.getTagsPack().getTagCode("station");
+        short esrUserTag = osm.getTagsPack().getTagCode("esr:user");
         osm.byTag("railway",
                 o -> osm.contains(o)
                         && (o.getTag(railwayTag).equals("station") || o.getTag(railwayTag).equals("halt"))
                         && !"subway".equals(o.getTag(stationTag)), o -> stations.put(o.getObjectCode(), o));
+        osm.byTag("esr:user", o -> osm.contains(o), o -> esrs.put(o.getTag(esrUserTag), o));
 
         Errors errors = new Errors();
 
@@ -82,6 +83,10 @@ public class CheckStancyi {
             if (obj.getTag(railwayTag) == null) {
                 errors.addError("Аб'ект OSM для станцыі " + st + " зьмяніў тып", obj);
                 continue;
+            }
+
+            if (st.esr!=null) {
+                esrs.remove(st.esr.toString());
             }
 
             String name;
@@ -121,6 +126,9 @@ public class CheckStancyi {
         }
         for (IOsmObject obj : stations.values()) {
             errors.addError("Невядомая станцыя ў OSM : " + obj.getTag("name", osm) + " / " + obj.getId(), obj);
+        }
+        for (IOsmObject obj : esrs.values()) {
+            errors.addError("Невядомыя ESR на мапе : " + obj.getTag("name", osm) + " / " + obj.getId(), obj);
         }
 
         String out = Env.readProperty("out.dir") + "/cyhunka.html";

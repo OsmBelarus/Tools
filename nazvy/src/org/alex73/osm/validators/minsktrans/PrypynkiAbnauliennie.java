@@ -44,6 +44,14 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * Абнаўленьне прыпынкаў з базы Мінсктранс.
+ * 
+ * http://www.minsktrans.by/city/minsk/stops.txt
+ * 
+ * http://www.minsktrans.by/city/minsk/routes.txt
+ * 
+ * http://www.minsktrans.by/city/minsk/times.txt
+ * 
+ * http://minsk.gov.by/ru/normdoc/3636/pril_2362_18092014.shtml
  */
 public class PrypynkiAbnauliennie {
     static Belarus osm;
@@ -104,15 +112,15 @@ public class PrypynkiAbnauliennie {
             if (stop.osmNodeId != null) {
                 IOsmNode node = prypynkiBielarusi.get(stop.osmNodeId);
                 if (node == null) {
-                    errors.addError("ERROR: Прыпынак што пазначаны ў даведніку для "
-                            + stop + " " + coord(stop)
-                            + ", не існуе на мапе. Трэба выправіць мапу ці даведнік.", "n" + stop.osmNodeId);
+                    errors.addError("ERROR: Прыпынак што пазначаны ў даведніку для " + stop + " "
+                            + coord(stop) + ", не існуе на мапе. Трэба выправіць мапу ці даведнік.", "n"
+                            + stop.osmNodeId);
                     continue;
                 }
                 // супадаюць
                 String d = formatDistanceKm(node, stop);
-                ResultTable2.ResultTableRow row = tableNames.new ResultTableRow("", node.getObjectCode(), stop.name + " (" + d
-                        + ") " + coord(stop));
+                ResultTable2.ResultTableRow row = tableNames.new ResultTableRow("", node.getObjectCode(),
+                        stop.name + " (" + d + ") " + coord(stop));
                 row.setAttr("name", node.getTag(nameTag), stop.osmNameRu);
                 // row.setAttr("name:be", node.getTag(namebeTag), mt.osmNameBe);
                 row.addChanged();
@@ -183,7 +191,7 @@ public class PrypynkiAbnauliennie {
         String out = Env.readProperty("out.dir") + "/prypynkiMiensk.html";
         String outJS = Env.readProperty("out.dir") + "/prypynkiMiensk.js";
         VelocityOutput.output("org/alex73/osm/validators/minsktrans/prypynki.velocity", out);
-        JS js=new JS(outJS);
+        JS js = new JS(outJS);
         js.add("errors", errors.getJS());
         js.add("table", tableNames.getJS());
     }

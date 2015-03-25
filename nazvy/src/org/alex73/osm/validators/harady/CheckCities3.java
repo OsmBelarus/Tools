@@ -44,6 +44,8 @@ import org.alex73.osmemory.IOsmObject;
 
 /**
  * Правярае супадзеньне назваў населеных пунктаў OSM назвам деведніка.
+ * 
+ * admin_level - толькі для boundary=administrative
  */
 public class CheckCities3 {
     static public class Result {
@@ -319,7 +321,15 @@ public class CheckCities3 {
                             : "???");
                     setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), rajon != null ? rajon
                             : "???");
+                    setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), "8");
+                }
+                if (!"administrative".equals(tags.get("boundary"))) {
                     setAttrIfAllowed(w, "admin_level", tags.get("admin_level"), null);
+                }
+                if ("suburb".equals(correctTags.place)) {
+                    setAttrIfAllowed(w, "addr:country", tags.get("addr:country"), null);
+                    setAttrIfAllowed(w, "addr:region", tags.get("addr:region"), null);
+                    setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), null);
                 }
 
                 w.addChanged();

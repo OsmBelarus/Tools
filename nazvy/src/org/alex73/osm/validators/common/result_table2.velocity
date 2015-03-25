@@ -54,7 +54,7 @@
   </thead>
   <tr ng-repeat="row in data.${table}.rows" ng-init="rowIndex = ${quo}index">
     <td>
-      <a href="{{::id2link(row.id)}}" target="_blank">o</a>
+      <a href="{{::id2link(row.id)}}" target="_blank"><img ng-src="{{::id2image(row.id)}}"/></a>
       <span ng-bind-html="::renderHtml(row.name)"></span>
       <a href="" ng-click="setSelectedRow(data.${table}, rowIndex, true)">+</a>
       <a href="" ng-click="setSelectedRow(data.${table}, rowIndex, false)">-</a>

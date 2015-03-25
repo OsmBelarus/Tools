@@ -151,7 +151,7 @@ public class StreetsParse3 {
         File tmxFile = new File(tmxOutputDir + '/' + c.fn + ".tmx");
         poFile.getParentFile().mkdirs();
         tmxFile.getParentFile().mkdirs();
-        BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile)));
+        BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(poFile), "UTF-8"));
         for (String u : us) {
             LocalizationInfo li = c.uniq.get(u);
             Collections.sort(li.ways, new Comparator<String>() {
@@ -274,7 +274,7 @@ public class StreetsParse3 {
 
         public City(Miesta m, FastArea geomText) {
             this.nazva = m.voblasc + '/' + m.nazvaNoStress;
-            this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_');
+            this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_').replace("<kraina>/Minsk", "Minskaja/Minsk");
             this.geom = geomText;
         }
 
