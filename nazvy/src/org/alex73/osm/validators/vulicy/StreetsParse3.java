@@ -57,8 +57,14 @@ import org.alex73.osmemory.geometry.OsmHelper;
 public class StreetsParse3 {
     public static Locale BE = new Locale("be");
     public static Collator BEL = Collator.getInstance(BE);
-    public static final Pattern RE_HOUSENUMBER = Pattern
-            .compile("[1-9][0-9]*(/[1-9][0-9]*)?(/?[АБВГДабвгд])?( к[0-9]+)?");
+
+    public static final Pattern RE_HOUSENUMBER_FLAT_SUFFIX = Pattern
+            .compile("(.+)\\(кв\\.\\s[1-9][0-9]*\\-[1-9][0-9]*\\)");
+
+    public static final Pattern[] RE_HOUSENUMBERS = new Pattern[] { Pattern.compile("[1-9][0-9]*"), // 38
+            Pattern.compile("[1-9][0-9]* к[1-9]"), // 38 к1
+            Pattern.compile("[1-9][0-9]*[АБВГДЕЖЗИКЛМНабвгдежзиклмн]") // 38а
+    };
 
     static String poOutputDir;
     static String tmxOutputDir;
@@ -274,7 +280,8 @@ public class StreetsParse3 {
 
         public City(Miesta m, FastArea geomText) {
             this.nazva = m.voblasc + '/' + m.nazvaNoStress;
-            this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_').replace("<kraina>/Minsk", "Minskaja/Minsk");
+            this.fn = Lat.unhac(Lat.lat(nazva, false)).replace(' ', '_')
+                    .replace("<kraina>/Minsk", "Minskaja/Minsk");
             this.geom = geomText;
         }
 

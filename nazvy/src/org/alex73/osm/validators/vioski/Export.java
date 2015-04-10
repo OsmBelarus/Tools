@@ -21,6 +21,9 @@
 
 package org.alex73.osm.validators.vioski;
 
+import gen.alex73.osm.validators.rehijony.Rajon;
+import gen.alex73.osm.validators.rehijony.Voblasc;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +31,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.Env;
-import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.CSV;
+import org.alex73.osm.utils.Env;
+import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmNode;
 import org.apache.commons.io.FileUtils;
@@ -48,8 +51,7 @@ public class Export {
     static Map<String, List<Mosm>> map = new TreeMap<>();
 
     public static void main(String[] args) throws Exception {
-        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
+        RehijonyLoad.load(Env.readProperty("dav") + "/Rehijony.xml");
 
         osm = new Belarus();
 
@@ -58,10 +60,11 @@ public class Export {
 
         Map<String, List<Mdav>> rajony = new TreeMap<>();
         for (Miesta m : daviednik) {
-            List<Mdav> list = rajony.get(m.rajon);
+            String r=m.rajon.startsWith("<")?m.rajon:m.rajon+" раён";
+            List<Mdav> list = rajony.get(r);
             if (list == null) {
                 list = new ArrayList<>();
-                rajony.put(m.rajon, list);
+                rajony.put(r, list);
             }
             Mdav mm = new Mdav();
             mm.osmID = m.osmID;
@@ -84,9 +87,9 @@ public class Export {
         foutDir.mkdirs();
 
         Map<String, String> padzielo = new TreeMap<>();
-        for (PadzielOsmNas p : padziel) {
-            if (p.rajon != null) {
-                padzielo.put(p.rajon, osm.getRelationById(p.relationID).getTag("name", osm));
+        for(Voblasc v:RehijonyLoad.kraina.getVoblasc() ) {
+            for(Rajon r:v.getRajon()) {
+                padzielo.put(r.getNameBe(), osm.getObject(r.getOsmID()).getTag("name", osm));
             }
         }
 

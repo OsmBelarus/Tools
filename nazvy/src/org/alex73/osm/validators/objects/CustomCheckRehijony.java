@@ -21,6 +21,8 @@
 
 package org.alex73.osm.validators.objects;
 
+import gen.alex73.osm.validators.rehijony.Voblasc;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,10 +33,10 @@ import org.alex73.osm.utils.Belarus;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.PadzielOsmNas;
+import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.IOsmRelation;
 import org.alex73.osmemory.geometry.ExtendedRelation;
-import org.alex73.osmemory.geometry.IExtendedObject;
 import org.alex73.osmemory.geometry.OsmHelper;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -50,13 +52,12 @@ public class CustomCheckRehijony implements ICustomClass {
     static Geometry BelarusGeometry;
     static short nameTag;
     Belarus osm;
-    static Set<String> rehijony, processed;
-    static Map<String, ExtendedRelation> voblasci;
+    static Set<String> processed= new HashSet<>();
 
     public boolean filter(IOsmObject obj) {
-        if (!rehijony.contains(obj.getObjectCode())) {
-            return false;
-        }
+//        if (!rehijony.contains(obj.getObjectCode())) {
+//            return false;
+//        }
         return true;
     }
 
@@ -64,33 +65,12 @@ public class CustomCheckRehijony implements ICustomClass {
         this.osm = osm;
         nameTag = osm.getTagsPack().getTagCode("name:be");
         BelarusGeometry = osm.getGeometry();
-        try {
-            List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                    PadzielOsmNas.class);
-            rehijony = new HashSet<>();
-            processed = new HashSet<>();
-            voblasci = new HashMap<>();
-            for (PadzielOsmNas p : padziel) {
-                rehijony.add("r" + p.relationID);
-                if (p.voblasc == null) {
-                    // краіна
-                } else if (p.rajon == null) {
-                    // вобласьць
-                    IOsmRelation r = osm.getRelationById(p.relationID);
-                    voblasci.put(p.voblasc, new ExtendedRelation(r, osm));
-                } else {
-                    // раён
-                    voblasci.put((p.osmName == null ? p.rajon : p.osmName) + " раён", voblasci.get(p.voblasc));
-                }
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+      
     }
 
     @Override
     public void finish() throws Exception {
-        Set<String> diff = new HashSet<>(rehijony);
+        Set<String> diff = new HashSet<>();//rehijony);
         diff.removeAll(processed);
         for (String c : diff) {
             CheckObjects.addError(c, "Неапрацаваная вобласьць ці раён");
@@ -102,7 +82,7 @@ public class CustomCheckRehijony implements ICustomClass {
     }
 
     public void checkVoblasc(IOsmObject o) {
-        processed.add(o.getObjectCode());
+        processed.add(o.getObjectCode());//TODO check by xml
         Geometry voblascGeometry;
         try {
             voblascGeometry = OsmHelper.areaFromObject(o, osm);
@@ -115,26 +95,26 @@ public class CustomCheckRehijony implements ICustomClass {
         }
     }
 
-    public void checkRajon(IOsmObject o) {
+    public void checkRajon(IOsmObject o) {//TODO check by xml
         processed.add(o.getObjectCode());
-        Geometry voblascGeometry = voblasci.get(o.getTag("name:be", osm)).getArea();
-        if (voblascGeometry == null) {
-            CheckObjects.addError(o, "Невядомая вобласьць для раёну (мо няправільная назва раёну ?)");
-            return;
-        }
-        Geometry rajonGeometry;
-        try {
-            rajonGeometry = OsmHelper.areaFromObject(o, osm);
-        } catch (Exception ex) {
-            CheckObjects.addError(o, "Няправільная геамэтрыя раёну");
-            return;
-        }
-        if (!BelarusGeometry.contains(rajonGeometry)) {
-            CheckObjects.addError(o, "Раён па-за межамі краіны");
-        }
-
-        if (!voblascGeometry.contains(rajonGeometry)) {
-            CheckObjects.addError(o, "Раён па-за межамі вобласьці");
-        }
+//        Geometry voblascGeometry = voblasci.get(o.getTag("name:be", osm)).getArea();
+//        if (voblascGeometry == null) {
+//            CheckObjects.addError(o, "Невядомая вобласьць для раёну (мо няправільная назва раёну ?)");
+//            return;
+//        }
+//        Geometry rajonGeometry;
+//        try {
+//            rajonGeometry = OsmHelper.areaFromObject(o, osm);
+//        } catch (Exception ex) {
+//            CheckObjects.addError(o, "Няправільная геамэтрыя раёну");
+//            return;
+//        }
+//        if (!BelarusGeometry.contains(rajonGeometry)) {
+//            CheckObjects.addError(o, "Раён па-за межамі краіны");
+//        }
+//
+//        if (!voblascGeometry.contains(rajonGeometry)) {
+//            CheckObjects.addError(o, "Раён па-за межамі вобласьці");
+//        }
     }
 }

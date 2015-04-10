@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="Kraina">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="AreaObject">
+                    <xs:sequence>
+                        <xs:element ref="Voblasc" maxOccurs="unbounded" />
+                        <xs:element ref="Horad" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Voblasc">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="AreaObject">
+                    <xs:sequence>
+                        <xs:element ref="Rajon" maxOccurs="unbounded" />
+                        <xs:element ref="Horad" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Rajon">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="AreaObject">
+                    <xs:sequence>
+                        <xs:element ref="Vojtaustva" maxOccurs="unbounded" />
+                        <xs:element ref="Horad" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Vojtaustva">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="Nazva" />
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Horad">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="AreaObject" />
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="AreaObject">
+        <xs:complexContent>
+            <xs:extension base="Nazva">
+                <xs:attribute name="osmID" type="OsmIDarea" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="Nazva">
+        <xs:attribute name="name_be_correct" type="xs:string" use="optional" />
+        <xs:attribute name="name_be" type="xs:string" use="required" />
+        <xs:attribute name="name_ru" type="xs:string" use="optional" />
+        <xs:attribute name="int_name" type="xs:string" use="optional" />
+        <xs:attribute name="iso3166-1" type="xs:string" use="optional" />
+        <xs:attribute name="iso3166-2" type="xs:string" use="optional" />
+    </xs:complexType>
+
+    <xs:simpleType name="OsmIDnode">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="n[0-9]+" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="OsmIDarea">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="[wr][0-9]+" />
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

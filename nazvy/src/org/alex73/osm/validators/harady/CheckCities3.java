@@ -21,6 +21,10 @@
 
 package org.alex73.osm.validators.harady;
 
+import gen.alex73.osm.validators.rehijony.Nazva;
+import gen.alex73.osm.validators.rehijony.Rajon;
+import gen.alex73.osm.validators.rehijony.Voblasc;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,9 +42,13 @@ import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.Errors;
 import org.alex73.osm.validators.common.JS;
+import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmNode;
 import org.alex73.osmemory.IOsmObject;
+import org.alex73.osmemory.IOsmRelation;
+import org.alex73.osmemory.geometry.FastArea;
+import org.alex73.osmemory.geometry.OsmHelper;
 
 /**
  * Правярае супадзеньне назваў населеных пунктаў OSM назвам деведніка.
@@ -84,7 +92,7 @@ public class CheckCities3 {
         davDirectory = Env.readProperty("dav");
 
         System.out.println("Parsing csv from " + davDirectory);
-        daviednik = new CSV('\t').readCSV(davDirectory+"/Nazvy_nasielenych_punktau.csv", Miesta.class);
+        daviednik = new CSV('\t').readCSV(davDirectory + "/Nazvy_nasielenych_punktau.csv", Miesta.class);
 
         loadData();
 
@@ -95,7 +103,7 @@ public class CheckCities3 {
         findIncorrectTags();
         findRehijony();
 
-        CheckRehijony.check(storage,result.errors);
+        CheckRehijony.check(storage, result.errors);
         System.out.println("Output to " + out + "...");
         result.incorrectTags.sort();
         new File(out).getParentFile().mkdirs();
@@ -135,11 +143,10 @@ public class CheckCities3 {
             if (m.osmID != null) {
                 if (!dbPlaces.containsKey("n" + m.osmID)) {
                     if (storage.getNodeById(m.osmID) != null) {
-                        result.errors.addError("Ёсьць "
-                                + " на мапе, але не населены пункт " + m, "n" + m.osmID);
+                        result.errors.addError("Ёсьць " + " на мапе, але не населены пункт " + m, "n"
+                                + m.osmID);
                     } else {
-                        result.errors.addError("Няма " 
-                                + " на мапе, але ёсць у " + m, "n" + m.osmID);
+                        result.errors.addError("Няма " + " на мапе, але ёсць у " + m, "n" + m.osmID);
                     }
                 } else {
                     addUsed("n" + m.osmID, m.toString());
@@ -150,11 +157,9 @@ public class CheckCities3 {
                     try {
                         if (!dbPlaces.containsKey(id)) {
                             if (storage.getObject(id) != null) {
-                                result.errors.addError("Ёсьць " 
-                                        + " на мапе, але не населены пункт " + m, id);
+                                result.errors.addError("Ёсьць " + " на мапе, але не населены пункт " + m, id);
                             } else {
-                                result.errors.addError("Няма " +  " на мапе, але ёсць у "
-                                        + m, id);
+                                result.errors.addError("Няма " + " на мапе, але ёсць у " + m, id);
                             }
                         } else {
                             addUsed(id, m.toString());
@@ -192,67 +197,68 @@ public class CheckCities3 {
                 continue;
             }
             if (!usedInDav.containsKey(p.getObjectCode())) {
-                result.unusedInDav.addError(p.getTag("addr:region", storage) + "|"
-                        + p.getTag("addr:district", storage) + "|" + p.getTag("name", storage) 
-                        , p.getObjectCode());
+                result.unusedInDav.addError(
+                        p.getTag("addr:region", storage) + "|" + p.getTag("addr:district", storage) + "|"
+                                + p.getTag("name", storage), p.getObjectCode());
             }
         }
     }
 
+    static  short nameTag ;
+    static  short nameBeTag ;
+    static  short nameRuTag ;
+    static  short intNameTag ;
+    static  short addrCountryTag;
+    static  short addrRegionTag ;
+    static  short isoTag31661, isoTag31662 ;
+    static  short adminLevelTag ;
+    
     static void findRehijony() throws Exception {
         result.incorrectTagsRehijony = new ResultTable2("name", "name:be", "name:ru", "int_name",
-                "addr:country", "addr:region", "admin_level", "iso3166-2");
-        short nameTag = storage.getTagsPack().getTagCode("name");
-        short nameBeTag = storage.getTagsPack().getTagCode("name:be");
-        short nameRuTag = storage.getTagsPack().getTagCode("name:ru");
-        short intNameTag = storage.getTagsPack().getTagCode("int_name");
-        short addrCountryTag = storage.getTagsPack().getTagCode("addr:country");
-        short addrRegionTag = storage.getTagsPack().getTagCode("addr:region");
-        short isoTag = storage.getTagsPack().getTagCode("iso3166-2");
-        short adminLevelTag = storage.getTagsPack().getTagCode("admin_level");
+                "addr:country", "addr:region", "admin_level", "ISO3166-1", "iso3166-2");
+         nameTag = storage.getTagsPack().getTagCode("name");
+         nameBeTag = storage.getTagsPack().getTagCode("name:be");
+         nameRuTag = storage.getTagsPack().getTagCode("name:ru");
+         intNameTag = storage.getTagsPack().getTagCode("int_name");
+         addrCountryTag = storage.getTagsPack().getTagCode("addr:country");
+         addrRegionTag = storage.getTagsPack().getTagCode("addr:region");
+         isoTag31661 = storage.getTagsPack().getTagCode("ISO3166-1");
+         isoTag31662 = storage.getTagsPack().getTagCode("iso3166-2");
+         adminLevelTag = storage.getTagsPack().getTagCode("admin_level");
 
-        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(davDirectory + "/Rehijony.csv",
-                PadzielOsmNas.class);
-        Map<String, String> codes = new HashMap<>();
-        Map<String, String> voblasciBelToRus = new HashMap<>();
-        for (PadzielOsmNas p : padziel) {
-            IOsmObject o = storage.getRelationById(p.relationID);
-            ResultTable2.ResultTableRow w = result.incorrectTagsRehijony.new ResultTableRow("", o.getObjectCode(),
-                    p.toString());
-            String name, nameru, reg = null;
-            if (p.voblasc != null && p.rajon == null) {
-                codes.put(p.voblasc, p.iso_3166_2);
-                voblasciBelToRus.put(p.voblasc, p.osmNameRu);
+        IOsmObject o = storage.getObject(RehijonyLoad.kraina.getOsmID());
+        ResultTable2.ResultTableRow w = result.incorrectTagsRehijony.new ResultTableRow("",
+                o.getObjectCode(), RehijonyLoad.kraina.getNameBe());
+        findRehijonyAdd(w, o, RehijonyLoad.kraina, null, "2");
+        for (Voblasc v : RehijonyLoad.kraina.getVoblasc()) {
+            o = storage.getObject(v.getOsmID());
+            w = result.incorrectTagsRehijony.new ResultTableRow("", o.getObjectCode(), v.getNameBe());
+            findRehijonyAdd(w, o, v, null, "4");
+            for (Rajon r : v.getRajon()) {
+                o = storage.getObject(r.getOsmID());
+                w = result.incorrectTagsRehijony.new ResultTableRow("", o.getObjectCode(), r.getNameBe());
+                findRehijonyAdd(w, o, r, v.getNameRu(), "6");
             }
-            String admin_level;
-            if (p.rajon != null) {
-                name = (p.osmName != null ? p.osmName : p.rajon) + " раён";
-                nameru = p.osmNameRu + " район";
-                reg = voblasciBelToRus.get(p.voblasc) + " область";
-                admin_level = "6";
-            } else if (p.voblasc != null) {
-                name = (p.osmName != null ? p.osmName : p.voblasc) + " вобласць";
-                nameru = p.osmNameRu + " область";
-                admin_level = "4";
-            } else {
-                name = "Беларусь";
-                nameru = "Беларусь";
-                admin_level = "2";
-            }
-
-            w.setAttr("name", o.getTag(nameTag), nameru);
-            w.setAttr("name:be", o.getTag(nameBeTag), name);
-            w.setAttr("name:ru", o.getTag(nameRuTag), nameru);
-            w.setAttr("int_name", o.getTag(intNameTag), Lat.lat(name, false));
-            if (p.rajon == null && p.voblasc == null) {
-                w.setAttr("int_name", o.getTag(intNameTag), "Belarus");
-            }
-            w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
-            w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
-            w.setAttr("iso3166-2", o.getTag(isoTag), p.iso_3166_2);
-            w.setAttr("admin_level", o.getTag(adminLevelTag), admin_level);
-            w.addChanged();
         }
+    }
+    
+    static void findRehijonyAdd(ResultTable2.ResultTableRow w, IOsmObject o, Nazva nazva, String reg, String admin_level) {
+
+        w.setAttr("name", o.getTag(nameTag), nazva.getNameRu());
+        w.setAttr("name:be", o.getTag(nameBeTag), nazva.getNameBe());
+        w.setAttr("name:ru", o.getTag(nameRuTag), nazva.getNameRu());
+        
+        String int_name = nazva.getIntName();
+        if (int_name==null) {
+            int_name=  Lat.lat(nazva.getNameBe(), false);
+        }
+        w.setAttr("int_name", o.getTag(intNameTag), int_name);
+        w.setAttr("addr:country", o.getTag(addrCountryTag), "BY");
+        w.setAttr("addr:region", o.getTag(addrRegionTag), reg);
+        w.setAttr("ISO3166-1", o.getTag(isoTag31661), nazva.getIso31661());
+        w.setAttr("iso3166-2", o.getTag(isoTag31662), nazva.getIso31662());
+        w.setAttr("admin_level", o.getTag(adminLevelTag), admin_level);
+        w.addChanged();
     }
 
     static void findIncorrectTags() throws Exception {
@@ -271,9 +277,13 @@ public class CheckCities3 {
         addColumnIfAllowed("addr:region", attrs);
         addColumnIfAllowed("addr:district", attrs);
         addColumnIfAllowed("admin_level", attrs);
+        //TODO addColumnIfAllowed("type", attrs);
         result.incorrectTags = new ResultTable2(attrs);
 
         for (Miesta m : daviednik) {
+            if (m.osmIDother != null && m.osmIDother.contains(";")) {
+                result.errors.addError("Больш за 1 мяжу ў даведніку для " + m);
+            }
             for (final String code : getUsedCodes(m)) {
                 // final WrongTags w = new WrongTags();
                 ResultTable2.ResultTableRow w = result.incorrectTags.new ResultTableRow(m.voblasc + '|'
@@ -282,7 +292,7 @@ public class CheckCities3 {
                 Map<String, String> tags = p.extractTags(storage);
                 IOsmNode centerNode = m.osmID != null ? storage.getNodeById(m.osmID) : null;
                 if (centerNode == null) {
-                    result.errors.addError("Няма цэнтру ",code);
+                    result.errors.addError("Няма цэнтру ", code);
                     continue;
                 }
                 PlaceTags correctTags = CalcCorrectTags2.calc(m, storage, centerNode);
@@ -293,10 +303,12 @@ public class CheckCities3 {
                 setAttrIfAllowed(w, "int_name", tags.get("int_name"), correctTags.int_name);
                 setAttrIfAllowed(w, "name:be-tarask", tags.get("name:be-tarask"), correctTags.name_be_tarask);
                 setAttrIfAllowed(w, "place", tags.get("place"), correctTags.place);
-                setAttrIfAllowed(w, "abandoned:place", tags.get("abandoned:place"), correctTags.abandonedPlace);
+                setAttrIfAllowed(w, "abandoned:place", tags.get("abandoned:place"),
+                        correctTags.abandonedPlace);
                 setAttrIfAllowed(w, "alt_name:be", tags.get("alt_name:be"), correctTags.alt_name_be);
                 setAttrIfAllowed(w, "alt_name:ru", tags.get("alt_name:ru"), correctTags.alt_name_ru);
                 setAttrIfAllowed(w, "alt_name", tags.get("alt_name"), null);
+               // setAttrIfAllowed(w, "type", tags.get("type"), p.isRelation() ? "multipolygon" : null);
 
                 setAttrIfAllowed(w, "addr:country", tags.get("addr:country"), "BY");
                 String voblasc = adminLevelsBelToRus.get(m.voblasc + " вобласць");
@@ -332,8 +344,62 @@ public class CheckCities3 {
                     setAttrIfAllowed(w, "addr:district", tags.get("addr:district"), null);
                 }
 
+                if (p.isRelation()) {
+                    validateRelation((IOsmRelation) p, centerNode);
+                }
                 w.addChanged();
+
+                if (p != centerNode) {
+                    try {
+                        FastArea area = new FastArea(OsmHelper.areaFromObject(p, storage), storage);
+                        if (!area.covers(centerNode)) {
+                            // цэнтр па-за межамі
+                            result.errors.addError("Цэнтар па-за межамі населенага пункту", p);
+                        }
+                    } catch (Exception ex) {
+                        result.errors.addError("Неммагчыма стварыць геамэтрыю для межаў", p);
+                    }
+                }
             }
+        }
+    }
+
+    /**
+     * way што уваходяць - без назваў, кропка - як center
+     */
+    static void validateRelation(IOsmRelation rel, IOsmNode center) {
+        int centerCount = 0;
+        for (int i = 0; i < rel.getMembersCount(); i++) {
+            switch (rel.getMemberRole(storage, i)) {
+            case "label":
+                centerCount++;
+                if (!rel.getMemberCode(i).equals(center.getObjectCode())) {
+                    result.errors.addError("Несупадае цэнтр у даведніку і на мапе", rel);
+                }
+                break;
+            case "outer":
+                IOsmObject obj = rel.getMemberObject(storage, i);
+                if (obj == null) {
+                    result.errors.addError("Няма аб'екту з relation мяжы", rel);
+                } else {
+                    if (!obj.isWay()) {
+                        result.errors.addError("Не way outer member ў relation", rel);
+                    }
+                    if (obj.getTags().length > 0) {
+                        result.errors.addError("Непатрэбныя тэгі ў way мяжы ў relation", rel);
+                    }
+                }
+                break;
+            default:
+                result.errors.addError("Невядомая роль ў relation мяжы: " + rel.getMemberRole(storage, i),
+                        rel);
+                break;
+            }
+        }
+        if (centerCount == 0) {
+            result.errors.addError("Няма цэнтру на мапе", rel);
+        } else if (centerCount > 1) {
+            result.errors.addError("Больш за 1 цэнтр на мапе", rel);
         }
     }
 

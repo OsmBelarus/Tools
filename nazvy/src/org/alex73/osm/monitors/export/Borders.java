@@ -22,6 +22,9 @@ Some tools for OSM.
 
 package org.alex73.osm.monitors.export;
 
+import gen.alex73.osm.validators.rehijony.Rajon;
+import gen.alex73.osm.validators.rehijony.Voblasc;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -39,11 +42,10 @@ import java.util.Set;
 import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
-import org.alex73.osm.utils.PadzielOsmNas;
+import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osm.validators.harady.Miesta;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.MemoryStorage;
-import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.FastArea;
 import org.alex73.osmemory.geometry.GeometryHelper;
 import org.alex73.osmemory.geometry.OsmHelper;
@@ -118,24 +120,23 @@ public class Borders {
         rajony = new ArrayList<>();
         miesty = new ArrayList<>();
 
-        // чытаем рэгіёны
-        List<PadzielOsmNas> padziel = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
-        for (PadzielOsmNas p : padziel) {
-            List<Border> place = kraina;
-            String path = "/";
-            if (p.voblasc != null) {
-                path += p.voblasc + " вобласць" + '/';
-                place = voblasci;
+        RehijonyLoad.load(Env.readProperty("dav") + "/Rehijony.xml");
+        
+        FastArea area ;
+        String nazva;
+        
+        area = new FastArea(osm.getObject(RehijonyLoad.kraina.getOsmID()), osm);
+        kraina.add(new Border("/", area));
+        for (Voblasc v : RehijonyLoad.kraina.getVoblasc()) {
+            nazva = Lat.unhac(Lat.lat('/' + v.getNameBe() + '/', false)).replace(' ', '_');
+            area = new FastArea(osm.getObject(v.getOsmID()), osm);
+            voblasci.add(new Border(nazva, area));
+            for (Rajon r : v.getRajon()) {
+                String rn = r.getNameBeCorrect() != null ? r.getNameBeCorrect() : r.getNameBe();
+                nazva = Lat.unhac(Lat.lat('/' + v.getNameBe() + '/' + rn + '/', false)).replace(' ', '_');
+                area = new FastArea(osm.getObject(r.getOsmID()), osm);
+                rajony.add(new Border(nazva, area));
             }
-            if (p.rajon != null) {
-                path += p.rajon + " раён" + '/';
-                place = rajony;
-            }
-            String nazva = Lat.unhac(Lat.lat(path, false)).replace(' ', '_');
-            FastArea area = new FastArea(
-                    new ExtendedRelation(osm.getRelationById(p.relationID), osm).getArea(), osm);
-            place.add(new Border(nazva, area));
         }
 
         // чытаем гарады і вёскі

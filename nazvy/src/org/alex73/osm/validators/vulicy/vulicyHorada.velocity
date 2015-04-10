@@ -16,7 +16,7 @@
 
 #set ( $errors = 'pamylkiDamou' )
 #set ( $title = 'Памылкі дамоў' )
-#set ( $desc = '' )
+#set ( $desc = 'Прыклады правільных нумароў дамоў: 38; 38 к1; 38а. Таксама ў адрасных кропак можы быць суфікс накшталт "(кв. 1-33)"' )
 #parse ("org/alex73/osm/validators/common/errors2.velocity")
 
 </body>

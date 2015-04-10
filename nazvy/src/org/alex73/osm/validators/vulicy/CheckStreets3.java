@@ -20,23 +20,23 @@
  **************************************************************************/
 package org.alex73.osm.validators.vulicy;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.LettersCheck;
 import org.alex73.osm.utils.POReader;
 import org.alex73.osm.utils.VelocityOutput;
-import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.Errors;
+import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.ResultTable2;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.IExtendedObject;
-import org.apache.commons.io.FileUtils;
 
 /**
  * Правярае несупадзеньне тэгаў OSM правільным назвам.
@@ -71,12 +71,14 @@ public class CheckStreets3 extends StreetsParse3 {
     @Override
     void end(City c) throws Exception {
         houseErrorsCount.put(c, cityResult.pamylkiDamou.getObjectsCount());
-        streetErrorsCount.put(c, cityResult.pamylkiVulic.getObjectsCount() + cityResult.vulicy.getRowsCount());
+        streetErrorsCount
+                .put(c, cityResult.pamylkiVulic.getObjectsCount() + cityResult.vulicy.getRowsCount());
 
         System.out.println("Output to " + outDir + "/vulicy-" + c.fn + ".html...");
         cityResult.writeJS(outDir + "/vulicy-" + c.fn + ".js");
         VelocityOutput.output("org/alex73/osm/validators/vulicy/vulicyHorada.velocity", outDir + "/vulicy-"
-                + c.fn + ".html", "file", c.fn.substring(c.fn.indexOf('/')+1), "horad", c.nazva, "data", cityResult);
+                + c.fn + ".html", "file", c.fn.substring(c.fn.indexOf('/') + 1), "horad", c.nazva, "data",
+                cityResult);
     }
 
     void end() throws Exception {
@@ -282,14 +284,22 @@ public class CheckStreets3 extends StreetsParse3 {
     void checkHouseTags(City c, IOsmObject s) {
         String num = s.getTag(houseNumberTag);
         if (num != null) {
-            if (!RE_HOUSENUMBER.matcher(num).matches()) {
-                cityResult.pamylkiDamou.addError("Няправільны нумар дому: " + num, s);
+            Matcher mf = RE_HOUSENUMBER_FLAT_SUFFIX.matcher(num);
+            if (mf.matches()) {
+                num = mf.group(1).trim();
             }
+            for (Pattern p : RE_HOUSENUMBERS) {
+                if (p.matcher(num).matches()) {
+                    return;
+                }
+            }
+            cityResult.pamylkiDamou.addError("Няправільны нумар дому: " + num, s);
         }
     }
 
     public static class Result {
-        public ResultTable2 vulicy = new ResultTable2("name", "name:ru", "name:be", "name:en", "int_name", "name:by");
+        public ResultTable2 vulicy = new ResultTable2("name", "name:ru", "name:be", "name:en", "int_name",
+                "name:by");
 
         public Errors pamylkiVulic = new Errors();
 

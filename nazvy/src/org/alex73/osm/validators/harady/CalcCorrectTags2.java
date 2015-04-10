@@ -41,7 +41,7 @@ import org.alex73.osmemory.MemoryStorage;
 public class CalcCorrectTags2 {
     static public PlaceTags calc(Miesta m, MemoryStorage storage, IOsmNode node) throws Exception {
         String typ;
-        
+
         switch (m.typ) {
         case "г.":
             if (node == null) {
@@ -80,11 +80,11 @@ public class CalcCorrectTags2 {
             throw new RuntimeException("Невядомы тып " + m.typ + " для " + m.osmID);
         }
 
-        String abandoned=null;
+        String abandoned = null;
         String nodePlace = node.getTag("place", storage);
-        if ("locality".equals(nodePlace)||"suburb".equals(nodePlace)||"neighbourhood".equals(nodePlace)) {
+        if ("locality".equals(nodePlace) || "suburb".equals(nodePlace) || "neighbourhood".equals(nodePlace)) {
             abandoned = typ;
-            typ=nodePlace;
+            typ = nodePlace;
         }
 
         if (m.osmForceTyp != null) {

@@ -21,6 +21,11 @@
 
 package org.alex73.osm.validators.harady;
 
+import gen.alex73.osm.validators.rehijony.AreaObject;
+import gen.alex73.osm.validators.rehijony.Horad;
+import gen.alex73.osm.validators.rehijony.Rajon;
+import gen.alex73.osm.validators.rehijony.Voblasc;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,10 +34,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.CSV;
 import org.alex73.osm.utils.Env;
-import org.alex73.osm.utils.PadzielOsmNas;
 import org.alex73.osm.validators.common.Errors;
+import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osmemory.IOsmObject;
 import org.alex73.osmemory.geometry.GeometryHelper;
 import org.alex73.osmemory.geometry.OsmHelper;
@@ -46,46 +50,27 @@ public class CheckRehijony {
     static Belarus osm;
     static Errors errors;
 
-    public static void main(String[] args) throws Exception {
-        osm = new Belarus();
-        errors = new Errors();
-        check(osm, errors);
-      //  errors.errors.keySet().forEach(o -> System.out.println(o));
-    }
     static Map<String, String> load() throws Exception {
         Map<String, String> result=new HashMap<>();
         
-        List<PadzielOsmNas> padziely = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
-        for (PadzielOsmNas p : padziely) {
-            if (p.voblasc == null && p.rajon == null) {
-                // краіна
-            } else if (p.voblasc != null && p.rajon == null) {
-                // вобласьць
-                result.put(p.voblasc + " вобласць", p.osmNameRu + " область");
-                if (p.osmName != null) {
-                    result.put(p.osmName + " вобласць", p.osmNameRu + " область");
-                }
-            } else if (p.voblasc != null && p.rajon != null) {
-                // раён
-                result.put(p.rajon + " раён", p.osmNameRu + " район");
-                if (p.osmName != null) {
-                    result.put(p.osmName + " раён", p.osmNameRu + " район");
-                }
-            } else {
-                throw new RuntimeException("Няправильны фармат у Rehijony.csv");
+        RehijonyLoad.load(Env.readProperty("dav") + "/Rehijony.xml");
+
+        for (Voblasc p : RehijonyLoad.kraina.getVoblasc()) {
+            result.put(p.getNameBe(), p.getNameRu());
+            for (Rajon r : p.getRajon()) {
+                result.put(r.getNameBe(), r.getNameRu());
             }
         }
         return result;
     }
-//TODO
+
     static void check(Belarus posm, Errors perrors) throws Exception {
         osm = posm;
         errors = perrors;
 
+        RehijonyLoad.load(Env.readProperty("dav") + "/Rehijony.xml");
+        
         // правяраем існаваньне дакладна такога падзелу як у даведніку
-        List<PadzielOsmNas> padziely = new CSV('\t').readCSV(Env.readProperty("dav") + "/Rehijony.csv",
-                PadzielOsmNas.class);
         List<IOsmObject> level2 = new ArrayList<>();
         List<IOsmObject> level4 = new ArrayList<>();
         List<IOsmObject> level6 = new ArrayList<>();
@@ -98,71 +83,61 @@ public class CheckRehijony {
         osm.byTag("admin_level",
                 o -> o.isRelation() && o.getTag("admin_level", osm).equals("6") && osm.contains(o),
                 o -> level6.add(o));
-        check("Аб'екты з admin_level=2: ", level2, kraina(padziely));
-        check("Аб'екты з admin_level=4: ", level4, voblasci(padziely));
-        check("Аб'екты з admin_level=6: ", level6, rajony(padziely));
+        check("Аб'екты з admin_level=2: ", level2, kraina());
+        check("Аб'екты з admin_level=4: ", level4, voblasci());
+        check("Аб'екты з admin_level=6: ", level6, rajony());
 
-//        if (errors.errors.isEmpty()) {
+//   TODO     if (errors.errors.isEmpty()) {
 //            // правяраем ці ствараюць вобласьці й раёны такую самую геамэтрыю як краіна
 //            checkGeometry("Вобласьці ў межах краіны: ", osm.getGeometry(), level4);
 //            checkGeometry("Раёны ў межах краіны: ", osm.getGeometry(), level6);
 //        }
     }
 
-    static List<PadzielOsmNas> kraina(List<PadzielOsmNas> padziely) {
-        List<PadzielOsmNas> r = new ArrayList<>();
-        padziely.stream().filter(p -> p.voblasc == null && p.rajon == null).forEach(p -> {
-            p.osmName = "Беларусь";
-            r.add(p);
-        });
+    static List<AreaObject> kraina() {
+        List<AreaObject> r = new ArrayList<AreaObject>();
+        r.add(RehijonyLoad.kraina);
         return r;
     }
 
-    static List<PadzielOsmNas> voblasci(List<PadzielOsmNas> padziely) {
-        List<PadzielOsmNas> r = new ArrayList<>();
-        padziely.stream().filter(p -> p.voblasc != null && p.rajon == null).forEach(p -> {
-            p.osmName = (p.osmName != null ? p.osmName : p.voblasc) + " вобласць";
-            r.add(p);
-        });
+    static List<AreaObject> voblasci() {
+        List<AreaObject> r = new ArrayList<AreaObject>();
+        for (Voblasc v : RehijonyLoad.kraina.getVoblasc()) {
+            r.add(v);
+        }
+        for (Horad h : RehijonyLoad.kraina.getHorad()) {
+            r.add(h);
+        }
         return r;
     }
 
-    static List<PadzielOsmNas> rajony(List<PadzielOsmNas> padziely) {
-        List<PadzielOsmNas> r = new ArrayList<>();
-        padziely.stream().filter(p -> p.rajon != null).forEach(p -> {
-            p.osmName = (p.osmName != null ? p.osmName : p.rajon) + " раён";
-            r.add(p);
-        });
+    static List<AreaObject> rajony() {
+        List<AreaObject> r = new ArrayList<AreaObject>();
+        for (Voblasc v : RehijonyLoad.kraina.getVoblasc()) {
+            for (Rajon ra : v.getRajon()) {
+                r.add(ra);
+            }
+            for (Horad h : v.getHorad()) {
+                r.add(h);
+            }
+        }
         return r;
     }
 
-    static void check(String prefix, List<IOsmObject> osmObjects, List<PadzielOsmNas> padziely) {
+    static void check(String prefix, List<IOsmObject> osmObjects, List<AreaObject> padziely) {
         Set<String> found = new HashSet<>();
         osmObjects.forEach(o -> found.add(o.getObjectCode()));
 
-        // гарады абласнога ці раённага падчыненьня
-        for (PadzielOsmNas p : padziely) {
-            if (p.harady != null) {
-                String[] hs = p.harady.split(";");
-                for (String h : hs) {
-                    if (!found.remove(h)) {
-                        errors.addError(prefix + "Няма гораду з даведніку(Rehijony.csv) '" + h
-                                + "' на мапе альбо няправільны admin_level");
-                    }
-                }
-            }
-        }
-
-        for (PadzielOsmNas p : padziely) {
-            if (!found.remove("r" + p.relationID)) {
-                errors.addError(prefix + "Няма аб'екту з даведніку(Rehijony.csv) 'r" + p.relationID
+        for (AreaObject p : padziely) {
+            if (!found.remove(p.getOsmID())) {
+                errors.addError(prefix + "Няма аб'екту з даведніку(Rehijony.xml) '" + p.getOsmID()
                         + "' на мапе альбо няправільны admin_level");
             }
         }
 
         // тыя што засталіся
         found.forEach(o -> errors
-                .addError(prefix + "Няма ў даведніку(Rehijony.csv), але ёсьць на мапе: " + o));
+                .addError(prefix + "Няма ў даведніку(Rehijony.xml), але ёсьць на мапе", o));
     }
 
     static void checkGeometry(String prefix, Geometry full, List<IOsmObject> objects) throws Exception {
