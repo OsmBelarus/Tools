@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.alex73.osm.monitors.export.Borders;
 import org.alex73.osm.utils.Belarus;
@@ -18,6 +20,7 @@ import org.alex73.osm.utils.Env;
 import org.alex73.osm.utils.Lat;
 import org.alex73.osm.utils.POWriter;
 import org.alex73.osm.utils.RehijonTypeSeparator;
+import org.alex73.osm.utils.TMX;
 import org.alex73.osm.utils.VelocityOutput;
 import org.alex73.osm.validators.common.JS;
 import org.alex73.osm.validators.common.ResultTable2;
@@ -87,6 +90,7 @@ public class TranslationProcessor extends RehijonTypeSeparator {
         Map<String, String> fixes;
         Map<String, TypReh> trs = new HashMap<>();
         Map<String, String> translation;
+        Map<String, Set<String>> existTranslation = new HashMap<>();
 
         public Typ(String typ) throws Exception {
             this.typ = typ;
@@ -122,9 +126,18 @@ public class TranslationProcessor extends RehijonTypeSeparator {
 
         void add(IOsmObject obj, String typ, String rehijon) throws Exception {
             String name = obj.getTag(nameTag);
+            String namebe = obj.getTag(nameBeTag);
             String namechanged = fixes.get(name);
             if (namechanged == null) {
                 namechanged = name;
+            }
+            if (name != null && namebe != null) {
+                Set<String> exist = existTranslation.get(name);
+                if (exist == null) {
+                    exist = new TreeSet<>();
+                    existTranslation.put(name, exist);
+                }
+                exist.add(namebe);
             }
 
             TypReh tr = getTypeReh(typ, rehijon);
@@ -151,9 +164,19 @@ public class TranslationProcessor extends RehijonTypeSeparator {
                         return RUC.compare(o1.from, o2.from);
                     }
                 });
-                new CSV('\t').saveCSV(
-                        Env.readProperty("translations.dir") + "/vypraulenni/" + getFile() + ".csv",
-                        Replace.class, names);
+                new CSV('\t').saveCSV(Env.readProperty("translations.dir") + "/vypraulenni/" + getFile()
+                        + ".csv", Replace.class, names);
+                
+                TMX tmx=new TMX();
+                for (Map.Entry<String, Set<String>> en : existTranslation.entrySet()) {
+                    if (en.getValue().size() == 1) {
+                        tmx.put(en.getKey(), en.getValue().iterator().next());
+                    }else {
+                        tmx.put(en.getKey(), en.getValue().toString());
+                    }
+                }
+                tmx.save(new File(Env.readProperty("translations.dir") + "/isnujucyja_pieraklady/"
+                        + getFile() + ".tmx"));
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

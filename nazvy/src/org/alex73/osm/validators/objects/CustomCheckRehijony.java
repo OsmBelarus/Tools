@@ -21,22 +21,11 @@
 
 package org.alex73.osm.validators.objects;
 
-import gen.alex73.osm.validators.rehijony.Voblasc;
-
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.alex73.osm.utils.Belarus;
-import org.alex73.osm.utils.CSV;
-import org.alex73.osm.utils.Env;
-import org.alex73.osm.utils.PadzielOsmNas;
-import org.alex73.osm.validators.common.RehijonyLoad;
 import org.alex73.osmemory.IOsmObject;
-import org.alex73.osmemory.IOsmRelation;
-import org.alex73.osmemory.geometry.ExtendedRelation;
 import org.alex73.osmemory.geometry.OsmHelper;
 
 import com.vividsolutions.jts.geom.Geometry;

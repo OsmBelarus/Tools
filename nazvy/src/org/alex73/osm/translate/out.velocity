@@ -2,6 +2,10 @@
 #set ( $js = ${typ}+".js" )
 #parse ("org/alex73/osm/validators/common/header2.velocity")
 
+Пераклады захоўваюцца ў https://github.com/OsmBelarus/Pieraklady
+<br/>
+Іх можна выпраўляць праз <a href="http://latlon.org/~alex73/omegat/${typ}.jnlp">OmegaT.jnlp</a>. Пытайцеся пра доступ да перакладаў у alex73mail@gmail.com.
+<br/>
 Калі жадаеце дапамагчы з перакладам,
 пішыце на <a href="http://forum.openstreetmap.org/viewforum.php?id=35">форум</a> ці <a href="mailto:alex73mail@gmail.com">пошту</a>.
 

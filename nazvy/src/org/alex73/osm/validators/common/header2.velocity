@@ -85,7 +85,7 @@
       };
       scope.id2link = function(id) {
           var p = id.replace('n','node/').replace('w','way/').replace('r','relation/');
-          return "https://www.openstreetmap.org/"+p+"/history";
+          return "https://www.openstreetmap.org/"+p;//+"/history";
       };
       scope.renderHtml = function(html) {
         return ${quo}sce.trustAsHtml(html);
@@ -137,7 +137,7 @@
             }
             if (send) {
               ${quo}.ajax({
-                  url: "http://127.0.0.1:8111/load_object?objects="+table.rows[i].id+"&addtags="+send.substring(1),
+                  url: "http://127.0.0.1:8111/load_object?objects="+table.rows[i].id+"&addtags="+encodeURIComponent(send.substring(1)),
                   async: false
                   }).done(function( data ) {
                     scope.${quo}apply(function() {
