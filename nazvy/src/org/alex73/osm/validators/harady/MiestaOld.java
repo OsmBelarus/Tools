@@ -1,31 +1,10 @@
-/**************************************************************************
- Some tools for OSM.
-
- Copyright (C) 2013 Aleś Bułojčyk <alex73mail@gmail.com>
-               Home page: http://www.omegat.org/
-               Support center: http://groups.yahoo.com/group/OmegaT/
-
- This is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This software is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **************************************************************************/
-
 package org.alex73.osm.validators.harady;
 
 import java.lang.reflect.Field;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
-public class Miesta {
+public class MiestaOld {
     @XmlAttribute(name = "Вобласць")
     public String voblasc;
     @XmlAttribute(name = "Раён")
@@ -64,10 +43,6 @@ public class Miesta {
     public String osmNameBeTarask;
     @XmlAttribute(name = "osm:Node ID")
     public Long osmID;
-    @XmlAttribute(name = "osm:Lat")
-    public Integer lat;
-    @XmlAttribute(name = "osm:Lon")
-    public Integer lon;
     @XmlAttribute(name = "Супадзеньне ў аўтаматычным пошуку")
     public String osmComment;
     @XmlAttribute(name = "osm:Стары тып")
@@ -88,8 +63,9 @@ public class Miesta {
 
     public Miesta cloneObject() throws Exception {
         Miesta r = new Miesta();
-        for (Field f : Miesta.class.getFields()) {
-            f.set(r, f.get(this));
+        for (Field f : MiestaOld.class.getFields()) {
+            Field fn=Miesta.class.getField(f.getName());
+            fn.set(r, f.get(this));
         }
         return r;
     }
